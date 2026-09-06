@@ -8,12 +8,12 @@
 body, html {
     font-family: 'Poppins', sans-serif;
     height: 100%;
-    background-color: #FFFFFF;
+    background-color: #ffffff;
 }
 
 /* Navigasi Kaca */
 .top-nav {
-    position: absolute;
+    position: fixed;
     top: 35px;
     left: 50%;
     transform: translateX(-50%);
@@ -26,9 +26,9 @@ body, html {
     z-index: 100;
     overflow: hidden;
  
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.20);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 50px;
  
@@ -70,9 +70,11 @@ body, html {
 }
  
 @keyframes navSheen {
-    0%   { transform: translateX(-38%); opacity: 0.25; }
-    50%  { transform: translateX(38%);  opacity: 0.85; }
-    100% { transform: translateX(-38%); opacity: 0.25; }
+    0%   { transform: translateX(-55%); opacity: 0; }
+    12%  { opacity: 0.85; }
+    68%  { opacity: 0.85; }
+    90%  { transform: translateX(60%); opacity: 0; }
+    100% { transform: translateX(-55%); opacity: 0; }
 }
  
 /* Penyesuaian tata letak vertikal untuk huruf sambung logo */
@@ -153,7 +155,7 @@ body, html {
     justify-content: center;
     
     /* Latar warna solid pada area bawah */
-    background-color: #F9F7F7;
+    background-color: #f6f6f6;
     background-image: none; 
 }
 
@@ -361,6 +363,9 @@ a:focus-visible {
         height: auto;
         min-height: 100vh;
     }
+    .hero::before {
+    height: 340px;
+    }
     .hero-content {
         flex-direction: column-reverse;
         text-align: center;
@@ -407,7 +412,8 @@ a:focus-visible {
     }
     .nav-menu {
     flex-wrap: nowrap;
-    justify-content: center;
+    width: 100%;
+    justify-content: space-between;
     gap: 0;
     }
 
@@ -429,6 +435,9 @@ a:focus-visible {
 }
 
 @media (max-width: 600px) {
+    .hero::before {
+    height: 280px;
+    }
     .name {
         font-size: 32px;
     }
