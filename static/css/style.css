@@ -406,19 +406,22 @@ a:focus-visible {
         border-radius: 28px;
     }
     .nav-menu {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 2px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 0;
     }
+
     .top-nav .nav-brand {
         top: 0;
         font-size: 26px;
         padding: 0;
     }
+
     .top-nav a {
-        font-size: 11px;
-        letter-spacing: 0.3px;
-        padding: 6px 10px;
+        font-size: 9.5px;
+        letter-spacing: 0;
+        padding: 6px 6px;
+        white-space: nowrap;
     }
     .hero-content {
         padding-top: 175px;
