@@ -394,22 +394,38 @@ a:focus-visible {
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
     .top-nav {
         top: 14px;
         width: calc(100% - 24px);
-        gap: 6px;
-        padding: 7px 8px 7px 16px;
+        max-width: none;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        padding: 10px 12px 12px;
+        border-radius: 28px;
+    }
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2px;
     }
     .top-nav .nav-brand {
+        top: 0;
         font-size: 26px;
-        padding: 0 0 4px;
+        padding: 0;
     }
     .top-nav a {
-        font-size: 10px;
-        letter-spacing: 0;
-        padding: 7px 7px;
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        padding: 6px 10px;
     }
+    .hero-content {
+        padding-top: 175px;
+    }
+}
+
+@media (max-width: 600px) {
     .name {
         font-size: 32px;
     }
