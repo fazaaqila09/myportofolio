@@ -1,61 +1,64 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burhan - Portfolio</title>
+    <title>Faza - Portfolio</title>
+
+    <!-- Poppins untuk teks, Great Vibes untuk logo "Faza" -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+
+    <!-- Ambil Ikon Logo dari FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Menghubungkan ke file CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <header class="site-header">
-        <div class="container">
-            <a href="#profile" class="brand">faqil</a>
-            <nav>
-                <a href="#profile">Profile</a>
-            </nav>
-        </div>
-    </header>
 
-    <main>
-        <section class="hero" id="profile">
-            <div class="container hero-grid">
-                <div class="hero-identity">
-                    <p class="hero-kicker">Computer Science &middot; Universitas Indonesia</p>
-                    <h1>Muhammad Faza Aqila</h1>
-                </div>
-                <div class="hero-photo">
-                    <div class="photo-block"></div>
-                    <img class="avatar" src="/static/img/faza.jpg" alt="Photo of Faza">
-                </div>
-                <div class="hero-details">
-                    <p class="bio">CS student at Universitas Indonesia for longer than planned, now a familiar (and slightly dreaded) face among Fasilkom students as a teaching assistant across several courses.</p>
-                    <dl class="meta-list">
-                        <div class="meta-row">
-                            <dt>NPM</dt>
-                            <dd>2506613142</dd>
-                        </div>
-                        <div class="meta-row">
-                            <dt>Program</dt>
-                            <dd>S1 Ilmu Komputer</dd>
-                        </div>
-                    </dl>
+    <!-- Navigasi Bar: logo kiri, menu kanan -->
+    <nav class="top-nav">
+        <a href="#home" class="nav-brand">Faza</a>
+        <div class="nav-menu">
+            <a href="#home" aria-current="page">Home</a>
+            <a href="#about">About</a>
+            <a href="#experience">Experience</a>
+            <a href="#education">Education</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Area Hero -->
+    <header id="home" class="hero">
+
+        <!-- Wadah Flexbox: teks kiri, foto kanan -->
+        <div class="hero-content">
+
+            <div class="text-content">
+                <p class="greeting">Hello I am</p>
+                <h1 class="name">Muhammad Faza Aqila</h1>
+                <p class="subtitle">Computer Science student at Universitas Indonesia, Data Scientist</p>
+
+                <div class="connect-area">
+                    <span class="connect-text">LET'S CONNECT <i class="fa-solid fa-chevron-right arrow"></i></span>
                     <div class="social-links">
-                        <a href="https://github.com/fazaaqila09" class="social-link">GitHub</a>
-                        <a href="https://www.linkedin.com/in/muhammadfazaaqila/" class="social-link">LinkedIn</a>
-                        <a href="mailto:muhammadfazaaqila09@gmail.com" class="social-link">Email</a>
+                        <a href="https://github.com/fazaaqila09" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                        <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="https://instagram.com/fazaaqilaaaa" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="mailto:muhammadfazaaqila09@gmail.com" title="Email"><i class="fa-solid fa-envelope"></i></a>
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
 
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2026 Muhammad Faza Aqila. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+            <div class="profile-photo">
+                <img src="{% static 'img/fazabw.jpeg' %}" alt="Foto Muhammad Faza Aqila">
+            </div>
+
         </div>
-    </footer>
+    </header>
+
 </body>
 </html>
