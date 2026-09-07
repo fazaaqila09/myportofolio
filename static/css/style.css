@@ -1,4 +1,8 @@
 /* Pengaturan Dasar */
+html {
+    scroll-behavior: smooth;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -26,6 +30,7 @@ body, html {
     z-index: 100;
     overflow: hidden;
  
+    /* kondisi awal */
     background: rgba(255, 255, 255, 0.20);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -133,17 +138,6 @@ body, html {
         inset 0 1px 0 rgba(255, 255, 255, 0.65),
         0 4px 12px rgba(0, 0, 0, 0.18);
     transform: translateY(-1px);
-}
- 
-/* Indikator menu halaman aktif */
-.top-nav a[aria-current="page"] {
-    background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.26),
-        rgba(255, 255, 255, 0.10)
-    );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-    font-weight: 700;
 }
 
 /* Area Hero Utama */
@@ -585,9 +579,77 @@ a:focus-visible {
     }
 }
 
+/* ============================================================
+   NAVBAR BERUBAH GAYA SAAT MELEWATI GELOMBANG
+   Tanpa JavaScript, memakai scroll-driven animation: animasi yang
+   "diputar" oleh posisi scroll, bukan oleh waktu.
+ 
+   Di atas gelombang  -> kaca iPhone, teks putih (kondisi awal di atas)
+   Setelah gelombang  -> kaca bening, teks gelap
+ 
+   Dibungkus @supports supaya browser yang belum mendukung tetap
+   memakai kondisi awal, bukan malah rusak. Saat ini didukung penuh
+   di Chrome & Edge 115+.
+   ============================================================ */
+@supports (animation-timeline: scroll()) {
+ 
+    .top-nav {
+        /* Animasi ketiga ditambahkan. Tiap animasi punya timeline dan
+           range sendiri, urutannya harus sejajar dengan daftar di
+           properti animation. */
+        animation:
+            navEnter 1s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+            ripple-glass 6s ease-in-out 1s infinite alternate,
+            navGlassSwap linear both;
+        animation-timeline: auto, auto, scroll(root block);
+        animation-range: normal, normal, 22vh 42vh;
+    }
+ 
+    .top-nav a,
+    .top-nav .nav-brand {
+        animation: navTextSwap linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 22vh 42vh;
+    }
+ 
+    @keyframes navGlassSwap {
+        from {
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(15px) saturate(100%) brightness(1);
+            -webkit-backdrop-filter: blur(15px) saturate(100%) brightness(1);
+            border-color: rgba(255, 255, 255, 0.4);
+            /* Bayangan awal saat di atas gelombang */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); 
+        }
+        to {
+            /* Kaca menjadi lebih putih solid agar tulisan gelap terbaca sempurna */
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(3px) saturate(120%) brightness(1);
+            -webkit-backdrop-filter: blur(3px) saturate(120%) brightness(1);
+            border-color: rgba(255, 255, 255, 0.9);
+            
+            /* Bayangan dipertegas di akhir agar navigasi terpisah dari background putih */
+            box-shadow: 0 12px 36px -10px rgba(17, 45, 78, 0.35);
+        }
+    }
+ 
+    @keyframes navTextSwap {
+        from {
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+        }
+        to {
+            color: #0D2237;
+            /* HAPUS font-weight: 600 di sini agar transisi tidak kasar/patah */
+            /* Gunakan bayangan super tipis berwarna senada untuk efek 'bold' yang mulus */
+            text-shadow: 0 0 1px rgba(13, 34, 55, 0.6); 
+        }
+    }
+}
+
 /* ABOUT */
 .about {
-    scroll-margin-top: 120px;
+    scroll-margin-top: 24px;
  
     padding: 7rem 0;
     background-color: #FFFFFF;
@@ -747,7 +809,7 @@ a:focus-visible {
 @media (max-width: 600px) {
     .about {
         padding: 4rem 0;
-        scroll-margin-top: 100px;
+        scroll-margin-top: 16px;
     }
     .about-photo {
         max-width: 260px;
