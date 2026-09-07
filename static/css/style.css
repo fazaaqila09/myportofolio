@@ -1188,7 +1188,6 @@ a:focus-visible {
     /* atas dikurangi dari 4.5rem -> 2.5rem supaya isinya naik */
     padding: 2.5rem 0 5rem;
     background-color: #FFFFFF;
-    overflow: hidden;          /* kartu yang menembus tepi dipotong rapi */
 }
  
 .experience .section-head {
@@ -1376,5 +1375,55 @@ a:focus-visible {
     /* tanpa animasi, kartunya bisa digeser manual */
     .exp-marquee {
         overflow-x: auto;
+    }
+}
+
+.site-footer {
+    background-color: #112D4E;
+    padding: 2.2rem 1.5rem;
+    text-align: center;
+}
+ 
+.site-footer p {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #DBE2EF;
+    max-width: 700px;
+    margin: 0 auto;
+}
+ 
+@media (max-width: 600px) {
+    .site-footer {
+        padding: 1.8rem 1.25rem;
+    }
+    .site-footer p {
+        font-size: 13px;
+    }
+}
+ 
+@supports (animation-timeline: view()) {
+ 
+    .exp-marquee {
+        animation: expReveal linear both;
+        animation-timeline: view();
+        animation-range: entry 20% entry 85%;
+    }
+ 
+    @keyframes expReveal {
+        from {
+            opacity: 0;
+            transform: translateY(34px) scale(0.97);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+    .exp-marquee {
+        animation: none;
     }
 }
