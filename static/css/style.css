@@ -14,7 +14,7 @@ body, html {
 /* Navigasi Kaca */
 .top-nav {
     position: fixed;
-    top: 35px;
+    top: 25px;
     left: 50%;
     transform: translateX(-50%);
     width: 85%;
@@ -155,7 +155,7 @@ body, html {
     justify-content: center;
     
     /* Latar warna solid pada area bawah */
-    background-color: #f6f6f6;
+    background-color: #FFFFFF;
     background-image: none; 
 }
 
@@ -582,5 +582,182 @@ a:focus-visible {
     .social-links a,
     .profile-photo {
         animation: none;
+    }
+}
+
+/* ABOUT */
+.about {
+    scroll-margin-top: 120px;
+ 
+    padding: 7rem 0;
+    background-color: #FFFFFF;
+}
+ 
+.about-content {
+    width: 88%;
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 32% 1fr;
+    gap: 60px;
+    align-items: stretch;
+}
+ 
+/* ---------- Foto ---------- */
+.about-photo {
+    position: relative;
+    height: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 50px -30px rgba(17, 45, 78, 0.5);
+}
+ 
+.about-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+ 
+/* ---------- Kolom teks ---------- */
+.about-text {
+    display: flex;
+    flex-direction: column;
+}
+ 
+.about-title {
+    font-size: clamp(32px, 3.6vw, 46px);
+    font-weight: 700;
+    color: #FFBB00;
+    letter-spacing: -0.5px;
+    margin-bottom: 18px;
+}
+ 
+.about-bio {
+    text-align: justify;
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.85;
+    color: #112D4E;
+    margin-bottom: 30px;
+}
+ 
+/* ---------- Garis pemisah kuning + 4 poin ---------- */
+.about-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 40px;
+ 
+    padding-top: 28px;
+    border-top: 3px solid #FFBB00;
+    margin-bottom: 30px;
+}
+ 
+.info-item dt {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #3F72AF;
+    margin-bottom: 4px;
+}
+ 
+.info-item dd {
+    font-size: 15px;
+    font-weight: 500;
+    color: #112D4E;
+    word-break: break-word;   /* email panjang tidak menembus kolom */
+}
+ 
+.info-item dd a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid #DBE2EF;
+    transition: color 0.3s ease, border-color 0.3s ease;
+}
+ 
+.info-item dd a:hover {
+    color: #3F72AF;
+    border-color: #3F72AF;
+}
+ 
+/* ---------- Tombol CV ---------- */
+.cv-button {
+    margin-top: auto;
+    align-self: flex-start;
+ 
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+ 
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+ 
+    color: #112D4E;              /* navy di atas kuning = 8.19:1, aman */
+    background-color: #FFBB00;
+    padding: 16px 30px;
+    border-radius: 999px;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+ 
+.cv-button:hover {
+    background-color: #3F72AF;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+}
+ 
+.cv-button i {
+    font-size: 13px;
+}
+ 
+/* ---------- Responsif ---------- */
+@media (max-width: 900px) {
+    .about {
+        padding: 5rem 0;
+    }
+    .about-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    .about-photo {
+        /* ditumpuk di mobile, jadi rasionya dikunci lagi */
+        height: auto;
+        aspect-ratio: 3 / 4;
+        max-width: 320px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    .cv-button {
+        align-self: center;
+        margin-top: 0;
+    }
+    .about-text {
+        text-align: center;
+    }
+    .about-info {
+        text-align: left;
+    }
+}
+ 
+@media (max-width: 600px) {
+    .about {
+        padding: 4rem 0;
+        scroll-margin-top: 100px;
+    }
+    .about-photo {
+        max-width: 260px;
+    }
+    .about-bio {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+    .about-info {
+        grid-template-columns: 1fr;
+        gap: 14px;
     }
 }
