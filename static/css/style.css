@@ -625,8 +625,6 @@ a:focus-visible {
         }
         to {
             color: #0D2237;
-            /* HAPUS font-weight: 600 di sini agar transisi tidak kasar/patah */
-            /* Gunakan bayangan super tipis berwarna senada untuk efek 'bold' yang mulus */
             text-shadow: 0 0 1px rgba(13, 34, 55, 0.6); 
         }
     }
@@ -719,7 +717,7 @@ a:focus-visible {
     font-size: 15px;
     font-weight: 500;
     color: #112D4E;
-    word-break: break-word;   /* email panjang tidak menembus kolom */
+    word-break: break-word;
 }
  
 .info-item dd a {
@@ -749,7 +747,7 @@ a:focus-visible {
     letter-spacing: 0.5px;
     text-decoration: none;
  
-    color: #112D4E;              /* navy di atas kuning = 8.19:1, aman */
+    color: #112D4E;
     background-color: #FFBB00;
     padding: 16px 30px;
     border-radius: 999px;
@@ -904,7 +902,7 @@ a:focus-visible {
 .section-sub {
     font-size: 16px;
     font-weight: 400;
-    color: #DBE2EF;   /* bagian atas section gelap, jadi teksnya terang */
+    color: #DBE2EF;
 }
  
 /* ---------- Garis waktu ---------- */
@@ -956,14 +954,13 @@ a:focus-visible {
 .timeline-item::before {
     content: "";
     position: absolute;
-    top: 50%;                              /* sejajar tengah kartu */
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 18px;
     height: 18px;
     border-radius: 50%;
     background-color: #FFBB00;
-    /* Cincin gelap memisahkan titik dari garis kuning di belakangnya */
     border: 3px solid #112D4E;
     box-shadow: 0 0 0 4px rgba(255, 187, 0, 0.28);
     z-index: 1;
@@ -973,13 +970,9 @@ a:focus-visible {
 .timeline-card {
     background-color: #FFFFFF;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    /* Garis kuning menghadap ke garis waktu. Item ganjil kartunya di
-       KIRI garis, jadi aksennya di sisi KANAN kartu. */
     border-right: 4px solid #FFBB00;
     border-radius: 16px;
     padding: 22px 24px;
-    /* Bayangan PERSIS sama dengan foto di hero & About supaya
-       kesan timbulnya seragam di seluruh halaman */
     box-shadow:
         0 2px 6px rgba(17, 45, 78, 0.14),
         0 12px 24px -8px rgba(17, 45, 78, 0.22),
@@ -990,7 +983,6 @@ a:focus-visible {
 }
  
 .timeline-card:hover {
-    /* saat disorot, kartu terangkat dan bayangannya ikut memanjang */
     transform: translateY(-6px);
     box-shadow:
         0 3px 8px rgba(17, 45, 78, 0.18),
@@ -1026,7 +1018,7 @@ a:focus-visible {
 }
  
 .card-heading {
-    min-width: 0;   /* mencegah nama sekolah panjang menembus kartu */
+    min-width: 0;
 }
  
 .timeline-year {
@@ -1065,7 +1057,6 @@ a:focus-visible {
         margin-bottom: 2.5rem;
     }
  
-    /* Garis pindah ke tepi kiri, semua kartu berjajar di kanannya */
     .timeline::before {
         left: 9px;
     }
@@ -1078,12 +1069,11 @@ a:focus-visible {
     .timeline-item .timeline-card,
     .timeline-item:nth-child(even) .timeline-card {
         width: 100%;
-        /* semua kartu berada di kanan garis, jadi aksen selalu di kiri */
         border-right: 1px solid rgba(255, 255, 255, 0.12);
         border-left: 4px solid #FFBB00;
     }
     .timeline-item::before {
-        left: 9px;      /* acuan sama dengan garis */
+        left: 9px;
         width: 16px;
         height: 16px;
     }
@@ -1092,7 +1082,6 @@ a:focus-visible {
 @media (max-width: 600px) {
     .education {
         padding: 3rem 0 4rem;
-        /* di layar kecil navbar jadi dua baris, jadi lebih tinggi */
         scroll-margin-top: 120px;
     }
     .timeline-card {
@@ -1182,5 +1171,210 @@ a:focus-visible {
     .timeline-item::before,
     .timeline-item .timeline-card {
         animation: none;
+    }
+}
+
+/* ============================================================
+   EXPERIENCE — kartu berjalan mendatar tanpa henti
+   ============================================================ */
+.experience {
+    /* Angka ini = jarak batas biru-putih dari puncak layar saat menu
+       Experience diklik. Navbar melayang di 25px setinggi ~55px, jadi
+       sisi bawahnya ada di ~80px. Dengan 88px, batasnya berhenti hanya
+       8px di bawah navbar — navbar menempel dekat perbatasan dan tetap
+       berada di area biru. Perbesar angkanya kalau mau lebih renggang. */
+    scroll-margin-top: 100px;
+ 
+    /* atas dikurangi dari 4.5rem -> 2.5rem supaya isinya naik */
+    padding: 2.5rem 0 5rem;
+    background-color: #FFFFFF;
+    overflow: hidden;          /* kartu yang menembus tepi dipotong rapi */
+}
+ 
+.experience .section-head {
+    margin-bottom: 2.2rem;   /* dari 4rem, judul lebih dekat ke kartu */
+}
+ 
+.exp-title {
+    color: #FFBB00;
+}
+ 
+.exp-sub {
+    color: #6B7A8F;            /* latar section ini putih, jadi teks gelap */
+}
+ 
+/* Jendela marquee: selebar layar penuh, bukan dibatasi container,
+   supaya kartunya benar-benar menembus tepi kiri dan kanan.
+ 
+   overflow-x: auto (bukan hidden) membuat deretan kartu bisa digeser
+   manual — pakai trackpad, Shift+scroll, atau swipe di layar sentuh —
+   TANPA menghentikan putarannya. */
+.exp-marquee {
+    position: relative;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+ 
+    /* batang gulir disembunyikan, geserannya tetap berfungsi */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+ 
+.exp-marquee::-webkit-scrollbar {
+    display: none;
+}
+ 
+/* Tepi kiri-kanan dipudarkan supaya kartu tidak terpotong mendadak */
+.exp-marquee::before,
+.exp-marquee::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 90px;
+    z-index: 2;
+    pointer-events: none;
+}
+ 
+.exp-marquee::before {
+    left: 0;
+    background: linear-gradient(90deg, #FFFFFF, transparent);
+}
+ 
+.exp-marquee::after {
+    right: 0;
+    background: linear-gradient(270deg, #FFFFFF, transparent);
+}
+ 
+.exp-track {
+    display: flex;
+    gap: 24px;
+    width: max-content;        /* lebar mengikuti isi, bukan layar */
+    padding: 10px 0 24px;      /* ruang untuk bayangan kartu */
+    animation: expScroll 45s linear infinite;
+}
+ 
+/* Geser tepat setengah lebar track (satu kelompok kartu), lalu ulang.
+   Dikurangi separuh gap (12px) karena ada satu jarak tambahan di
+   sambungan antar-kelompok — tanpa itu putarannya meloncat. */
+@keyframes expScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(-50% - 12px)); }
+}
+ 
+/* ---------- Kartu ---------- */
+.exp-card {
+    flex: 0 0 auto;
+    width: 330px;
+    background-color: #FFFFFF;
+    border: 1px solid #E4EAF3;
+    border-top: 4px solid #FFBB00;
+    border-radius: 16px;
+    padding: 22px 24px;
+ 
+    /* bayangan berlapis, seragam dengan kartu Education & foto */
+    box-shadow:
+        0 2px 6px rgba(17, 45, 78, 0.14),
+        0 12px 24px -8px rgba(17, 45, 78, 0.22),
+        0 34px 60px -24px rgba(17, 45, 78, 0.38);
+ 
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+ 
+.exp-card:hover {
+    transform: translateY(-6px);
+}
+ 
+.exp-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+ 
+.exp-logo {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    padding: 4px;
+    border-radius: 12px;
+    background-color: #F4F7FC;
+    border: 1px solid #E4EAF3;
+    overflow: hidden;
+}
+ 
+.exp-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;       /* logo utuh, tidak terpotong */
+    display: block;
+}
+ 
+.exp-org {
+    font-size: 17px;
+    font-weight: 700;
+    color: #112D4E;
+    line-height: 1.3;
+}
+ 
+.exp-role {
+    font-size: 14px;
+    font-weight: 500;
+    color: #3F72AF;
+}
+ 
+.exp-period {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #112D4E;
+    background-color: #FFBB00;
+    padding: 4px 11px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+}
+ 
+.exp-desc {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: #6B7A8F;
+    text-align: justify;
+    hyphens: auto;   /* mencegah celah antar-kata melebar di kartu sempit */
+}
+ 
+/* ---------- Responsif ---------- */
+@media (max-width: 820px) {
+    .experience {
+        padding: 2rem 0 3.5rem;
+        /* navbar dua baris di layar kecil, jadi lebih tinggi */
+        scroll-margin-top: 108px;
+    }
+    .experience .section-head {
+        margin-bottom: 1.6rem;
+    }
+    .exp-card {
+        width: 280px;
+        padding: 18px 20px;
+    }
+    .exp-marquee::before,
+    .exp-marquee::after {
+        width: 48px;
+    }
+    .exp-track {
+        animation-duration: 32s;   /* kartu lebih kecil, jarak lebih pendek */
+    }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+    .exp-track {
+        animation: none;
+    }
+    /* tanpa animasi, kartunya bisa digeser manual */
+    .exp-marquee {
+        overflow-x: auto;
     }
 }
