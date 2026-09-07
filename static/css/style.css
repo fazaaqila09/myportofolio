@@ -1,8 +1,13 @@
 /* Pengaturan Dasar */
+
+/* Scroll halus saat pindah section lewat link nav (href="#id") */
 html {
     scroll-behavior: smooth;
 }
 
+/* Reset margin/padding bawaan browser dan pakai box-sizing: border-box
+   supaya padding & border ikut dihitung dalam lebar/tinggi elemen,
+   bukan menambah ukuran di luar width/height yang sudah ditentukan. */
 * {
     margin: 0;
     padding: 0;
@@ -15,7 +20,7 @@ body, html {
     background-color: #ffffff;
 }
 
-/* Navigasi Kaca */
+/* NAVIGASI */
 .top-nav {
     position: fixed;
     top: 25px;
@@ -29,21 +34,25 @@ body, html {
     padding: 8px 10px 6px 24px;
     z-index: 100;
     overflow: hidden;
- 
-    /* kondisi awal */
+
+    /* kondisi awal: latar putih transparan + blur di belakangnya
+       (efek kaca buram / glassmorphism) */
     background: rgba(255, 255, 255, 0.20);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 50px;
- 
-    /* Animasi masuk dilanjutkan dengan efek riak */
+
+    /* Animasi masuk (navEnter, sekali saja saat halaman dimuat) dilanjutkan
+       dengan animasi berulang tak berhenti (ripple-glass) yang membuat
+       bayangan kaca "berdenyut" pelan */
     animation:
         navEnter 1s cubic-bezier(0.22, 1, 0.36, 1) backwards,
         ripple-glass 6s ease-in-out 1s infinite alternate;
 }
- 
-/* Efek riak cahaya pada kotak navigasi */
+
+/* Efek riak cahaya pada kotak navigasi: bayangan (box-shadow) membesar
+   dan mengecil bergantian untuk kesan kaca yang hidup */
 @keyframes ripple-glass {
     0% {
         box-shadow: 0 0 10px rgba(219, 226, 239, 0.2),
@@ -54,8 +63,11 @@ body, html {
                     0 12px 40px rgba(63, 114, 175, 0.15);
     }
 }
- 
-/* Efek sapuan cahaya di permukaan kaca */
+
+/* Efek sapuan cahaya (sheen) yang melintas di permukaan kaca navbar.
+   Dibuat dari pseudo-element ::after berisi gradient diagonal transparan
+   yang posisinya digeser lewat animasi navSheen, memberi kesan pantulan
+   cahaya bergerak. */
 .top-nav::after {
     content: "";
     position: absolute;
@@ -73,7 +85,7 @@ body, html {
     );
     animation: navSheen 7s ease-in-out infinite;
 }
- 
+
 @keyframes navSheen {
     0%   { transform: translateX(-55%); opacity: 0; }
     12%  { opacity: 0.85; }
@@ -81,8 +93,10 @@ body, html {
     90%  { transform: translateX(60%); opacity: 0; }
     100% { transform: translateX(-55%); opacity: 0; }
 }
- 
-/* Penyesuaian tata letak vertikal untuk huruf sambung logo */
+
+/* Penyesuaian tata letak vertikal untuk huruf sambung logo "Faza".
+   Font cursive (Great Vibes) punya baseline yang berbeda dari Poppins,
+   jadi diberi top: 3px supaya sejajar rapi dengan menu di sebelahnya. */
 .top-nav .nav-brand {
     position: relative;
     top: 3px;
@@ -98,21 +112,22 @@ body, html {
     border-radius: 0;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
- 
-/* Menghilangkan efek hover bawaan pada logo */
+
+/* Menghilangkan efek hover bawaan pada logo (logo tidak perlu berubah
+   tampilan saat disorot, beda dari menu lain) */
 .top-nav .nav-brand:hover {
     background: none;
     box-shadow: none;
     transform: none;
 }
- 
+
 .nav-menu {
     position: relative;
     z-index: 1;
     display: flex;
     gap: 2px;
 }
- 
+
 .top-nav a {
     position: relative;
     z-index: 1;
@@ -126,8 +141,9 @@ body, html {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
- 
-/* Hover tombol menu berupa kaca kecil mendalam */
+
+/* Hover tombol menu: muncul latar kaca kecil dengan sedikit efek terangkat
+   (translateY ke atas) supaya terasa interaktif */
 .top-nav a:hover {
     background: linear-gradient(
         180deg,
@@ -140,40 +156,47 @@ body, html {
     transform: translateY(-1px);
 }
 
-/* Area Hero Utama */
+/* HERO */
 .hero {
     position: relative;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    
-    /* Latar warna solid pada area bawah */
+
+    /* Latar warna solid pada area bawah (di luar area gelombang) */
     background-color: #FFFFFF;
-    background-image: none; 
+    background-image: none;
 }
 
-/* Latar gelombang menggunakan elemen before */
+/* Latar gelombang menggunakan pseudo-element ::before yang dipotong
+   (masking) memakai bentuk SVG gelombang, lalu diberi gradient biru.
+   Pendekatan ini dipakai (bukan gambar gelombang biasa) supaya bentuknya
+   bisa melebar mengikuti ukuran layar apa pun tanpa pecah/blur. */
 .hero::before {
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0;
-    
-    /* Kedalaman area gelombang */
-    height: 45%; 
+
+    /* Kedalaman area gelombang, dalam persen tinggi .hero */
+    height: 45%;
     z-index: 0;
-    
-    /* Gradasi warna gelombang membaur */
+
+    /* Gradasi warna gelombang membaur dari biru tua ke abu-kebiruan muda */
     background: linear-gradient(165deg, #112D4E 0%, #3F72AF 45%, #DBE2EF 100%);
 
     transform-origin: top center;
-    
-    /* Gelombang masuk lalu berayun */
+
+    /* Gelombang masuk sekali saat halaman dimuat (waveEnter), lalu
+       berayun pelan tanpa henti (gerak-pantai) untuk kesan air bergerak */
     animation:
         waveEnter 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards,
         gerak-pantai 6s ease-in-out 1.6s infinite alternate;
-    
-    /* Bentuk masking SVG gelombang kustom */
+
+    /* Bentuk masking SVG gelombang kustom: mask-image memotong elemen ini
+       mengikuti path SVG gelombang (bagian path = terlihat, sisanya
+       transparan). Ditulis dua kali (-webkit- dan tanpa prefix) untuk
+       kompatibilitas Safari/Chrome lama. */
     -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'><path fill='%23000' d='M0,96L15,101.3C30,107,60,117,90,133.3C120,149,150,171,180,181.3C210,192,240,192,270,181.3C300,171,330,149,360,133.3C390,117,420,107,450,122.7C480,139,510,181,540,213.3C570,245,600,267,630,250.7C660,235,690,181,720,149.3C750,117,780,107,810,112C840,117,870,139,900,176C930,213,960,267,990,277.3C1020,288,1050,256,1080,229.3C1110,203,1140,181,1170,186.7C1200,192,1230,224,1260,202.7C1290,181,1320,107,1350,90.7C1380,75,1410,117,1425,138.7L1440,160L1440,0L1425,0C1410,0,1380,0,1350,0C1320,0,1290,0,1260,0C1230,0,1200,0,1170,0C1140,0,1110,0,1080,0C1050,0,1020,0,990,0C960,0,930,0,900,0C870,0,840,0,810,0C780,0,750,0,720,0C690,0,660,0,630,0C600,0,570,0,540,0C510,0,480,0,450,0C420,0,390,0,360,0C330,0,300,0,270,0C240,0,210,0,180,0C150,0,120,0,90,0C60,0,30,0,15,0L0,0Z'/></svg>");
     mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320' preserveAspectRatio='none'><path fill='%23000' d='M0,96L15,101.3C30,107,60,117,90,133.3C120,149,150,171,180,181.3C210,192,240,192,270,181.3C300,171,330,149,360,133.3C390,117,420,107,450,122.7C480,139,510,181,540,213.3C570,245,600,267,630,250.7C660,235,690,181,720,149.3C750,117,780,107,810,112C840,117,870,139,900,176C930,213,960,267,990,277.3C1020,288,1050,256,1080,229.3C1110,203,1140,181,1170,186.7C1200,192,1230,224,1260,202.7C1290,181,1320,107,1350,90.7C1380,75,1410,117,1425,138.7L1440,160L1440,0L1425,0C1410,0,1380,0,1350,0C1320,0,1290,0,1260,0C1230,0,1200,0,1170,0C1140,0,1110,0,1080,0C1050,0,1020,0,990,0C960,0,930,0,900,0C870,0,840,0,810,0C780,0,750,0,720,0C690,0,660,0,630,0C600,0,570,0,540,0C510,0,480,0,450,0C420,0,390,0,360,0C330,0,300,0,270,0C240,0,210,0,180,0C150,0,120,0,90,0C60,0,30,0,15,0L0,0Z'/></svg>");
     -webkit-mask-size: 100% 100%;
@@ -183,6 +206,9 @@ body, html {
     pointer-events: none;
 }
 
+/* Animasi ayunan gelombang: latar bergeser sedikit dan tingginya
+   diregangkan (scaleY) supaya terlihat seperti air yang bergerak pelan,
+   tanpa membuat bagian atas gelombang ikut turun (transform-origin: top) */
 @keyframes gerak-pantai {
     0% {
         background-position: 0% 0%;
@@ -191,16 +217,18 @@ body, html {
     100% {
         background-position: 100% 100%;
         /* Merenggangkan gelombang ke bawah tanpa menggeser atap */
-        transform: scaleY(1.35); 
+        transform: scaleY(1.35);
     }
 }
 
-/* Memastikan overlay mati untuk warna akurat */
+/* Memastikan overlay mati untuk warna akurat (elemen .overlay sudah
+   tidak dipakai di HTML, class ini disimpan sebagai pengaman/jaga-jaga) */
 .overlay {
-    display: none; 
+    display: none;
 }
 
-/* Penempatan konten Hero */
+/* Penempatan konten Hero: flexbox dua kolom (teks | foto), rata tengah
+   secara vertikal, dengan jarak antar kolom 80px */
 .hero-content {
     position: relative;
     z-index: 2;
@@ -213,7 +241,8 @@ body, html {
     padding: 100px 0 0;
 }
 
-/* Pengaturan kolom teks */
+/* Pengaturan kolom teks: mengambil sisa ruang (flex: 1 1 auto) di
+   sebelah kolom foto yang lebarnya tetap */
 .text-content {
     color: #112D4E;
     text-align: left;
@@ -221,7 +250,8 @@ body, html {
     min-width: 0;
 }
 
-/* Teks sapaan */
+/* Teks sapaan "HELLO I AM": hanya garis tepi huruf yang terlihat
+   (warna isi transparan + text-stroke), memberi gaya outline/kontur */
 .greeting {
     font-size: 60px;
     font-weight: 700;
@@ -234,7 +264,9 @@ body, html {
     -webkit-text-stroke: 2px #FFBB00;
 }
 
-/* Nama utama */
+/* Nama utama. Ukuran font memakai clamp() supaya otomatis menyesuaikan
+   antara 38px (layar sempit) sampai 64px (layar lebar) mengikuti lebar
+   viewport (4.3vw), tanpa perlu media query terpisah untuk tiap ukuran. */
 .name {
     font-size: clamp(38px, 4.3vw, 64px);
     font-weight: 700;
@@ -244,7 +276,7 @@ body, html {
     white-space: nowrap;
 }
 
-/* Deskripsi subtitle */
+/* Deskripsi subtitle di bawah nama */
 .subtitle {
     font-size: 18px;
     font-weight: 300;
@@ -254,7 +286,8 @@ body, html {
     margin-bottom: 30px;
 }
 
-/* Area kontak */
+/* Baris "LET'S CONNECT" beserta ikon panah dan ikon sosial media,
+   disusun sejajar horizontal */
 .connect-area {
     display: flex;
     align-items: center;
@@ -274,7 +307,7 @@ body, html {
     font-size: 15px;
 }
 
-/* Tautan Sosial Media */
+/* Tautan Sosial Media (ikon GitHub/LinkedIn/Instagram/Email) */
 .social-links {
     display: flex;
     gap: 15px;
@@ -282,21 +315,24 @@ body, html {
 .social-links a {
     color: #112D4E;
     font-size: 25px;
-    
-    /* Mengunci area klik agar tidak bergeser saat ukuran berubah */
+
+    /* Mengunci area klik agar tidak bergeser saat ukuran ikon berubah
+       (mis. saat hover membesar) */
     display: inline-block;
-    
+
     /* Akselerasi GPU untuk animasi transform lebih mulus */
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s ease;
-    will-change: transform; 
+    will-change: transform;
 }
 .social-links a:hover {
-    /* Mengunci rendering Z untuk menghindari glitch */
-    transform: scale(1.2) translateZ(0); 
+    /* translateZ(0) memaksa browser merender elemen di layer GPU
+       terpisah, menghindari glitch/kedipan saat scale berubah */
+    transform: scale(1.2) translateZ(0);
     color: #3F72AF;
 }
 
-/* Area foto profil */
+/* Area foto profil di hero: ukuran tetap, dengan border putih tebal
+   dan bayangan berlapis (multiple box-shadow) untuk kesan kedalaman */
 .profile-photo {
     flex: 0 0 auto;
 }
@@ -312,13 +348,17 @@ body, html {
         0 34px 60px -24px rgba(17, 45, 78, 0.38);
 }
 
-/* Aksesibilitas keyboard dan pengurangan animasi */
+/* Aksesibilitas keyboard: garis fokus terlihat jelas saat elemen link
+   dipilih dengan tombol Tab (bukan mouse) */
 a:focus-visible {
     outline: 2px solid #3F72AF;
     outline-offset: 4px;
     border-radius: 6px;
 }
 
+/* Pengguna yang mengaktifkan pengaturan "reduce motion" di sistem
+   operasinya (untuk menghindari pusing/mual akibat animasi) akan
+   melihat versi tanpa animasi transisi pada elemen-elemen ini */
 @media (prefers-reduced-motion: reduce) {
     .top-nav a,
     .social-links a {
@@ -329,7 +369,9 @@ a:focus-visible {
     }
 }
 
-/* Penyesuaian Responsif Layar */
+/* Penyesuaian Responsif Layar: breakpoint 1000px ke bawah, elemen
+   diperkecil sedikit demi sedikit tapi layout masih tetap sama
+   (teks kiri, foto kanan) */
 @media (max-width: 1000px) {
     .greeting {
         font-size: 30px;
@@ -355,6 +397,10 @@ a:focus-visible {
     }
 }
 
+/* Breakpoint 820px: layout hero berubah dari 2 kolom (teks|foto) jadi
+   1 kolom bertumpuk, dengan foto di ATAS teks (flex-direction:
+   column-reverse membalik urutan visual meski urutan HTML tetap
+   teks dulu baru foto) */
 @media (max-width: 820px) {
     .hero {
         height: auto;
@@ -396,6 +442,8 @@ a:focus-visible {
     }
 }
 
+/* Breakpoint 700px: navbar berubah jadi vertikal (logo di atas, menu
+   di bawah) karena lebar layar sudah tidak cukup untuk satu baris */
 @media (max-width: 700px) {
     .top-nav {
         top: 14px;
@@ -427,10 +475,13 @@ a:focus-visible {
         white-space: nowrap;
     }
     .hero-content {
+        /* Padding atas ditambah karena navbar sekarang dua baris
+           (logo + menu) sehingga lebih tinggi dari sebelumnya */
         padding-top: 175px;
     }
 }
 
+/* Breakpoint 600px: penyesuaian terakhir untuk layar ponsel kecil */
 @media (max-width: 600px) {
     .hero::before {
     height: 280px;
@@ -463,7 +514,9 @@ a:focus-visible {
     }
 }
 
-/* Kunci Animasi Masuk Utama */
+/* ANIMASI DASAR */
+
+/* Navbar masuk dari atas sambil memudar */
 @keyframes navEnter {
     from {
         opacity: 0;
@@ -475,7 +528,8 @@ a:focus-visible {
     }
 }
 
-/* Animasi bentuk gelombang */
+/* Bentuk gelombang hero muncul dari kecil (scaleY 0.25) membesar ke
+   ukuran penuh */
 @keyframes waveEnter {
     from {
         opacity: 0;
@@ -487,11 +541,14 @@ a:focus-visible {
     }
 }
 
-/* Animasi singkap teks ke samping */
+/* Teks tersingkap dari sisi kiri ke kanan memakai clip-path (area kanan
+   awalnya "dipotong" 100%, lalu dibuka pelan-pelan) sambil sedikit naik
+   dan memudar masuk */
 @keyframes revealText {
     from {
         opacity: 0;
-        /* Ruang minus untuk mencegah ujung huruf panjang terpotong */
+        /* Ruang minus (-20%) di sisi atas/bawah/kiri mencegah ujung
+           huruf yang menjorok (misalnya huruf g, y) ikut terpotong */
         clip-path: inset(-20% 100% -20% -20%);
         transform: translateY(14px);
     }
@@ -502,6 +559,8 @@ a:focus-visible {
     }
 }
 
+/* Elemen naik sedikit dari bawah sambil memudar masuk -- animasi
+   generik yang dipakai di banyak elemen (subtitle, judul section, dll) */
 @keyframes riseIn {
     from {
         opacity: 0;
@@ -513,7 +572,9 @@ a:focus-visible {
     }
 }
 
-/* Animasi foto tanpa memotong bayangan */
+/* Foto profil muncul dari bawah sambil membesar sedikit (scale 0.95 -> 1).
+   Dipisah dari riseIn karena butuh titik awal scale yang berbeda, dan
+   supaya bayangan (box-shadow) di sekitar foto tidak ikut terpotong. */
 @keyframes photoReveal {
     from {
         opacity: 0;
@@ -525,7 +586,8 @@ a:focus-visible {
     }
 }
 
-/* Animasi pop-up sederhana */
+/* Animasi "pop" sederhana untuk elemen kecil seperti ikon sosial media
+   dan tombol -- muncul dari bawah dengan sedikit efek membesar */
 @keyframes popIn {
     from {
         opacity: 0;
@@ -537,7 +599,9 @@ a:focus-visible {
     }
 }
 
-/* Waktu Tunda Animasi Per Elemen */
+/* Waktu Tunda Animasi Per Elemen di Hero: setiap elemen diberi
+   animation-delay berbeda supaya muncul berurutan satu per satu
+   (staggered entrance) alih-alih muncul serentak */
 .greeting {
     animation: revealText 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.75s backwards;
 }
@@ -557,6 +621,8 @@ a:focus-visible {
 .social-links a {
     animation: popIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
+/* Setiap ikon sosmed diberi delay makin lama supaya muncul satu-satu
+   berurutan dari kiri ke kanan */
 .social-links a:nth-child(1) { animation-delay: 1.75s; }
 .social-links a:nth-child(2) { animation-delay: 1.83s; }
 .social-links a:nth-child(3) { animation-delay: 1.91s; }
@@ -566,6 +632,8 @@ a:focus-visible {
     animation: photoReveal 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s backwards;
 }
 
+/* Matikan semua animasi masuk di atas untuk pengguna yang memilih
+   "reduce motion" */
 @media (prefers-reduced-motion: reduce) {
     .top-nav,
     .hero::before,
@@ -579,8 +647,18 @@ a:focus-visible {
     }
 }
 
+/* Animasi berbasis scroll (CSS scroll-driven animations, fitur browser
+   modern). @supports memastikan blok ini hanya berlaku di browser yang
+   mendukung animation-timeline: scroll(), browser lama akan mengabaikan
+   blok ini dan navbar tetap tampil solid seperti biasa.
+
+   Efeknya: begitu pengguna scroll melewati area gelombang hero
+   (22vh sampai 42vh dari atas halaman), warna navbar dan teksnya
+   perlahan berubah dari "putih transparan di atas latar biru" menjadi
+   "putih solid dengan teks gelap" supaya tetap terbaca di atas latar
+   putih section berikutnya. */
 @supports (animation-timeline: scroll()) {
- 
+
     .top-nav {
         animation:
             navEnter 1s cubic-bezier(0.22, 1, 0.36, 1) backwards,
@@ -589,14 +667,14 @@ a:focus-visible {
         animation-timeline: auto, auto, scroll(root block);
         animation-range: normal, normal, 22vh 42vh;
     }
- 
+
     .top-nav a,
     .top-nav .nav-brand {
         animation: navTextSwap linear both;
         animation-timeline: scroll(root block);
         animation-range: 22vh 42vh;
     }
- 
+
     @keyframes navGlassSwap {
         from {
             background: rgba(255, 255, 255, 0.20);
@@ -604,7 +682,7 @@ a:focus-visible {
             -webkit-backdrop-filter: blur(15px) saturate(100%) brightness(1);
             border-color: rgba(255, 255, 255, 0.4);
             /* Bayangan awal saat di atas gelombang */
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
         }
         to {
             /* Kaca menjadi lebih putih solid agar tulisan gelap terbaca sempurna */
@@ -612,12 +690,12 @@ a:focus-visible {
             backdrop-filter: blur(3px) saturate(120%) brightness(1);
             -webkit-backdrop-filter: blur(3px) saturate(120%) brightness(1);
             border-color: rgba(255, 255, 255, 0.9);
-            
+
             /* Bayangan dipertegas di akhir agar navigasi terpisah dari background putih */
             box-shadow: 0 12px 36px -10px rgba(17, 45, 78, 0.35);
         }
     }
- 
+
     @keyframes navTextSwap {
         from {
             color: #ffffff;
@@ -625,7 +703,7 @@ a:focus-visible {
         }
         to {
             color: #0D2237;
-            text-shadow: 0 0 1px rgba(13, 34, 55, 0.6); 
+            text-shadow: 0 0 1px rgba(13, 34, 55, 0.6);
         }
     }
 }
@@ -633,11 +711,11 @@ a:focus-visible {
 /* ABOUT */
 .about {
     scroll-margin-top: 24px;
- 
+
     padding: 7rem 0;
     background-color: #FFFFFF;
 }
- 
+
 .about-content {
     width: 88%;
     max-width: 1320px;
@@ -647,7 +725,7 @@ a:focus-visible {
     gap: 60px;
     align-items: stretch;
 }
- 
+
 /* ---------- Foto ---------- */
 .about-photo {
     position: relative;
@@ -660,8 +738,12 @@ a:focus-visible {
         0 12px 24px -8px rgba(17, 45, 78, 0.22),
         0 34px 60px -24px rgba(17, 45, 78, 0.38);
 }
- 
+
 .about-photo img {
+    /* position: absolute + inset: 0 membuat gambar mengisi penuh kotak
+       .about-photo (yang tingginya mengikuti kolom teks di sebelahnya
+       lewat align-items: stretch pada grid), lalu object-fit: cover
+       memotong bagian gambar yang berlebih tanpa membuatnya gepeng */
     position: absolute;
     inset: 0;
     width: 100%;
@@ -669,13 +751,13 @@ a:focus-visible {
     object-fit: cover;
     display: block;
 }
- 
+
 /* ---------- Kolom teks ---------- */
 .about-text {
     display: flex;
     flex-direction: column;
 }
- 
+
 .about-title {
     font-size: clamp(32px, 3.6vw, 46px);
     font-weight: 700;
@@ -683,7 +765,7 @@ a:focus-visible {
     letter-spacing: -0.5px;
     margin-bottom: 18px;
 }
- 
+
 .about-bio {
     text-align: justify;
     font-size: 17px;
@@ -692,18 +774,18 @@ a:focus-visible {
     color: #112D4E;
     margin-bottom: 30px;
 }
- 
-/* ---------- Garis pemisah kuning + 4 poin ---------- */
+
+/* ---------- Garis pemisah kuning + 4 poin info ---------- */
 .about-info {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 18px 40px;
- 
+
     padding-top: 28px;
     border-top: 3px solid #FFBB00;
     margin-bottom: 30px;
 }
- 
+
 .info-item dt {
     font-size: 12px;
     font-weight: 700;
@@ -712,68 +794,76 @@ a:focus-visible {
     color: #3F72AF;
     margin-bottom: 4px;
 }
- 
+
 .info-item dd {
     font-size: 15px;
     font-weight: 500;
     color: #112D4E;
     word-break: break-word;
 }
- 
+
 .info-item dd a {
     color: inherit;
     text-decoration: none;
     border-bottom: 1px solid #DBE2EF;
     transition: color 0.3s ease, border-color 0.3s ease;
 }
- 
+
 .info-item dd a:hover {
     color: #3F72AF;
     border-color: #3F72AF;
 }
- 
+
 /* ---------- Tombol CV ---------- */
 .cv-button {
+    /* margin-top: auto mendorong tombol ini ke paling bawah kolom
+       .about-text (yang berupa flex column), sehingga tombol selalu
+       menempel di dasar terlepas dari panjang teks bio di atasnya */
     margin-top: auto;
     align-self: flex-start;
- 
+
     display: inline-flex;
     align-items: center;
     gap: 10px;
- 
+
     font-family: 'Poppins', sans-serif;
     font-size: 15px;
     font-weight: 600;
     letter-spacing: 0.5px;
     text-decoration: none;
- 
+
     color: #112D4E;
     background-color: #FFBB00;
     padding: 16px 30px;
     border-radius: 999px;
     transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
- 
+
 .cv-button:hover {
     background-color: #3F72AF;
     color: #FFFFFF;
     transform: translateY(-2px);
 }
- 
+
 .cv-button i {
     font-size: 13px;
 }
- 
+
 /* ---------- Responsif ---------- */
 @media (max-width: 900px) {
     .about {
         padding: 5rem 0;
     }
- 
+
     .about-content {
         grid-template-columns: 1fr;
         row-gap: 0;
     }
+    /* display: contents membuat .about-text "menghilang" secara visual
+       (anak-anaknya langsung jadi anak dari grid .about-content),
+       sehingga urutan tampil foto/judul/bio/info/tombol bisa diatur
+       bebas satu per satu lewat properti order di bawah, tanpa
+       terkunci oleh urutan asli di dalam .about-text */
     .about-text {
         display: contents;
         text-align: center;
@@ -795,17 +885,17 @@ a:focus-visible {
         width: 100%;
         margin: 10px auto 30px;   /* jarak ke judul di atas & bio di bawah */
     }
- 
+
     .cv-button {
         justify-self: center;   /* align-self tidak berlaku lagi di grid */
         margin-top: 0;
     }
- 
+
     .about-info {
         text-align: left;
     }
 }
- 
+
 @media (max-width: 600px) {
     .about {
         padding: 4rem 0;
@@ -824,32 +914,36 @@ a:focus-visible {
     }
 }
 
+/* Animasi saat elemen About masuk ke area pandang (viewport) ketika
+   di-scroll, memakai CSS scroll-driven animation berbasis view().
+   animation-range menentukan pada rentang scroll mana animasi
+   berjalan, relatif terhadap posisi elemen masuk/keluar viewport. */
 @supports (animation-timeline: view()) {
     .about-photo {
         animation: photoReveal linear both;
         animation-timeline: view();
         animation-range: entry 90% cover 43%;
     }
- 
+
     .about-title {
         animation: revealText linear both;
         animation-timeline: view();
         animation-range: entry 90% cover 35%;
     }
- 
+
     .about-bio {
         animation: riseIn linear both;
         animation-timeline: view();
         animation-range: entry 20% cover 35%;
     }
- 
+
     /* 4 poin info */
     .about-info {
         animation: revealText linear both;
         animation-timeline: view();
         animation-range: entry 60% cover 33%;
     }
- 
+
     /* Tombol CV: pop, sama seperti ikon sosmed di home */
     .cv-button {
         animation: popIn linear both;
@@ -857,7 +951,7 @@ a:focus-visible {
         animation-range: entry 60% cover 13%;
     }
 }
- 
+
 @media (prefers-reduced-motion: reduce) {
     .about-photo,
     .about-title,
@@ -868,10 +962,13 @@ a:focus-visible {
     }
 }
 
+/* EDUCATION */
 .education {
     scroll-margin-top: 100px;
     padding: 2rem 0 7rem;
     background-color: #112D4E;
+    /* Beberapa radial-gradient ditumpuk untuk menciptakan latar biru
+       tua bertekstur "berawan"/berpendar, bukan warna solid polos */
     background-image:
         radial-gradient(58% 45% at 18% 12%, rgba(63, 114, 175, 0.55), transparent 70%),
         radial-gradient(52% 42% at 88% 28%, rgba(63, 114, 175, 0.32), transparent 72%),
@@ -879,18 +976,18 @@ a:focus-visible {
         radial-gradient(60% 48% at 78% 78%, rgba(63, 114, 175, 0.42), transparent 72%),
         radial-gradient(40% 34% at 45% 96%, rgba(219, 226, 239, 0.10), transparent 70%);
 }
- 
+
 .education-inner {
     width: 88%;
     max-width: 1100px;
     margin: 0 auto;
 }
- 
+
 .section-head {
     text-align: center;
     margin-bottom: 4rem;
 }
- 
+
 .section-title {
     font-size: clamp(32px, 3.6vw, 46px);
     font-weight: 700;
@@ -898,19 +995,20 @@ a:focus-visible {
     letter-spacing: -0.5px;
     margin-bottom: 10px;
 }
- 
+
 .section-sub {
     font-size: 16px;
     font-weight: 400;
     color: #DBE2EF;
 }
- 
-/* ---------- Garis waktu ---------- */
+
+/* ---------- Garis waktu (timeline) ---------- */
 .timeline {
     position: relative;
 }
- 
-/* Garis vertikal di tengah */
+
+/* Garis vertikal kuning di tengah, membentang dari atas sampai bawah
+   daftar timeline */
 .timeline::before {
     content: "";
     position: absolute;
@@ -922,35 +1020,39 @@ a:focus-visible {
     background-color: #FFBB00;
     border-radius: 999px;
 }
- 
+
 .timeline-item {
     position: relative;
     width: 100%;
     display: flex;
     margin-bottom: 56px;
 }
- 
+
 .timeline-item:last-child {
     margin-bottom: 0;
 }
- 
-/* Kartu mengisi separuh, sisi kiri untuk item ganjil */
+
+/* Kartu mengisi separuh lebar timeline (dikurangi jarak ke garis
+   tengah); default-nya (item ganjil) rata ke sisi kiri garis */
 .timeline-item .timeline-card {
     width: calc(50% - 46px);
 }
- 
-/* Item genap: kartu didorong ke kanan garis */
+
+/* Item genap: kartu didorong ke sisi kanan garis (justify-content:
+   flex-end pada flex container .timeline-item) */
 .timeline-item:nth-child(even) {
     justify-content: flex-end;
 }
- 
-/* Kartunya di KANAN garis, jadi aksen kuningnya pindah ke sisi KIRI */
+
+/* Kartu item genap ada di KANAN garis, jadi aksen kuningnya perlu
+   dipindah ke sisi KIRI kartu (arah yang menghadap garis) */
 .timeline-item:nth-child(even) .timeline-card {
     border-right: 1px solid rgba(255, 255, 255, 0.12);
     border-left: 4px solid #FFBB00;
 }
- 
-/* Titik penanda — persis di tengah garis */
+
+/* Titik penanda bulat kuning — diposisikan persis di tengah garis
+   vertikal, di tengah tinggi tiap .timeline-item */
 .timeline-item::before {
     content: "";
     position: absolute;
@@ -965,8 +1067,8 @@ a:focus-visible {
     box-shadow: 0 0 0 4px rgba(255, 187, 0, 0.28);
     z-index: 1;
 }
- 
-/* ---------- Kartu ---------- */
+
+/* ---------- Kartu timeline ---------- */
 .timeline-card {
     background-color: #FFFFFF;
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -977,11 +1079,11 @@ a:focus-visible {
         0 2px 6px rgba(17, 45, 78, 0.14),
         0 12px 24px -8px rgba(17, 45, 78, 0.22),
         0 34px 60px -24px rgba(17, 45, 78, 0.38);
- 
+
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
                 box-shadow 0.3s ease;
 }
- 
+
 .timeline-card:hover {
     transform: translateY(-6px);
     box-shadow:
@@ -989,14 +1091,14 @@ a:focus-visible {
         0 18px 32px -8px rgba(17, 45, 78, 0.28),
         0 46px 74px -24px rgba(17, 45, 78, 0.45);
 }
- 
+
 .card-head {
     display: flex;
     align-items: center;
     gap: 16px;
     margin-bottom: 12px;
 }
- 
+
 .school-logo {
     flex: 0 0 auto;
     width: 64px;
@@ -1009,18 +1111,18 @@ a:focus-visible {
     border: 1px solid #E4EAF3;
     overflow: hidden;
 }
- 
+
 .school-logo img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
 }
- 
+
 .card-heading {
     min-width: 0;
 }
- 
+
 .timeline-year {
     display: inline-block;
     font-size: 12px;
@@ -1032,21 +1134,21 @@ a:focus-visible {
     border-radius: 999px;
     margin-bottom: 8px;
 }
- 
+
 .school-name {
     font-size: 18px;
     font-weight: 700;
     color: #112D4E;
     line-height: 1.3;
 }
- 
+
 .school-desc {
     font-size: 15px;
     font-weight: 400;
     color: #6B7A8F;
     line-height: 1.6;
 }
- 
+
 /* ---------- Responsif ---------- */
 @media (max-width: 820px) {
     .education {
@@ -1056,7 +1158,10 @@ a:focus-visible {
     .section-head {
         margin-bottom: 2.5rem;
     }
- 
+
+    /* Di layar sempit, garis timeline dipindah ke tepi kiri (bukan
+       tengah) dan semua kartu disusun satu kolom penuh menghadap ke
+       garis tersebut, karena tidak cukup ruang untuk dua sisi */
     .timeline::before {
         left: 9px;
     }
@@ -1078,7 +1183,7 @@ a:focus-visible {
         height: 16px;
     }
 }
- 
+
 @media (max-width: 600px) {
     .education {
         padding: 3rem 0 4rem;
@@ -1097,20 +1202,24 @@ a:focus-visible {
     }
 }
 
+/* Animasi timeline saat di-scroll ke dalam pandangan: garis tumbuh
+   dulu dari atas ke bawah, disusul titik yang "meletup" muncul, baru
+   kemudian kartu masuk dari sisi luar menuju garis (kiri untuk item
+   ganjil, kanan untuk item genap) */
 @supports (animation-timeline: view()) {
- 
+
     .section-title {
         animation: revealText linear both;
         animation-timeline: view();
         animation-range: entry 12% cover 55%;
     }
- 
+
     .section-sub {
         animation: riseIn linear both;
         animation-timeline: view();
         animation-range: entry 20% cover 62%;
     }
- 
+
     /* 1. Ruas garis tumbuh lebih dulu */
     .timeline-item::after {
         animation: lineGrow linear both;
@@ -1118,30 +1227,30 @@ a:focus-visible {
         animation-range: entry 10% entry 55%;
 
     }
- 
+
     /* 2. Titik menyusul, satu kesatuan dengan ruasnya */
     .timeline-item::before {
         animation: dotPop linear both;
         animation-timeline: view();
         animation-range: entry 55% entry 80%;
     }
- 
+
     /* 3. Kartu terakhir, masuk dari arah luar menuju garis */
     .timeline-item .timeline-card {
         animation: cardFromLeft linear both;
         animation-timeline: view();
         animation-range: entry 80% cover 35%;
     }
- 
+
     .timeline-item:nth-child(even) .timeline-card {
         animation-name: cardFromRight;
     }
- 
+
     @keyframes lineGrow {
         from { transform: translateX(-50%) scaleY(0); }
         to   { transform: translateX(-50%) scaleY(1); }
     }
- 
+
     @keyframes dotPop {
         from {
             opacity: 0;
@@ -1152,18 +1261,18 @@ a:focus-visible {
             transform: translate(-50%, -50%) scale(1);
         }
     }
- 
+
     @keyframes cardFromLeft {
         from { opacity: 0; transform: translateX(-44px); }
         to   { opacity: 1; transform: translateX(0); }
     }
- 
+
     @keyframes cardFromRight {
         from { opacity: 0; transform: translateX(44px); }
         to   { opacity: 1; transform: translateX(0); }
     }
 }
- 
+
 @media (prefers-reduced-motion: reduce) {
     .section-title,
     .section-sub,
@@ -1174,9 +1283,7 @@ a:focus-visible {
     }
 }
 
-/* ============================================================
-   EXPERIENCE — kartu berjalan mendatar tanpa henti
-   ============================================================ */
+/* EXPERIENCE */
 .experience {
     /* Angka ini = jarak batas biru-putih dari puncak layar saat menu
        Experience diklik. Navbar melayang di 25px setinggi ~55px, jadi
@@ -1184,27 +1291,27 @@ a:focus-visible {
        8px di bawah navbar — navbar menempel dekat perbatasan dan tetap
        berada di area biru. Perbesar angkanya kalau mau lebih renggang. */
     scroll-margin-top: 100px;
- 
+
     /* atas dikurangi dari 4.5rem -> 2.5rem supaya isinya naik */
     padding: 2.5rem 0 5rem;
     background-color: #FFFFFF;
 }
- 
+
 .experience .section-head {
     margin-bottom: 2.2rem;   /* dari 4rem, judul lebih dekat ke kartu */
 }
- 
+
 .exp-title {
     color: #FFBB00;
 }
- 
+
 .exp-sub {
     color: #6B7A8F;            /* latar section ini putih, jadi teks gelap */
 }
- 
+
 /* Jendela marquee: selebar layar penuh, bukan dibatasi container,
    supaya kartunya benar-benar menembus tepi kiri dan kanan.
- 
+
    overflow-x: auto (bukan hidden) membuat deretan kartu bisa digeser
    manual — pakai trackpad, Shift+scroll, atau swipe di layar sentuh —
    TANPA menghentikan putarannya. */
@@ -1213,17 +1320,18 @@ a:focus-visible {
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
- 
+
     /* batang gulir disembunyikan, geserannya tetap berfungsi */
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
- 
+
 .exp-marquee::-webkit-scrollbar {
     display: none;
 }
- 
-/* Tepi kiri-kanan dipudarkan supaya kartu tidak terpotong mendadak */
+
+/* Tepi kiri-kanan dipudarkan (fade) supaya kartu di ujung tidak
+   terpotong mendadak, memakai gradient dari putih ke transparan */
 .exp-marquee::before,
 .exp-marquee::after {
     content: "";
@@ -1234,17 +1342,17 @@ a:focus-visible {
     z-index: 2;
     pointer-events: none;
 }
- 
+
 .exp-marquee::before {
     left: 0;
     background: linear-gradient(90deg, #FFFFFF, transparent);
 }
- 
+
 .exp-marquee::after {
     right: 0;
     background: linear-gradient(270deg, #FFFFFF, transparent);
 }
- 
+
 .exp-track {
     display: flex;
     gap: 24px;
@@ -1252,16 +1360,21 @@ a:focus-visible {
     padding: 10px 0 24px;      /* ruang untuk bayangan kartu */
     animation: expScroll 45s linear infinite;
 }
- 
-/* Geser tepat setengah lebar track (satu kelompok kartu), lalu ulang.
-   Dikurangi separuh gap (12px) karena ada satu jarak tambahan di
-   sambungan antar-kelompok — tanpa itu putarannya meloncat. */
+
+/* Track digeser tepat setengah lebar total (-50%), yaitu persis satu
+   kelompok kartu (lihat catatan "kelompok asli/salinan" di index.html),
+   lalu animasi diulang dari awal (infinite). Karena kelompok kedua
+   identik dengan yang pertama, pengulangan ini tidak terlihat patah/
+   meloncat -- terasa seperti kartu berjalan tanpa akhir.
+   Dikurangi separuh gap (12px) sebagai koreksi karena ada satu jarak
+   (gap) tambahan tepat di titik sambungan antar-kelompok; tanpa
+   koreksi ini akan ada "loncatan" kecil saat animasi berulang. */
 @keyframes expScroll {
     from { transform: translateX(0); }
     to   { transform: translateX(calc(-50% - 12px)); }
 }
- 
-/* ---------- Kartu ---------- */
+
+/* ---------- Kartu experience ---------- */
 .exp-card {
     flex: 0 0 auto;
     width: 330px;
@@ -1270,27 +1383,28 @@ a:focus-visible {
     border-top: 4px solid #FFBB00;
     border-radius: 16px;
     padding: 22px 24px;
- 
-    /* bayangan berlapis, seragam dengan kartu Education & foto */
+
+    /* bayangan berlapis, seragam dengan kartu Education & foto profil,
+       supaya kesan "kedalaman" konsisten di seluruh halaman */
     box-shadow:
         0 2px 6px rgba(17, 45, 78, 0.14),
         0 12px 24px -8px rgba(17, 45, 78, 0.22),
         0 34px 60px -24px rgba(17, 45, 78, 0.38);
- 
+
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
- 
+
 .exp-card:hover {
     transform: translateY(-6px);
 }
- 
+
 .exp-head {
     display: flex;
     align-items: center;
     gap: 14px;
     margin-bottom: 14px;
 }
- 
+
 .exp-logo {
     flex: 0 0 auto;
     width: 56px;
@@ -1303,27 +1417,27 @@ a:focus-visible {
     border: 1px solid #E4EAF3;
     overflow: hidden;
 }
- 
+
 .exp-logo img {
     width: 100%;
     height: 100%;
     object-fit: contain;       /* logo utuh, tidak terpotong */
     display: block;
 }
- 
+
 .exp-org {
     font-size: 17px;
     font-weight: 700;
     color: #112D4E;
     line-height: 1.3;
 }
- 
+
 .exp-role {
     font-size: 14px;
     font-weight: 500;
     color: #3F72AF;
 }
- 
+
 .exp-period {
     display: inline-block;
     font-size: 12px;
@@ -1335,7 +1449,7 @@ a:focus-visible {
     border-radius: 999px;
     margin-bottom: 12px;
 }
- 
+
 .exp-desc {
     font-size: 14px;
     font-weight: 400;
@@ -1344,7 +1458,7 @@ a:focus-visible {
     text-align: justify;
     hyphens: auto;   /* mencegah celah antar-kata melebar di kartu sempit */
 }
- 
+
 /* ---------- Responsif ---------- */
 @media (max-width: 820px) {
     .experience {
@@ -1367,7 +1481,10 @@ a:focus-visible {
         animation-duration: 32s;   /* kartu lebih kecil, jarak lebih pendek */
     }
 }
- 
+
+/* Pengguna dengan preferensi reduce-motion tidak melihat kartu berjalan
+   otomatis; sebagai gantinya mereka bisa menggeser kartu secara manual
+   (overflow-x tetap auto) */
 @media (prefers-reduced-motion: reduce) {
     .exp-track {
         animation: none;
@@ -1378,12 +1495,13 @@ a:focus-visible {
     }
 }
 
+/* FOOTER */
 .site-footer {
     background-color: #112D4E;
     padding: 2.2rem 1.5rem;
     text-align: center;
 }
- 
+
 .site-footer p {
     font-size: 14px;
     font-weight: 400;
@@ -1392,7 +1510,7 @@ a:focus-visible {
     max-width: 700px;
     margin: 0 auto;
 }
- 
+
 @media (max-width: 600px) {
     .site-footer {
         padding: 1.8rem 1.25rem;
@@ -1401,15 +1519,17 @@ a:focus-visible {
         font-size: 13px;
     }
 }
- 
+
+/* Seluruh baris kartu Experience memudar masuk sambil sedikit naik dan
+   membesar, saat area marquee mulai terlihat ketika di-scroll */
 @supports (animation-timeline: view()) {
- 
+
     .exp-marquee {
         animation: expReveal linear both;
         animation-timeline: view();
         animation-range: entry 20% entry 85%;
     }
- 
+
     @keyframes expReveal {
         from {
             opacity: 0;
@@ -1421,7 +1541,7 @@ a:focus-visible {
         }
     }
 }
- 
+
 @media (prefers-reduced-motion: reduce) {
     .exp-marquee {
         animation: none;

@@ -5,20 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faza - Portfolio</title>
-
-    <!-- Poppins untuk teks, Great Vibes untuk logo "Faza" -->
+ 
+    <!-- preconnect ke domain font Google supaya koneksi dibuka lebih awal
+         (mengurangi delay saat font mulai diunduh) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
-
+ 
     <!-- Ambil Ikon Logo dari FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+ 
     <!-- Menghubungkan ke file CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-
+ 
     <!-- Navigasi Bar: logo kiri, menu kanan -->
     <nav class="top-nav">
         <a href="#home" class="nav-brand">Faza</a>
@@ -29,17 +30,25 @@
             <a href="#experience">Experience</a>
         </div>
     </nav>
-
+ 
     <!-- Area Hero -->
+    <!-- Section pertama: nama, sapaan, deskripsi
+         singkat, tautan sosial media, dan foto profil. Tinggi section ini
+         diatur 100vh (satu layar penuh) lewat CSS. -->
     <header id="home" class="hero">
-
+ 
         <!-- Wadah Flexbox: teks kiri, foto kanan -->
         <div class="hero-content">
-
+ 
             <div class="text-content">
                 <p class="greeting">Hello I am</p>
                 <h1 class="name">Muhammad Faza Aqila</h1>
                 <p class="subtitle">Computer Science student at Universitas Indonesia, Data Scientist, Web Developer</p>
+ 
+                <!-- Baris "LET'S CONNECT" beserta ikon-ikon sosial media.
+                     target="_blank" membuka tautan di tab baru; title
+                     memberi tooltip nama platform saat kursor mengarah
+                     ke ikon. -->
                 <div class="connect-area">
                     <span class="connect-text">LET'S CONNECT <i class="fa-solid fa-chevron-right arrow"></i></span>
                     <div class="social-links">
@@ -50,15 +59,20 @@
                     </div>
                 </div>
             </div>
-
+ 
+            <!-- Foto profil di sisi kanan hero. Sama seperti foto di section
+                 About, hanya beda ukuran. -->
             <div class="profile-photo">
                 <img src="{% static 'img/fazabw.jpeg' %}" alt="Foto Muhammad Faza Aqila">
             </div>
-
+ 
         </div>
     </header>
-
+ 
     <!-- About -->
+    <!-- Section bio: foto di kiri (grid 32%), teks + info singkat + tombol
+         CV di kanan. Layout grid diatur lewat class .about-content di CSS,
+         dan berubah jadi satu kolom di layar mobile. -->
     <section id="about" class="about">
         <div class="about-content">
  
@@ -70,15 +84,18 @@
                 <h2 class="about-title">About Me</h2>
  
                 <p class="about-bio">
-                    Hello! I am Muhammad Faza Aqila, a Computer Science undergraduate at Universitas Indonesia. 
-                    My core interests lie deeply at the intersection of Data Science and modern Web Development. 
-                    I am passionate about extracting meaningful insights from complex, raw data to drive informed decisions, 
+                    Hello! I am Muhammad Faza Aqila, a Computer Science undergraduate at Universitas Indonesia.
+                    My core interests lie deeply at the intersection of Data Science and modern Web Development.
+                    I am passionate about extracting meaningful insights from complex, raw data to drive informed decisions,
                     and translating those findings into intuitive, user-friendly web applications.
-                    Whether I am building predictive data models or designing seamless front-end interfaces, 
+                    Whether I am building predictive data models or designing seamless front-end interfaces,
                     my ultimate goal is to craft end-to-end technological solutions that are both highly functional and visually engaging.
                 </p>
  
                 <!-- 4 poin: Name & Age di kiri, From & Email di kanan -->
+                <!-- Dipakai elemen <dl> (description list) karena ini memang
+                     data berupa pasangan label-nilai (dt = label, dd = nilai);
+                     lebih semantik dibanding pakai <div> biasa. -->
                 <dl class="about-info">
                     <div class="info-item">
                         <dt>Name</dt>
@@ -98,6 +115,9 @@
                     </div>
                 </dl>
  
+                <!-- Tombol download CV. Atribut "download" memberi tahu
+                     browser untuk mengunduh file ini alih-alih membukanya
+                     di tab baru. File PDF diambil dari folder static/files. -->
                 <a class="cv-button" href="{% static 'files/CV - Muhammad Faza Aqila.pdf' %}" download>
                     <i class="fa-solid fa-download"></i>
                     Download CV
@@ -106,8 +126,12 @@
  
         </div>
     </section>
-
+ 
     <!-- Education -->
+    <!-- Riwayat pendidikan ditampilkan sebagai timeline vertikal (garis
+         di tengah dengan kartu berselang-seling kiri/kanan, diatur lewat
+         nth-child(even) di CSS). Urutan di HTML dari yang terbaru ke yang
+         terlama. -->
     <section id="education" class="education">
         <div class="education-inner">
  
@@ -118,6 +142,7 @@
  
             <div class="timeline">
  
+                <!-- Item timeline #1 (ganjil -> kartu di sisi kiri garis) -->
                 <div class="timeline-item">
                     <div class="timeline-card">
                         <div class="card-head">
@@ -133,6 +158,7 @@
                     </div>
                 </div>
  
+                <!-- Item timeline #2 (genap -> kartu berpindah ke sisi kanan garis) -->
                 <div class="timeline-item">
                     <div class="timeline-card">
                         <div class="card-head">
@@ -148,6 +174,7 @@
                     </div>
                 </div>
  
+                <!-- Item timeline #3 (ganjil -> kartu kembali ke sisi kiri) -->
                 <div class="timeline-item">
                     <div class="timeline-card">
                         <div class="card-head">
@@ -165,8 +192,22 @@
             </div>
         </div>
     </section>
-    
+ 
     <!-- Experience -->
+    <!-- Daftar organisasi/kepanitiaan ditampilkan sebagai kartu-kartu yang
+         berjalan otomatis ke samping tanpa henti (efek "marquee"), diatur
+         lewat animasi CSS @keyframes expScroll pada .exp-track.
+ 
+         Trik animasinya: seluruh daftar kartu di bawah ini DIGANDAKAN
+         (ditulis dua kali berturut-turut, isinya identik). Track lalu
+         digeser sejauh -50% (setengah lebar total, yaitu tepat satu
+         kelompok kartu) lalu diulang dari awal. Karena kelompok kedua
+         adalah salinan persis kelompok pertama, pergantian dari akhir
+         animasi kembali ke awal tidak terlihat "meloncat" -- efeknya
+         jadi lingkaran kartu yang berjalan mulus dan tanpa jeda.
+ 
+         Jika ingin menambah/mengurangi kartu, sesuaikan KEDUA kelompok
+         (asli dan salinannya) supaya animasinya tetap mulus. -->
     <section id="experience" class="experience">
  
         <div class="section-head">
@@ -177,7 +218,7 @@
         <div class="exp-marquee">
             <div class="exp-track">
  
-                <!-- ===== KELOMPOK ASLI ===== -->
+                <!-- ===== Kelompok kartu asli (5 kartu) ===== -->
                 <article class="exp-card">
                     <div class="exp-head">
                         <div class="exp-logo">
@@ -248,8 +289,12 @@
                     <p class="exp-desc">Designed comprehensive event programs and collaborated closely with cross-functional divisions to ensure smooth and successful event executions.</p>
                 </article>
  
-
-
+ 
+ 
+                <!-- ===== Kelompok kartu salinan (identik dengan di atas) =====
+                     Wajib sama persis isinya dengan kelompok pertama supaya
+                     animasi expScroll (geser -50%) menyambung tanpa terlihat
+                     patah saat mengulang. -->
                 <article class="exp-card">
                     <div class="exp-head">
                         <div class="exp-logo">
@@ -323,11 +368,12 @@
             </div>
         </div>
     </section>
-
+ 
     <!-- Footer -->
+    <!-- Baris hak cipta sederhana di dasar halaman -->
     <footer class="site-footer">
         <p>&copy; 2026 Muhammad Faza Aqila. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
     </footer>
-    
+ 
 </body>
 </html>
