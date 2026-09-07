@@ -771,25 +771,38 @@ a:focus-visible {
     .about {
         padding: 5rem 0;
     }
+ 
     .about-content {
         grid-template-columns: 1fr;
-        gap: 40px;
+        row-gap: 0;
+    }
+    .about-text {
+        display: contents;
+        text-align: center;
+    }
+    .about-title {
+         order: 1;
+        text-align: center; }
+    .about-photo { order: 2; }
+    .about-bio   { order: 3; }
+    .about-info  { order: 4; }
+    .cv-button   { order: 5; }
+    .about-bio {
+        text-align: justify;
     }
     .about-photo {
-        /* ditumpuk di mobile, jadi rasionya dikunci lagi */
         height: auto;
         aspect-ratio: 3 / 4;
         max-width: 320px;
-        margin: 0 auto;
         width: 100%;
+        margin: 10px auto 30px;   /* jarak ke judul di atas & bio di bawah */
     }
+ 
     .cv-button {
-        align-self: center;
+        justify-self: center;   /* align-self tidak berlaku lagi di grid */
         margin-top: 0;
     }
-    .about-text {
-        text-align: center;
-    }
+ 
     .about-info {
         text-align: left;
     }
@@ -810,6 +823,63 @@ a:focus-visible {
     .about-info {
         grid-template-columns: 1fr;
         gap: 14px;
+    }
+}
+
+@supports (animation-timeline: view()) {
+ 
+    /* Pola penulisan penting: shorthand `animation` DULU, baru
+       `animation-timeline` dan `animation-range`. Kalau urutannya
+       dibalik, shorthand akan me-reset animation-timeline kembali ke
+       `auto` (berbasis waktu) dan animasinya tidak akan terpicu
+       oleh scroll sama sekali. */
+ 
+    /* Foto: sama seperti .profile-photo di home */
+    .about-photo {
+        animation: photoReveal linear both;
+        animation-timeline: view();
+        animation-range: entry 90% cover 43%;
+    }
+ 
+    /* Judul "About Me": singkap ke samping,
+       sama seperti .name ("Muhammad Faza Aqila") di home */
+    .about-title {
+        animation: revealText linear both;
+        animation-timeline: view();
+        animation-range: entry 90% cover 35%;
+    }
+ 
+    /* Paragraf panjang: naik lembut, sama seperti .subtitle di home.
+       Sengaja BUKAN revealText — menyingkap paragraf multi-baris dari
+       kiri terasa kaku. */
+    .about-bio {
+        animation: riseIn linear both;
+        animation-timeline: view();
+        animation-range: entry 140% cover 35%;
+    }
+ 
+    /* 4 poin info */
+    .about-info {
+        animation: revealText linear both;
+        animation-timeline: view();
+        animation-range: entry 60% cover 33%;
+    }
+ 
+    /* Tombol CV: pop, sama seperti ikon sosmed di home */
+    .cv-button {
+        animation: popIn linear both;
+        animation-timeline: view();
+        animation-range: entry 60% cover 13%;
+    }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+    .about-photo,
+    .about-title,
+    .about-bio,
+    .about-info,
+    .cv-button {
+        animation: none;
     }
 }
 
@@ -1048,5 +1118,82 @@ a:focus-visible {
         width: 52px;
         height: 52px;
         padding: 3px;
+    }
+}
+
+@supports (animation-timeline: view()) {
+ 
+    .section-title {
+        animation: revealText linear both;
+        animation-timeline: view();
+        animation-range: entry 12% cover 55%;
+    }
+ 
+    .section-sub {
+        animation: riseIn linear both;
+        animation-timeline: view();
+        animation-range: entry 20% cover 62%;
+    }
+ 
+    /* 1. Ruas garis tumbuh lebih dulu */
+    .timeline-item::after {
+        animation: lineGrow linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 55%;
+
+    }
+ 
+    /* 2. Titik menyusul, satu kesatuan dengan ruasnya */
+    .timeline-item::before {
+        animation: dotPop linear both;
+        animation-timeline: view();
+        animation-range: entry 55% entry 80%;
+    }
+ 
+    /* 3. Kartu terakhir, masuk dari arah luar menuju garis */
+    .timeline-item .timeline-card {
+        animation: cardFromLeft linear both;
+        animation-timeline: view();
+        animation-range: entry 80% cover 35%;
+    }
+ 
+    .timeline-item:nth-child(even) .timeline-card {
+        animation-name: cardFromRight;
+    }
+ 
+    @keyframes lineGrow {
+        from { transform: translateX(-50%) scaleY(0); }
+        to   { transform: translateX(-50%) scaleY(1); }
+    }
+ 
+    @keyframes dotPop {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.2);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+ 
+    @keyframes cardFromLeft {
+        from { opacity: 0; transform: translateX(-44px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+ 
+    @keyframes cardFromRight {
+        from { opacity: 0; transform: translateX(44px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+    .section-title,
+    .section-sub,
+    .timeline::before,
+    .timeline-item::before,
+    .timeline-item .timeline-card {
+        animation: none;
     }
 }
