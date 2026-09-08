@@ -914,53 +914,6 @@ a:focus-visible {
     }
 }
 
-/* Animasi saat elemen About masuk ke area pandang (viewport) ketika
-   di-scroll, memakai CSS scroll-driven animation berbasis view().
-   animation-range menentukan pada rentang scroll mana animasi
-   berjalan, relatif terhadap posisi elemen masuk/keluar viewport. */
-@supports (animation-timeline: view()) {
-    .about-photo {
-        animation: photoReveal linear both;
-        animation-timeline: view();
-        animation-range: entry 90% cover 43%;
-    }
-
-    .about-title {
-        animation: revealText linear both;
-        animation-timeline: view();
-        animation-range: entry 90% cover 35%;
-    }
-
-    .about-bio {
-        animation: riseIn linear both;
-        animation-timeline: view();
-        animation-range: entry 20% cover 35%;
-    }
-
-    /* 4 poin info */
-    .about-info {
-        animation: revealText linear both;
-        animation-timeline: view();
-        animation-range: entry 60% cover 33%;
-    }
-
-    /* Tombol CV: pop, sama seperti ikon sosmed di home */
-    .cv-button {
-        animation: popIn linear both;
-        animation-timeline: view();
-        animation-range: entry 60% cover 13%;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .about-photo,
-    .about-title,
-    .about-bio,
-    .about-info,
-    .cv-button {
-        animation: none;
-    }
-}
 
 /* EDUCATION */
 .education {
@@ -1202,86 +1155,6 @@ a:focus-visible {
     }
 }
 
-/* Animasi timeline saat di-scroll ke dalam pandangan: garis tumbuh
-   dulu dari atas ke bawah, disusul titik yang "meletup" muncul, baru
-   kemudian kartu masuk dari sisi luar menuju garis (kiri untuk item
-   ganjil, kanan untuk item genap) */
-@supports (animation-timeline: view()) {
-
-    .section-title {
-        animation: revealText linear both;
-        animation-timeline: view();
-        animation-range: entry 12% cover 55%;
-    }
-
-    .section-sub {
-        animation: riseIn linear both;
-        animation-timeline: view();
-        animation-range: entry 20% cover 62%;
-    }
-
-    /* 1. Ruas garis tumbuh lebih dulu */
-    .timeline-item::after {
-        animation: lineGrow linear both;
-        animation-timeline: view();
-        animation-range: entry 10% entry 55%;
-
-    }
-
-    /* 2. Titik menyusul, satu kesatuan dengan ruasnya */
-    .timeline-item::before {
-        animation: dotPop linear both;
-        animation-timeline: view();
-        animation-range: entry 55% entry 80%;
-    }
-
-    /* 3. Kartu terakhir, masuk dari arah luar menuju garis */
-    .timeline-item .timeline-card {
-        animation: cardFromLeft linear both;
-        animation-timeline: view();
-        animation-range: entry 80% cover 35%;
-    }
-
-    .timeline-item:nth-child(even) .timeline-card {
-        animation-name: cardFromRight;
-    }
-
-    @keyframes lineGrow {
-        from { transform: translateX(-50%) scaleY(0); }
-        to   { transform: translateX(-50%) scaleY(1); }
-    }
-
-    @keyframes dotPop {
-        from {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.2);
-        }
-        to {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-    }
-
-    @keyframes cardFromLeft {
-        from { opacity: 0; transform: translateX(-44px); }
-        to   { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes cardFromRight {
-        from { opacity: 0; transform: translateX(44px); }
-        to   { opacity: 1; transform: translateX(0); }
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .section-title,
-    .section-sub,
-    .timeline::before,
-    .timeline-item::before,
-    .timeline-item .timeline-card {
-        animation: none;
-    }
-}
 
 /* EXPERIENCE */
 .experience {
@@ -1517,33 +1390,5 @@ a:focus-visible {
     }
     .site-footer p {
         font-size: 13px;
-    }
-}
-
-/* Seluruh baris kartu Experience memudar masuk sambil sedikit naik dan
-   membesar, saat area marquee mulai terlihat ketika di-scroll */
-@supports (animation-timeline: view()) {
-
-    .exp-marquee {
-        animation: expReveal linear both;
-        animation-timeline: view();
-        animation-range: entry 20% entry 85%;
-    }
-
-    @keyframes expReveal {
-        from {
-            opacity: 0;
-            transform: translateY(34px) scale(0.97);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .exp-marquee {
-        animation: none;
     }
 }
