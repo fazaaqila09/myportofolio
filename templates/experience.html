@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Mengubah judul menggunakan variabel Django sesuai tutorial -->
+    <title>Experience - {{ name }}</title>
+ 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+ 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+ 
+    <!-- Navigasi Bar dengan URL Routing Django -->
+    <nav class="top-nav">
+        <a href="{% url 'main:show_main' %}" class="nav-brand">Faza</a>
+        <div class="nav-menu">
+            <a href="{% url 'main:show_main' %}#home">Home</a>
+            <a href="{% url 'main:show_main' %}#about">About</a>
+            <a href="{% url 'main:show_main' %}#education">Education</a>
+            <a href="{% url 'main:show_experience' %}">Experience</a>
+        </div>
+    </nav>
+ 
+    <!-- Hanya Section Experience yang disisakan -->
+    <!-- (Ditambah sedikit margin-top agar tidak tertutup navbar kaca melayang saat jadi halaman sendiri) -->
+    <section id="experience" class="experience" style="padding-top: 130px; min-height: 100vh;">
+ 
+        <div class="section-head">
+            <h2 class="section-title exp-title">Experience</h2>
+            <p class="section-sub exp-sub">Organizations and committees I have been part of</p>
+        </div>
+ 
+        <div class="exp-grid">
+            {% for experience in experience_list %}
+                <article class="exp-card">
+
+                    <!-- Bilah atas: kategori di kiri, status di kanan -->
+                    <div class="exp-meta">
+                        <span class="exp-category">{{ experience.get_category_display }}</span>
+
+                        {% if experience.is_ongoing %}
+                            <span class="exp-status is-ongoing">Ongoing</span>
+                        {% else %}
+                            <span class="exp-status">Completed</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="exp-photo">
+                        {% if experience.thumbnail %}
+                            <img src="{{ experience.thumbnail }}" alt="Dokumentasi {{ experience.title }}">
+                        {% else %}
+                            <img src="{% static 'img/exp-cf.jpg' %}" alt="Dokumentasi Default">
+                        {% endif %}
+                    </div>
+
+                    <div class="exp-body">
+                        <div class="exp-head">
+                            <div class="exp-logo">
+                                {% if experience.logo %}
+                                    <img src="{{ experience.logo }}" alt="Logo {{ experience.title }}">
+                                {% else %}
+                                    <img src="{% static 'img/logo-cf.png' %}" alt="Logo Default">
+                                {% endif %}
+                            </div>
+                            <div class="exp-heading">
+                                <h3 class="exp-org">{{ experience.title }}</h3>
+                                <p class="exp-role">{{ experience.role }}</p>
+                            </div>
+                        </div>
+
+                        <span class="exp-period">
+                            {{ experience.started_at|date:"M Y" }} &ndash; 
+                            {% if experience.is_ongoing %}
+                                Present
+                            {% else %}
+                                {{ experience.ended_at|date:"M Y" }}
+                            {% endif %}
+                        </span>
+                        
+                        <p class="exp-desc">{{ experience.description }}</p>
+                    </div>
+                </article>
+            {% empty %}
+                <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    Belum ada pengalaman yang ditambahkan.
+                </p>
+            {% endfor %}
+        </div>
+    </section>
+ 
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+    </footer>
+ 
+</body>
+</html>

@@ -1166,12 +1166,12 @@ a:focus-visible {
     scroll-margin-top: 100px;
 
     /* atas dikurangi dari 4.5rem -> 2.5rem supaya isinya naik */
-    padding: 2.5rem 0 5rem;
+    padding: 0.5rem 0 5rem;
     background-color: #FFFFFF;
 }
 
 .experience .section-head {
-    margin-bottom: 2.2rem;   /* dari 4rem, judul lebih dekat ke kartu */
+    margin-bottom: 4rem;   /* dari 4rem, judul lebih dekat ke kartu */
 }
 
 .exp-title {
@@ -1188,77 +1188,28 @@ a:focus-visible {
    overflow-x: auto (bukan hidden) membuat deretan kartu bisa digeser
    manual — pakai trackpad, Shift+scroll, atau swipe di layar sentuh —
    TANPA menghentikan putarannya. */
-.exp-marquee {
-    position: relative;
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    /* batang gulir disembunyikan, geserannya tetap berfungsi */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+.exp-grid {
+    width: 90%;
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);   /* 3 kartu per baris */
+    gap: 32px;
+    padding-bottom: 10px;   /* ruang untuk bayangan kartu */
 }
 
-.exp-marquee::-webkit-scrollbar {
-    display: none;
-}
-
-/* Tepi kiri-kanan dipudarkan (fade) supaya kartu di ujung tidak
-   terpotong mendadak, memakai gradient dari putih ke transparan */
-.exp-marquee::before,
-.exp-marquee::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 90px;
-    z-index: 2;
-    pointer-events: none;
-}
-
-.exp-marquee::before {
-    left: 0;
-    background: linear-gradient(90deg, #FFFFFF, transparent);
-}
-
-.exp-marquee::after {
-    right: 0;
-    background: linear-gradient(270deg, #FFFFFF, transparent);
-}
-
-.exp-track {
-    display: flex;
-    gap: 24px;
-    width: max-content;        /* lebar mengikuti isi, bukan layar */
-    padding: 10px 0 24px;      /* ruang untuk bayangan kartu */
-    animation: expScroll 45s linear infinite;
-}
-
-/* Track digeser tepat setengah lebar total (-50%), yaitu persis satu
-   kelompok kartu (lihat catatan "kelompok asli/salinan" di index.html),
-   lalu animasi diulang dari awal (infinite). Karena kelompok kedua
-   identik dengan yang pertama, pengulangan ini tidak terlihat patah/
-   meloncat -- terasa seperti kartu berjalan tanpa akhir.
-   Dikurangi separuh gap (12px) sebagai koreksi karena ada satu jarak
-   (gap) tambahan tepat di titik sambungan antar-kelompok; tanpa
-   koreksi ini akan ada "loncatan" kecil saat animasi berulang. */
-@keyframes expScroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(calc(-50% - 12px)); }
-}
-
-/* ---------- Kartu experience ---------- */
+/* ---------- Kartu ---------- */
 .exp-card {
-    flex: 0 0 auto;
-    width: 330px;
+    width: 100%;            /* lebar mengikuti kolom grid */
     background-color: #FFFFFF;
     border: 1px solid #E4EAF3;
-    border-top: 4px solid #FFBB00;
     border-radius: 16px;
-    padding: 22px 24px;
 
-    /* bayangan berlapis, seragam dengan kartu Education & foto profil,
-       supaya kesan "kedalaman" konsisten di seluruh halaman */
+    /* padding dipindah ke .exp-body agar foto menempel penuh ke tepi;
+       overflow memotong foto mengikuti sudut lengkung kartu */
+    padding: 0;
+    overflow: hidden;
+
     box-shadow:
         0 2px 6px rgba(17, 45, 78, 0.14),
         0 12px 24px -8px rgba(17, 45, 78, 0.22),
@@ -1271,21 +1222,75 @@ a:focus-visible {
     transform: translateY(-6px);
 }
 
+/* Bilah atas kartu: kategori (kiri) & status (kanan) */
+.exp-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    background-color: #112D4E;
+    border-bottom: 1px solid #36454F;
+}
+
+/* Kategori & status: teks polos, tanpa pil. Bentuk dan bobot hurufnya
+   dibuat sama persis supaya setara; yang membedakan hanya warna. */
+.exp-category,
+.exp-status {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Bilahnya kini biru, jadi teksnya putih. Hitam di atas #3F72AF
+   kontrasnya cuma 2.4:1 — di bawah ambang baca yang nyaman. */
+.exp-category,
+.exp-status {
+    color: #FFFFFF;
+}
+
+/* Foto kegiatan — rasio lanskap */
+.exp-photo {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #DBE2EF;   /* terlihat kalau foto belum ada */
+    overflow: hidden;
+}
+
+.exp-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;           /* foto rasio apa pun tidak gepeng */
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.exp-card:hover .exp-photo img {
+    transform: scale(1.05);
+}
+
+.exp-body {
+    padding: 18px 20px 20px;
+    border-top: 3px solid #FFBB00;   /* garis aksen pemisah foto & isi */
+}
+
 .exp-head {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 14px;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .exp-logo {
     flex: 0 0 auto;
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     display: grid;
     place-items: center;
     padding: 4px;
-    border-radius: 12px;
+    border-radius: 10px;
     background-color: #F4F7FC;
     border: 1px solid #E4EAF3;
     overflow: hidden;
@@ -1294,19 +1299,23 @@ a:focus-visible {
 .exp-logo img {
     width: 100%;
     height: 100%;
-    object-fit: contain;       /* logo utuh, tidak terpotong */
+    object-fit: contain;         /* logo utuh, tidak terpotong */
     display: block;
 }
 
+.exp-heading {
+    min-width: 0;                /* nama panjang tidak menembus kartu */
+}
+
 .exp-org {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
     color: #112D4E;
     line-height: 1.3;
 }
 
 .exp-role {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: #3F72AF;
 }
@@ -1316,20 +1325,20 @@ a:focus-visible {
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 1px;
-    color: #112D4E;
+    color: #FFFFFF;
     background-color: #FFBB00;
     padding: 4px 11px;
     border-radius: 999px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .exp-desc {
     font-size: 14px;
     font-weight: 400;
     line-height: 1.65;
-    color: #6B7A8F;
+    color: #000000;
     text-align: justify;
-    hyphens: auto;   /* mencegah celah antar-kata melebar di kartu sempit */
+    hyphens: auto;
 }
 
 /* ---------- Responsif ---------- */
@@ -1342,29 +1351,24 @@ a:focus-visible {
     .experience .section-head {
         margin-bottom: 1.6rem;
     }
-    .exp-card {
-        width: 280px;
-        padding: 18px 20px;
+    .exp-grid {
+        /* 2 kolom di tablet */
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
     }
-    .exp-marquee::before,
-    .exp-marquee::after {
-        width: 48px;
+    .exp-body {
+        padding: 16px 16px 18px;
     }
-    .exp-track {
-        animation-duration: 32s;   /* kartu lebih kecil, jarak lebih pendek */
+    .exp-meta {
+        padding: 8px 12px;
     }
-}
-
-/* Pengguna dengan preferensi reduce-motion tidak melihat kartu berjalan
-   otomatis; sebagai gantinya mereka bisa menggeser kartu secara manual
-   (overflow-x tetap auto) */
-@media (prefers-reduced-motion: reduce) {
-    .exp-track {
-        animation: none;
+    .exp-category,
+    .exp-status {
+        font-size: 10px;
     }
-    /* tanpa animasi, kartunya bisa digeser manual */
-    .exp-marquee {
-        overflow-x: auto;
+    .exp-logo {
+        width: 42px;
+        height: 42px;
     }
 }
 
@@ -1385,6 +1389,12 @@ a:focus-visible {
 }
 
 @media (max-width: 600px) {
+    .exp-grid {
+        grid-template-columns: 1fr;   /* satu kolom di HP */
+        max-width: 420px;
+        gap: 22px;
+    }
+
     .site-footer {
         padding: 1.8rem 1.25rem;
     }
