@@ -919,15 +919,7 @@ a:focus-visible {
 .education {
     scroll-margin-top: 100px;
     padding: 2rem 0 7rem;
-    background-color: #112D4E;
-    /* Beberapa radial-gradient ditumpuk untuk menciptakan latar biru
-       tua bertekstur "berawan"/berpendar, bukan warna solid polos */
-    background-image:
-        radial-gradient(58% 45% at 18% 12%, rgba(63, 114, 175, 0.55), transparent 70%),
-        radial-gradient(52% 42% at 88% 28%, rgba(63, 114, 175, 0.32), transparent 72%),
-        radial-gradient(48% 38% at 12% 62%, rgba(17, 45, 78, 0.85), transparent 70%),
-        radial-gradient(60% 48% at 78% 78%, rgba(63, 114, 175, 0.42), transparent 72%),
-        radial-gradient(40% 34% at 45% 96%, rgba(219, 226, 239, 0.10), transparent 70%);
+    background-color: #FFFFFF;
 }
 
 .education-inner {
@@ -1000,7 +992,7 @@ a:focus-visible {
 /* Kartu item genap ada di KANAN garis, jadi aksen kuningnya perlu
    dipindah ke sisi KIRI kartu (arah yang menghadap garis) */
 .timeline-item:nth-child(even) .timeline-card {
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    border-right: 1px solid #E4EAF3;
     border-left: 4px solid #FFBB00;
 }
 
@@ -1024,7 +1016,7 @@ a:focus-visible {
 /* ---------- Kartu timeline ---------- */
 .timeline-card {
     background-color: #FFFFFF;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid #E4EAF3;
     border-right: 4px solid #FFBB00;
     border-radius: 16px;
     padding: 22px 24px;
@@ -1400,5 +1392,92 @@ a:focus-visible {
     }
     .site-footer p {
         font-size: 13px;
+    }
+}
+
+/* Navbar khusus halaman Experience (Mode Putih Solid) */
+.top-nav.nav-solid {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(3px) saturate(120%) brightness(1);
+    -webkit-backdrop-filter: blur(3px) saturate(120%) brightness(1);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 12px 36px -10px rgba(17, 45, 78, 0.35);
+    
+    /* Mematikan efek animasi scroll bawaan index.html */
+    animation: none; 
+}
+
+/* Mengubah warna teks menjadi gelap agar terbaca */
+.top-nav.nav-solid .nav-brand,
+.top-nav.nav-solid a {
+    color: #0D2237;
+    text-shadow: 0 0 1px rgba(13, 34, 55, 0.6);
+    animation: none;
+}
+
+/* Menyesuaikan warna sorotan hover untuk latar putih */
+.top-nav.nav-solid a:hover {
+    background: rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+}
+
+/* ============================================================
+   ANIMASI MASUK HALAMAN EXPERIENCE
+   Experience kini halaman tersendiri, jadi animasinya cukup berbasis
+   WAKTU (bukan scroll). Konsekuensinya persis seperti yang diminta:
+   jalan sekali saat halaman dibuka, lalu diam. Kalau pengunjung
+   scroll naik-turun, animasinya tidak terulang.
+
+   Dipakai 'backwards', bukan 'forwards': elemen menahan kondisi awal
+   selama masa tunda lalu berhenti di kondisi normalnya sendiri. Jadi
+   kalau animasinya dihapus atau gagal jalan, kartunya tetap terlihat.
+   ============================================================ */
+.experience .section-head {
+    animation: expHeadIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.exp-card {
+    animation: expCardIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Muncul berurutan. CSS tidak bisa menghitung jeda dari nomor urut,
+   jadi ditulis satu per satu. Kalau nanti kartunya lebih dari 9,
+   tambahkan barisnya di sini. */
+.exp-card:nth-child(1) { animation-delay: 0.30s; }
+.exp-card:nth-child(2) { animation-delay: 0.40s; }
+.exp-card:nth-child(3) { animation-delay: 0.50s; }
+.exp-card:nth-child(4) { animation-delay: 0.60s; }
+.exp-card:nth-child(5) { animation-delay: 0.70s; }
+.exp-card:nth-child(6) { animation-delay: 0.80s; }
+.exp-card:nth-child(7) { animation-delay: 0.90s; }
+.exp-card:nth-child(8) { animation-delay: 1.00s; }
+.exp-card:nth-child(9) { animation-delay: 1.10s; }
+
+@keyframes expHeadIn {
+    from {
+        opacity: 0;
+        transform: translateY(-18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes expCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .experience .section-head,
+    .exp-card {
+        animation: none;
     }
 }
