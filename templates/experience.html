@@ -7,10 +7,12 @@
     <!-- Mengubah judul menggunakan variabel Django sesuai tutorial -->
     <title>Experience - {{ name }}</title>
  
+    <!-- Font Poppins & Great Vibes dari Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
  
+    <!-- Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -37,12 +39,14 @@
             <p class="section-sub exp-sub">Organizations and committees I have been part of</p>
         </div>
  
-        <div class="exp-grid">
+    <div class="exp-grid">
+            {# looping tiap data pengalaman dari database (experience_list dari views.py) #}
             {% for experience in experience_list %}
                 <article class="exp-card">
 
                     <!-- Bilah atas: kategori di kiri, status di kanan -->
                     <div class="exp-meta">
+                        {# get_category_display: ambil label yang enak dibaca dari field choices #}
                         <span class="exp-category">{{ experience.get_category_display }}</span>
 
                         {% if experience.is_ongoing %}
@@ -52,6 +56,7 @@
                         {% endif %}
                     </div>
 
+                    <!-- Foto dokumentasi, fallback ke gambar default kalau belum ada -->
                     <div class="exp-photo">
                         {% if experience.thumbnail %}
                             <img src="{{ experience.thumbnail }}" alt="Dokumentasi {{ experience.title }}">
@@ -62,6 +67,7 @@
 
                     <div class="exp-body">
                         <div class="exp-head">
+                            <!-- Logo organisasi, fallback ke logo default -->
                             <div class="exp-logo">
                                 {% if experience.logo %}
                                     <img src="{{ experience.logo }}" alt="Logo {{ experience.title }}">
@@ -75,6 +81,7 @@
                             </div>
                         </div>
 
+                        <!-- Periode: tampilkan "Present" kalau masih berjalan -->
                         <span class="exp-period">
                             {{ experience.started_at|date:"M Y" }} &ndash; 
                             {% if experience.is_ongoing %}
@@ -88,6 +95,7 @@
                     </div>
                 </article>
             {% empty %}
+                {# tampil kalau experience_list masih kosong #}
                 <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
                     Belum ada pengalaman yang ditambahkan.
                 </p>

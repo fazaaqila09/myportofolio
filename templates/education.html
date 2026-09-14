@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Education - {{ name }}</title>
 
+    <!-- Font Poppins & Great Vibes dari Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
 
+    <!-- Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -36,11 +38,13 @@
             </div>
 
             <div class="timeline">
+                {# looping tiap data pendidikan dari database (education_list dari views.py) #}
                 {% for education in education_list %}
                     <div class="timeline-item">
                         <div class="timeline-card">
                             <div class="card-head">
                                 <div class="school-logo">
+                                    {# pakai logo dari data, kalau kosong pakai logo default UI #}
                                     {% if education.logo %}
                                         <img src="{{ education.logo }}" alt="Logo {{ education.school }}">
                                     {% else %}
@@ -50,6 +54,7 @@
                                 <div class="card-heading">
                                     <span class="timeline-year">
                                         {{ education.started_at|date:"Y" }} &ndash;
+                                        {# tampilkan "Present" kalau masih berjalan, kalau tidak tampilkan tahun selesai #}
                                         {% if education.is_ongoing %}
                                             Present
                                         {% else %}
@@ -63,6 +68,7 @@
                         </div>
                     </div>
                 {% empty %}
+                    {# tampil kalau education_list masih kosong #}
                     <p class="empty-state" style="text-align: center; padding: 40px;">
                         Belum ada riwayat pendidikan yang ditambahkan.
                     </p>

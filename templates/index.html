@@ -1,31 +1,35 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static %}  {# aktifkan tag {% static %} untuk load file css/img/js #}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faza - Portfolio</title>
  
+    <!-- Load font Poppins (teks) & Great Vibes (logo cursive) dari Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <!-- Font Awesome untuk ikon (panah, sosial media, dsb) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
  
-    <!-- Navigasi Bar Tersinkronisasi dengan Django URLs -->
+    <!-- Navbar versi kaca transparan (halaman ini punya hero berlatar gelap) -->
     <nav class="top-nav">
         <a href="{% url 'main:show_main' %}" class="nav-brand">Faza</a>
         <div class="nav-menu">
+            <!-- Home & About: anchor link (#id) di halaman ini sendiri -->
             <a href="{% url 'main:show_main' %}#home">Home</a>
             <a href="{% url 'main:show_main' %}#about">About</a>
+            <!-- Education & Experience: pindah ke halaman/route Django lain -->
             <a href="{% url 'main:show_education' %}">Education</a>
             <a href="{% url 'main:show_experience' %}">Experience</a>
         </div>
     </nav>
  
-    <!-- Area Hero -->
+    <!-- Area Hero: sapaan, nama, subtitle, dan link sosial media -->
     <header id="home" class="hero">
         <div class="hero-content">
             <div class="text-content">
@@ -36,6 +40,7 @@
  
                 <div class="connect-area">
                     <span class="connect-text">LET'S CONNECT <i class="fa-solid fa-chevron-right arrow"></i></span>
+                    <!-- Link sosial media, dibuka di tab baru kecuali email (mailto) -->
                     <div class="social-links">
                         <a href="https://github.com/fazaaqila09" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
                         <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
@@ -45,13 +50,14 @@
                 </div>
             </div>
  
+            <!-- Foto profil statis (bukan dari database) -->
             <div class="profile-photo">
                 <img src="{% static 'img/fazabw.jpeg' %}" alt="Foto {{ name }}">
             </div>
         </div>
     </header>
  
-    <!-- About -->
+    <!-- About: foto formal + bio, data diri, dan tombol download CV -->
     <section id="about" class="about">
         <div class="about-content">
             <div class="about-photo">
@@ -63,6 +69,7 @@
                 <!-- Menarik data bio dinamis -->
                 <p class="about-bio">{{ bio }}</p>
  
+                <!-- Daftar info diri: hanya "From" & Email yang teks tetap (hardcode) -->
                 <dl class="about-info">
                     <div class="info-item">
                         <dt>Name</dt>
@@ -83,6 +90,7 @@
                     </div>
                 </dl>
  
+                <!-- Tombol unduh CV, file diambil dari folder static -->
                 <a class="cv-button" href="{% static 'files/CV - Muhammad Faza Aqila.pdf' %}" download>
                     <i class="fa-solid fa-download"></i>
                     Download CV

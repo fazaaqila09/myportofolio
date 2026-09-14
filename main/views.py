@@ -105,9 +105,6 @@ def show_experience(request):
 
 def show_education(request):
     # Auto-populate: isi 3 riwayat pendidikan kalau database masih kosong.
-    # Karena started_at di model Education memakai DateField biasa
-    # (bukan auto_now_add), tanggalnya bisa langsung diisi di create()
-    # tanpa perlu ditimpa ulang seperti pada Experience.
     if not Education.objects.exists():
         Education.objects.create(
             school="Universitas Indonesia",
