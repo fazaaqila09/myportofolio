@@ -1,12 +1,13 @@
 from django.shortcuts import render
-from main.models import Experience
+from main.models import Experience, Education
 from django.utils.dateparse import parse_datetime
+from datetime import date
 
 def show_main(request):
     context = {
         "name": "Muhammad Faza Aqila",
         "npm": "2506613142",
-        "study_program": "S1 Ilmu Komputer",
+        "study_program": "Computer Science",
         "bio": (
             "Hello! I am Muhammad Faza Aqila, a Computer Science undergraduate at Universitas Indonesia. "
             "My core interests lie deeply at the intersection of Data Science and modern Web Development. "
@@ -38,7 +39,7 @@ def show_experience(request):
             description="Oversaw daily operational workflows, managed equipment procurement, and ensured all logistical requirements were executed on schedule.", 
             category="volunteer", 
             thumbnail="/static/img/exp-betis.jpeg", 
-            logo="/static/img/logo-betis.jpg"
+            logo="/static/img/logo-betis.png"
         )
         e2.started_at = parse_datetime("2026-02-01T00:00:00Z")
         e2.ended_at = parse_datetime("2026-07-01T00:00:00Z")
@@ -76,7 +77,7 @@ def show_experience(request):
             description="Supervised production timelines, managed essential equipment logistics, and coordinated team distributions for successful project delivery.", 
             category="freelance", 
             thumbnail="/static/img/exp-nabastala.jpeg", 
-            logo="/static/img/logo-nabastala.jpeg"
+            logo="/static/img/logo-nabastala.png"
         )
         e5.started_at = parse_datetime("2023-07-01T00:00:00Z")
         e5.ended_at = parse_datetime("2023-12-01T00:00:00Z")
@@ -89,7 +90,7 @@ def show_experience(request):
             description="Designed comprehensive event programs and collaborated closely with cross-functional divisions to ensure smooth and successful event executions.", 
             category="volunteer", 
             thumbnail="/static/img/exp-rismansa.jpeg", 
-            logo="/static/img/logo-risma.jpg"
+            logo="/static/img/logo-risma.png"
         )
         e6.started_at = parse_datetime("2023-07-01T00:00:00Z")
         e6.ended_at = parse_datetime("2024-07-01T00:00:00Z")
@@ -100,3 +101,48 @@ def show_experience(request):
         "experience_list": Experience.objects.all(),
     }
     return render(request, "experience.html", context)
+
+
+def show_education(request):
+    # Auto-populate: isi 3 riwayat pendidikan kalau database masih kosong.
+    # Karena started_at di model Education memakai DateField biasa
+    # (bukan auto_now_add), tanggalnya bisa langsung diisi di create()
+    # tanpa perlu ditimpa ulang seperti pada Experience.
+    if not Education.objects.exists():
+        Education.objects.create(
+            school="Universitas Indonesia",
+            major="Bachelor of Computer Science",
+            level="bachelor",
+            logo="/static/img/logo-ui.png",
+            started_at=date(2025, 8, 1),
+        )
+        Education.objects.create(
+                    school="Universitas Diponegoro",
+                    major="Bachelor of Computer Science",
+                    level="bachelor",
+                    logo="/static/img/logo-undip.png",
+                    started_at=date(2024, 8, 1),
+                    ended_at=date(2025, 6, 1),
+        )
+        Education.objects.create(
+            school="SMAN 1 Kota Serang",
+            major="Senior High School (STEM)",
+            level="senior",
+            logo="/static/img/logo-sma.png",
+            started_at=date(2021, 7, 1),
+            ended_at=date(2024, 6, 1),
+        )
+        Education.objects.create(
+            school="SMPN 1 Kota Serang",
+            major="Middle High School",
+            level="junior",
+            logo="/static/img/logo-smp.png",
+            started_at=date(2018, 7, 1),
+            ended_at=date(2021, 6, 1),
+        )
+
+    context = {
+        "name": "Faza",
+        "education_list": Education.objects.all(),
+    }
+    return render(request, "education.html", context)

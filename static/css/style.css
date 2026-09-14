@@ -922,6 +922,8 @@ a:focus-visible {
     background-color: #FFFFFF;
 }
 
+
+
 .education-inner {
     width: 88%;
     max-width: 1100px;
@@ -944,7 +946,7 @@ a:focus-visible {
 .section-sub {
     font-size: 16px;
     font-weight: 400;
-    color: #DBE2EF;
+    color: #112D4E;
 }
 
 /* ---------- Garis waktu (timeline) ---------- */
@@ -1008,7 +1010,6 @@ a:focus-visible {
     height: 18px;
     border-radius: 50%;
     background-color: #FFBB00;
-    border: 3px solid #112D4E;
     box-shadow: 0 0 0 4px rgba(255, 187, 0, 0.28);
     z-index: 1;
 }
@@ -1478,6 +1479,27 @@ a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
     .experience .section-head,
     .exp-card {
+        animation: none;
+    }
+}
+
+.education .section-head {
+    animation: expHeadIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.timeline-item {
+    animation: expCardIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.timeline-item:nth-child(1) { animation-delay: 0.30s; }
+.timeline-item:nth-child(2) { animation-delay: 0.42s; }
+.timeline-item:nth-child(3) { animation-delay: 0.54s; }
+.timeline-item:nth-child(4) { animation-delay: 0.66s; }
+.timeline-item:nth-child(5) { animation-delay: 0.78s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .education .section-head,
+    .timeline-item {
         animation: none;
     }
 }

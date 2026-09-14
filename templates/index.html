@@ -20,7 +20,7 @@
         <div class="nav-menu">
             <a href="{% url 'main:show_main' %}#home">Home</a>
             <a href="{% url 'main:show_main' %}#about">About</a>
-            <a href="{% url 'main:show_main' %}#education">Education</a>
+            <a href="{% url 'main:show_education' %}">Education</a>
             <a href="{% url 'main:show_experience' %}">Experience</a>
         </div>
     </nav>
@@ -55,7 +55,7 @@
     <section id="about" class="about">
         <div class="about-content">
             <div class="about-photo">
-                <img src="{% static 'img/fazabw.jpeg' %}" alt="Foto {{ name }}">
+                <img src="{% static 'img/fazaformal.jpg' %}" alt="Foto {{ name }}">
             </div>
  
             <div class="about-text">
@@ -87,60 +87,6 @@
                     <i class="fa-solid fa-download"></i>
                     Download CV
                 </a>
-            </div>
-        </div>
-    </section>
- 
-    <!-- Education -->
-    <section id="education" class="education">
-        <div class="education-inner">
-            <div class="section-head">
-                <h2 class="section-title">Education</h2>
-                <p class="section-sub">My educational journey from school to university</p>
-            </div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-card">
-                        <div class="card-head">
-                            <div class="school-logo">
-                                <img src="{% static 'img/logo-ui.png' %}" alt="Universitas Indonesia">
-                            </div>
-                            <div class="card-heading">
-                                <span class="timeline-year">2025 &ndash; Present</span>
-                                <h3 class="school-name">Universitas Indonesia</h3>
-                            </div>
-                        </div>
-                        <p class="school-desc">Bachelor of Computer Science</p>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-card">
-                        <div class="card-head">
-                            <div class="school-logo">
-                                <img src="{% static 'img/logo-sma.png' %}" alt="SMAN 1 Kota Serang">
-                            </div>
-                            <div class="card-heading">
-                                <span class="timeline-year">2021 &ndash; 2024</span>
-                                <h3 class="school-name">SMAN 1 Kota Serang</h3>
-                            </div>
-                        </div>
-                        <p class="school-desc">Senior High School (STEM)</p>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-card">
-                        <div class="card-head">
-                            <div class="school-logo">
-                                <img src="{% static 'img/logo-smp.png' %}" alt="SMPN 1 Kota Serang">
-                            </div>
-                            <div class="card-heading">
-                                <span class="timeline-year">2018 &ndash; 2021</span>
-                                <h3 class="school-name">SMPN 1 Kota Serang</h3>
-                            </div>
-                        </div>
-                        <p class="school-desc">Middle High School</p>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
