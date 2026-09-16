@@ -1,108 +1,76 @@
-<!DOCTYPE html>
-{% load static %}  {# aktifkan tag {% static %} untuk load file css/img/js #}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faza - Portfolio</title>
- 
-    <!-- Load font Poppins (teks) & Great Vibes (logo cursive) dari Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
-    <!-- Font Awesome untuk ikon (panah, sosial media, dsb) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
- 
-    <!-- Navbar versi kaca transparan (halaman ini punya hero berlatar gelap) -->
-    <nav class="top-nav">
-        <a href="{% url 'main:show_main' %}" class="nav-brand">Faza</a>
-        <div class="nav-menu">
-            <!-- Home & About: anchor link (#id) di halaman ini sendiri -->
-            <a href="{% url 'main:show_main' %}#home">Home</a>
-            <a href="{% url 'main:show_main' %}#about">About</a>
-            <!-- Education & Experience: pindah ke halaman/route Django lain -->
-            <a href="{% url 'main:show_education' %}">Education</a>
-            <a href="{% url 'main:show_experience' %}">Experience</a>
-        </div>
-    </nav>
- 
-    <!-- Area Hero: sapaan, nama, subtitle, dan link sosial media -->
-    <header id="home" class="hero">
-        <div class="hero-content">
-            <div class="text-content">
-                <p class="greeting">Hello I am</p>
-                <!-- Menarik nama dinamis dari views.py -->
-                <h1 class="name">{{ name }}</h1>
-                <p class="subtitle">{{ study_program }} student at Universitas Indonesia, interested in Data Science and Web Development</p>
- 
-                <div class="connect-area">
-                    <span class="connect-text">LET'S CONNECT <i class="fa-solid fa-chevron-right arrow"></i></span>
-                    <!-- Link sosial media, dibuka di tab baru kecuali email (mailto) -->
-                    <div class="social-links">
-                        <a href="https://github.com/fazaaqila09" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
-                        <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
-                        <a href="https://instagram.com/fazaaqilaaaa" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="mailto:muhammadfazaaqila09@gmail.com" title="Email"><i class="fa-solid fa-envelope"></i></a>
-                    </div>
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Faza - Portfolio{% endblock %}
+{% block content %}
+
+<!-- Area Hero: sapaan, nama, subtitle, dan link sosial media -->
+<header id="home" class="hero">
+    <div class="hero-content">
+        <div class="text-content">
+            <p class="greeting">Hello I am</p>
+            <!-- Menarik nama dinamis dari views.py -->
+            <h1 class="name">{{ name }}</h1>
+            <p class="subtitle">{{ study_program }} student at Universitas Indonesia, interested in Data Science and Web Development</p>
+
+            <div class="connect-area">
+                <span class="connect-text">LET'S CONNECT <i class="fa-solid fa-chevron-right arrow"></i></span>
+                <!-- Link sosial media, dibuka di tab baru kecuali email (mailto) -->
+                <div class="social-links">
+                    <a href="https://github.com/fazaaqila09" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                    <a href="https://instagram.com/fazaaqilaaaa" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="mailto:muhammadfazaaqila09@gmail.com" title="Email"><i class="fa-solid fa-envelope"></i></a>
                 </div>
             </div>
- 
-            <!-- Foto profil statis (bukan dari database) -->
-            <div class="profile-photo">
-                <img src="{% static 'img/fazabw.jpeg' %}" alt="Foto {{ name }}">
-            </div>
         </div>
-    </header>
- 
-    <!-- About: foto formal + bio, data diri, dan tombol download CV -->
-    <section id="about" class="about">
-        <div class="about-content">
-            <div class="about-photo">
-                <img src="{% static 'img/fazaformal.jpg' %}" alt="Foto {{ name }}">
-            </div>
- 
-            <div class="about-text">
-                <h2 class="about-title">About Me</h2>
-                <!-- Menarik data bio dinamis -->
-                <p class="about-bio">{{ bio }}</p>
- 
-                <!-- Daftar info diri: hanya "From" & Email yang teks tetap (hardcode) -->
-                <dl class="about-info">
-                    <div class="info-item">
-                        <dt>Name</dt>
-                        <dd>{{ name }}</dd>
-                    </div>
-                    <div class="info-item">
-                        <dt>From</dt>
-                        <dd>Depok, Indonesia</dd>
-                    </div>
-                    <div class="info-item">
-                        <dt>ID Student</dt>
-                        <!-- Menarik data NPM dinamis -->
-                        <dd>{{ npm }}</dd>
-                    </div>
-                    <div class="info-item">
-                        <dt>Email</dt>
-                        <dd><a href="mailto:muhammadfazaaqila09@gmail.com">muhammadfazaaqila09@gmail.com</a></dd>
-                    </div>
-                </dl>
- 
-                <!-- Tombol unduh CV, file diambil dari folder static -->
-                <a class="cv-button" href="{% static 'files/CV - Muhammad Faza Aqila.pdf' %}" download>
-                    <i class="fa-solid fa-download"></i>
-                    Download CV
-                </a>
-            </div>
+
+        <!-- Foto profil statis (bukan dari database) -->
+        <div class="profile-photo">
+            <img src="{% static 'img/fazabw.jpeg' %}" alt="Foto {{ name }}">
         </div>
-    </section>
- 
-    <!-- Footer dengan tahun dan nama dinamis -->
-    <footer class="site-footer">
-        <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
-    </footer>
- 
-</body>
-</html>
+    </div>
+</header>
+
+<!-- About: foto formal + bio, data diri, dan tombol download CV -->
+<section id="about" class="about">
+    <div class="about-content">
+        <div class="about-photo">
+            <img src="{% static 'img/fazaformal.jpg' %}" alt="Foto {{ name }}">
+        </div>
+
+        <div class="about-text">
+            <h2 class="about-title">About Me</h2>
+            <!-- Menarik data bio dinamis -->
+            <p class="about-bio">{{ bio }}</p>
+
+            <!-- Daftar info diri: hanya "From" & Email yang teks tetap (hardcode) -->
+            <dl class="about-info">
+                <div class="info-item">
+                    <dt>Name</dt>
+                    <dd>{{ name }}</dd>
+                </div>
+                <div class="info-item">
+                    <dt>From</dt>
+                    <dd>Depok, Indonesia</dd>
+                </div>
+                <div class="info-item">
+                    <dt>ID Student</dt>
+                    <!-- Menarik data NPM dinamis -->
+                    <dd>{{ npm }}</dd>
+                </div>
+                <div class="info-item">
+                    <dt>Email</dt>
+                    <dd><a href="mailto:muhammadfazaaqila09@gmail.com">muhammadfazaaqila09@gmail.com</a></dd>
+                </div>
+            </dl>
+
+            <!-- Tombol unduh CV, file diambil dari folder static -->
+            <a class="cv-button" href="{% static 'files/CV - Muhammad Faza Aqila.pdf' %}" download>
+                <i class="fa-solid fa-download"></i>
+                Download CV
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

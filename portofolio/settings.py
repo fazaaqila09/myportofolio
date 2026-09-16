@@ -31,6 +31,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "muhammad-faza51-myportofolio.pws.cs.ui.ac.id"]
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
+CSRF_TRUSTED_ORIGINS = ["https://muhammad-faza51-myportofolio.pws.cs.ui.ac.id"]
+PORTFOLIO_SECRET_KEY = os.getenv('PORTFOLIO_SECRET_KEY', '')
 
 
 # Application definition

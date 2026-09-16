@@ -1,85 +1,51 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 {% load static %}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Education - {{ name }}</title>
+{% block title %}Education - {{ name }}{% endblock %}
+{% block nav_class %}nav-solid{% endblock %}
+{% block content %}
 
-    <!-- Font Poppins & Great Vibes dari Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<section id="education" class="education" style="padding-top: 130px; min-height: 100vh;">
+    <div class="education-inner">
 
-    <!-- Font Awesome untuk ikon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
-
-    <!-- nav-solid dipakai karena halaman ini berlatar putih, sama seperti
-         halaman Experience — navbar kaca transparan tidak akan terbaca -->
-    <nav class="top-nav nav-solid">
-        <a href="{% url 'main:show_main' %}" class="nav-brand">Faza</a>
-        <div class="nav-menu">
-            <a href="{% url 'main:show_main' %}#home">Home</a>
-            <a href="{% url 'main:show_main' %}#about">About</a>
-            <a href="{% url 'main:show_education' %}">Education</a>
-            <a href="{% url 'main:show_experience' %}">Experience</a>
+        <div class="section-head">
+            <h2 class="section-title">Education</h2>
+            <p class="section-sub">My educational journey from school to university</p>
         </div>
-    </nav>
 
-    <section id="education" class="education" style="padding-top: 130px; min-height: 100vh;">
-        <div class="education-inner">
-
-            <div class="section-head">
-                <h2 class="section-title">Education</h2>
-                <p class="section-sub">My educational journey from school to university</p>
-            </div>
-
-            <div class="timeline">
-                {# looping tiap data pendidikan dari database (education_list dari views.py) #}
-                {% for education in education_list %}
-                    <div class="timeline-item">
-                        <div class="timeline-card">
-                            <div class="card-head">
-                                <div class="school-logo">
-                                    {# pakai logo dari data, kalau kosong pakai logo default UI #}
-                                    {% if education.logo %}
-                                        <img src="{{ education.logo }}" alt="Logo {{ education.school }}">
-                                    {% else %}
-                                        <img src="{% static 'img/logo-ui.png' %}" alt="Logo Default">
-                                    {% endif %}
-                                </div>
-                                <div class="card-heading">
-                                    <span class="timeline-year">
-                                        {{ education.started_at|date:"Y" }} &ndash;
-                                        {# tampilkan "Present" kalau masih berjalan, kalau tidak tampilkan tahun selesai #}
-                                        {% if education.is_ongoing %}
-                                            Present
-                                        {% else %}
-                                            {{ education.ended_at|date:"Y" }}
-                                        {% endif %}
-                                    </span>
-                                    <h3 class="school-name">{{ education.school }}</h3>
-                                </div>
+        <div class="timeline">
+            {% for education in education_list %}
+                <div class="timeline-item">
+                    <div class="timeline-card">
+                        <div class="card-head">
+                            <div class="school-logo">
+                                {% if education.logo %}
+                                    <img src="{{ education.logo }}" alt="Logo {{ education.school }}">
+                                {% else %}
+                                    <img src="{% static 'img/logo-ui.png' %}" alt="Logo Default">
+                                {% endif %}
                             </div>
-                            <p class="school-desc">{{ education.major }}</p>
+                            <div class="card-heading">
+                                <span class="timeline-year">
+                                    {{ education.started_at|date:"Y" }} &ndash;
+                                    {% if education.is_ongoing %}
+                                        Present
+                                    {% else %}
+                                        {{ education.ended_at|date:"Y" }}
+                                    {% endif %}
+                                </span>
+                                <h3 class="school-name">{{ education.school }}</h3>
+                            </div>
                         </div>
+                        <p class="school-desc">{{ education.major }}</p>
                     </div>
-                {% empty %}
-                    {# tampil kalau education_list masih kosong #}
-                    <p class="empty-state" style="text-align: center; padding: 40px;">
-                        Belum ada riwayat pendidikan yang ditambahkan.
-                    </p>
-                {% endfor %}
-            </div>
+                </div>
+            {% empty %}
+                <p class="empty-state" style="text-align: center; padding: 40px;">
+                    Belum ada riwayat pendidikan yang ditambahkan.
+                </p>
+            {% endfor %}
         </div>
-    </section>
+    </div>
+</section>
 
-    <footer class="site-footer">
-        <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
-    </footer>
-
-</body>
-</html>
+{% endblock content %}

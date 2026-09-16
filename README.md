@@ -16,7 +16,7 @@ Kelas : PBP C
 
 **Alat:** Claude.
 
-**Link percakapan AI:** https://claude.ai/chat/8c5a667f-5d61-4073-8987-a81e0e555d3b
+**Link percakapan AI:** https://claude.ai/share/9c19c5fc-6c9d-4e80-b794-ba0a07ab0ec5
 
 **Bagian yang dibantu:** Pembuatan boilerplate HTML, perhitungan koordinat matematis untuk bentuk SVG latar belakang gelombang kustom, dan penyusunan logika awal rentang @keyframes untuk animasi masuk berurutan.
 
@@ -39,7 +39,7 @@ Contoh: misalnya di model Education mau menambah kolom baru, seperti logo = mode
 
 **Alat:** Claude.
 
-**Link percakapan AI:** https://claude.ai/chat/8c5a667f-5d61-4073-8987-a81e0e555d3b
+**Link percakapan AI:** https://claude.ai/share/9c19c5fc-6c9d-4e80-b794-ba0a07ab0ec5
 
 **Bagian yang dibantu:** Mencari ide struktur MVT untuk model Education, membuat desain timeline vertikal menggunakan HTML/CSS, membuat skrip pengisian data otomatis (auto-populate), serta menyusun kerangka awal untuk unit test.
 

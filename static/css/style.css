@@ -1503,3 +1503,119 @@ a:focus-visible {
         animation: none;
     }
 }
+
+/* Add button + search, satu baris, lebar disamain sama .exp-grid */
+.exp-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    width: 90%;
+    max-width: 1320px;
+    margin: 0 auto 1.5rem;
+    flex-wrap: wrap;
+}
+.exp-add-button {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+.exp-search { display: flex; gap: .75rem; flex: 1; min-width: 240px; }
+.exp-search__input {
+    flex: 1;
+    padding: .7rem 1rem;
+    border: 1px solid #DBE2EF;
+    border-radius: 8px;
+    font: inherit;
+}
+.exp-search__input:focus { outline: 2px solid #3F72AF; border-color: #3F72AF; }
+
+/* Tombol hapus ikon tempat sampah, sejajar logo & nama */
+.exp-delete-btn {
+    margin-left: auto;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: #F4F7FC;
+    color: #b42318;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+}
+.exp-delete-btn:hover { background: #b42318; color: #fff; }
+
+/* Form (add experience & delete modal) */
+.exp-form { width: 90%; max-width: 600px; margin: 0 auto; }
+.form-group { margin-bottom: 1.25rem; }
+.form-group label { display: block; margin-bottom: .4rem; font-weight: 600; color: #112D4E; }
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: .7rem; border: 1px solid #DBE2EF; border-radius: 8px; font: inherit;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: 2px solid #3F72AF; border-color: #3F72AF;
+}
+.form-error { color: #b42318; font-size: .85rem; margin-top: .35rem; }
+
+.button {
+    display: inline-block;
+    border: 0;
+    border-radius: 8px;
+    padding: .65rem 1.2rem;
+    background: #FFBB00;
+    color: #112D4E;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+.button:hover { background: #3F72AF; color: #fff; }
+.button-secondary:hover { background: #b42318; color: #fff; }
+.button-secondary { background: #DBE2EF; color: #112D4E; }
+.button-danger { background: #b42318; color: #fff; }
+
+/* Modal konfirmasi hapus */
+.delete-modal { display: none; position: fixed; inset: 0; align-items: center; justify-content: center; padding: 1rem; z-index: 50; }
+.delete-modal:popover-open { display: flex; }
+.delete-modal__backdrop { position: absolute; inset: 0; border: 0; background: rgba(17,45,78,.55); }
+.delete-modal__content {
+    position: relative; z-index: 1; width: min(100%, 440px); padding: 1.5rem;
+    background: #fff; border-radius: 8px; box-shadow: 0 1rem 3rem rgba(17,45,78,.2);
+}
+.delete-modal__close { position: absolute; top: 1rem; right: 1rem; border: 0; background: transparent; font-size: 1.6rem; cursor: pointer; }
+.delete-modal__actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
+
+/* Notifikasi pesan (django messages) */
+.site-messages {
+    position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
+    z-index: 200; display: flex; flex-direction: column; gap: .5rem;
+    width: 90%; max-width: 480px;
+}
+.site-message {
+    padding: .75rem 1rem; border-radius: 8px; font-weight: 600;
+    text-align: center; box-shadow: 0 8px 24px rgba(17, 45, 78, .15);
+}
+
+.site-message {
+    padding: .75rem 1rem; border-radius: 8px; font-weight: 600;
+    text-align: center; box-shadow: 0 8px 24px rgba(17, 45, 78, .15);
+    animation: site-message-fade 4s ease forwards;
+}
+
+@keyframes site-message-fade {
+    0% { opacity: 1; transform: translateY(0); }
+    75% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-8px); visibility: hidden; }
+}
+
+.site-message--success { background: #DFF5E1; color: #1e7d32; }
+.site-message--error { background: #FBE4E1; color: #b42318; }
