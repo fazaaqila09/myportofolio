@@ -1524,6 +1524,7 @@ a:focus-visible {
 .exp-search { display: flex; gap: .75rem; flex: 1; min-width: 240px; }
 .exp-search__input {
     flex: 1;
+    min-width: 0;
     padding: .7rem 1rem;
     border: 1px solid #DBE2EF;
     border-radius: 8px;
@@ -1555,7 +1556,13 @@ a:focus-visible {
 .form-group { margin-bottom: 1.25rem; }
 .form-group label { display: block; margin-bottom: .4rem; font-weight: 600; color: #112D4E; }
 .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: .7rem; border: 1px solid #DBE2EF; border-radius: 8px; font: inherit;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: .7rem;
+    border: 1px solid #DBE2EF;
+    border-radius: 8px;
+    font: inherit;
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
     outline: 2px solid #3F72AF; border-color: #3F72AF;
@@ -1576,6 +1583,22 @@ a:focus-visible {
     text-decoration: none;
     box-sizing: border-box;
     vertical-align: middle;
+}
+
+@media (max-width: 600px) {
+    .exp-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .exp-add-button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+    .exp-search {
+        width: 100%;
+        min-width: 0;
+    }
 }
 
 .button:hover { background: #3F72AF; color: #fff; }

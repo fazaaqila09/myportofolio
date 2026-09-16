@@ -9,6 +9,8 @@ class ExperienceForm(ModelForm):
         widget=DateInput(attrs={"type": "date"}),
     )
 
+    field_order = ["title", "role", "description", "category", "thumbnail", "logo", "started_at", "ended_at"]
+
     class Meta:
         model = Experience
         fields = ["title", "role", "description", "category", "thumbnail", "logo", "ended_at"]
