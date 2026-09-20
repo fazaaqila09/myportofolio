@@ -29,7 +29,6 @@ class Experience(models.Model):
     def is_ongoing(self):
         return self.ended_at is None
 
-
 class Education(models.Model):
     """Riwayat pendidikan, ditampilkan sebagai timeline di halaman Education.
 
@@ -66,3 +65,23 @@ class Education(models.Model):
     @property
     def is_ongoing(self):
         return self.ended_at is None
+
+class Project(models.Model):
+    CATEGORY_CHOICES = [
+        ("film", "Film & Video"),
+        ("software", "Software / Web"),
+        ("design", "Design"),
+        ("writing", "Writing"),
+        ("music", "Music / Audio"),
+        ("other", "Other"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="other")
+    project_url = models.URLField()
+    completed_at = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return self.title

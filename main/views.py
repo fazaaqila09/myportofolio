@@ -6,9 +6,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_datetime
 from datetime import date, datetime
 from django.utils import timezone
-
-from main.models import Experience, Education
-from main.forms import ExperienceForm
+from main.models import Experience, Education, Project
+from main.forms import ExperienceForm, ProjectForm
 
 
 def is_authorized(request):
@@ -211,3 +210,84 @@ def show_education(request):
         "education_list": Education.objects.all(),
     }
     return render(request, "education.html", context)
+
+def show_projects(request):
+    json_response = get_project_json(request)
+    project_list = serializers.deserialize(
+        "json",
+        json_response.content.decode("utf-8"),
+    )
+    project_list = [item.object for item in project_list]
+
+    category_query = request.GET.get("category", "").strip()
+
+    context = {
+        "name": "Faza",
+        "project_list": project_list,
+        "category_query": category_query,
+    }
+    return render(request, "projects.html", context)
+
+
+def create_project(request):
+    form = ProjectForm(request.POST or None)
+    auth_error = None
+
+    if request.method == "POST":
+        if not is_authorized(request):
+            auth_error = "Invalid access code."
+        elif form.is_valid():
+            form.save()
+            messages.success(request, "New project added successfully!")
+            return redirect("main:show_projects")
+
+    context = {
+        "name": "Faza",
+        "form": form,
+        "auth_error": auth_error,
+    }
+    return render(request, "project_form.html", context)
+
+
+def update_project(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    form = ProjectForm(request.POST or None, instance=project)
+    auth_error = None
+
+    if request.method == "POST":
+        if not is_authorized(request):
+            auth_error = "Invalid access code."
+        elif form.is_valid():
+            form.save()
+            messages.success(request, "Project updated successfully!")
+            return redirect("main:show_projects")
+
+    context = {
+        "name": "Faza",
+        "form": form,
+        "project": project,
+        "auth_error": auth_error,
+    }
+    return render(request, "project_form.html", context)
+
+
+def get_project_json(request):
+    category_query = request.GET.get("category", "").strip()
+    projects = Project.objects.all()
+
+    if category_query:
+        projects = projects.filter(category__icontains=category_query)
+
+    projects_json = serializers.serialize("json", projects)
+    return HttpResponse(projects_json, content_type="application/json")
+
+
+def delete_project(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    if request.method == "POST":
+        if not is_authorized(request):
+            messages.error(request, "Invalid access code. Project was not deleted.")
+            return redirect("main:show_projects")
+        project.delete()
+        messages.success(request, "Project deleted successfully!")
+    return redirect("main:show_projects")

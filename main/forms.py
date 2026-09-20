@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import ModelForm, TextInput, Textarea, URLInput, Select, DateInput
-from main.models import Experience
+from main.models import Experience, Project
 
 
 class ExperienceForm(ModelForm):
@@ -31,4 +31,23 @@ class ExperienceForm(ModelForm):
             "thumbnail": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
             "logo": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
             "ended_at": DateInput(attrs={"type": "date"}),
+        }
+
+class ProjectForm(ModelForm):
+    class Meta:
+        model = Project
+        fields = ["title", "description", "category", "project_url", "completed_at"]
+        labels = {
+            "title": "Project Name",
+            "description": "Description",
+            "category": "Category",
+            "project_url": "Project URL (optional)",
+            "completed_at": "Completion Date (leave blank if ongoing)",
+        }
+        widgets = {
+            "title": TextInput(attrs={"placeholder": "Nabastala"}),
+            "description": Textarea(attrs={"rows": 3, "placeholder": "Tell us about this project"}),
+            "category": Select(),
+            "project_url": URLInput(attrs={"placeholder": "https://youtube.com/..."}),
+            "completed_at": DateInput(attrs={"type": "date"}),
         }

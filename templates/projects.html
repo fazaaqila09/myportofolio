@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Projects - {{ name }}{% endblock %}
+{% block nav_class %}nav-solid{% endblock %}
+{% block content %}
+
+<section id="projects" class="projects" style="padding-top: 130px; min-height: 100vh;">
+
+    <div class="section-head">
+        <h2 class="section-title proj-title">Projects</h2>
+        <p class="section-sub proj-sub">Things I've built, filmed, and created</p>
+    </div>
+
+    <div class="proj-toolbar">
+        <a href="{% url 'main:create_project' %}" class="button proj-add-button">
+            <span aria-hidden="true">+</span> Add Project
+        </a>
+        <form method="get" action="{% url 'main:show_projects' %}" class="proj-search">
+            <input type="search" name="category" value="{{ category_query }}"
+                placeholder="Search by category"
+                class="proj-search__input" aria-label="Search projects">
+            <button type="submit" class="button">Search</button>
+        </form>
+    </div>
+
+    <div class="proj-grid">
+        {% for project in project_list %}
+            <article class="proj-card">
+                <div class="proj-head">
+                    <span class="proj-category">{{ project.get_category_display }}</span>
+                    <div class="proj-actions">
+                        <a href="{% url 'main:update_project' project.id %}" class="proj-icon-btn" aria-label="Edit {{ project.title }}" title="Edit">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+                        <button type="button" class="proj-icon-btn proj-icon-btn--danger"
+                            popovertarget="delete-project-{{ project.id }}"
+                            aria-label="Delete {{ project.title }}" title="Delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <h3 class="proj-name">{{ project.title }}</h3>
+                <p class="proj-desc">{{ project.description }}</p>
+
+                {% if project.completed_at %}
+                    <span class="proj-date">Completed {{ project.completed_at|date:"M Y" }}</span>
+                {% endif %}
+                
+                <a href="{{ project.project_url }}" target="_blank" rel="noopener" class="button proj-view-button">View Project</a>
+
+                {% include "components/project_delete_modal.html" with project=project %}
+            </article>
+        {% empty %}
+            {% if category_query %}
+                <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    No projects found in that category.
+                </p>
+            {% else %}
+                <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    No projects added yet — click "Add Project" to add your first one.
+                </p>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock content %}
