@@ -43,7 +43,7 @@ def show_experience(request):
             title="COMPFEST 18",
             role="VPIC of Transportation & Venue",
             description="Managed venue logistics and coordinated transportation schedules to ensure the timely distribution of event equipment.",
-            category="volunteer",
+            category="comittee",
             thumbnail="/static/img/exp-cf.jpg",
             logo="/static/img/logo-cf.png"
         )
@@ -54,7 +54,7 @@ def show_experience(request):
             title="BETIS Fasilkom UI",
             role="VPIC of Operational",
             description="Oversaw daily operational workflows, managed equipment procurement, and ensured all logistical requirements were executed on schedule.",
-            category="volunteer",
+            category="comittee",
             thumbnail="/static/img/exp-betis.jpeg",
             logo="/static/img/logo-betis.png"
         )
@@ -66,7 +66,7 @@ def show_experience(request):
             title="Open House Fasilkom UI",
             role="VPIC of Operational",
             description="Directed operational preparations and coordinated cross-team equipment distribution to guarantee a seamless event execution.",
-            category="volunteer",
+            category="comittee",
             thumbnail="/static/img/exp-oh.jpg",
             logo="/static/img/logo-oh.png"
         )
@@ -77,7 +77,7 @@ def show_experience(request):
             title="DDP0",
             role="Mentor",
             description="Mentored students, managed class logistics, and provided guidance for foundational programming concepts.",
-            category="part-time",
+            category="volunteer",
             thumbnail="/static/img/exp-ddp0.jpeg",
             logo="/static/img/logo-ddp0.png"
         )
@@ -89,7 +89,7 @@ def show_experience(request):
             title="Nabastala Production",
             role="Producer",
             description="Supervised production timelines, managed essential equipment logistics, and coordinated team distributions for successful project delivery.",
-            category="freelance",
+            category="organization",
             thumbnail="/static/img/exp-nabastala.jpeg",
             logo="/static/img/logo-nabastala.png"
         )
@@ -101,7 +101,7 @@ def show_experience(request):
             title="RISMANSA",
             role="Head Division of PSDI",
             description="Designed comprehensive event programs and collaborated closely with cross-functional divisions to ensure smooth and successful event executions.",
-            category="volunteer",
+            category="organization",
             thumbnail="/static/img/exp-rismansa.jpeg",
             logo="/static/img/logo-risma.png"
         )
@@ -278,7 +278,8 @@ def get_project_json(request):
 
     if search_query:
         projects = projects.filter(
-            Q(title__icontains=search_query) | Q(description__icontains=search_query)
+            Q(title__icontains=search_query)
+            | Q(description__icontains=search_query)
         )
 
     projects_json = serializers.serialize("json", projects)

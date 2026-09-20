@@ -3,12 +3,12 @@ from django.db import models
 
 class Experience(models.Model):
     EXPERIENCE_CHOICES = [
-        ('internship', 'Internship'),
-        ('research', 'Research'),
+        ('organization', 'Organization'),
+        ('committee', 'Committee'),
         ('volunteer', 'Volunteer'),
         ('part-time', 'Part-Time'),
         ('full-time', 'Full-Time'),
-        ('freelance', 'Freelance'),
+        ('internship', 'Internship'),
     ]
         
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
