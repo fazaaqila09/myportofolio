@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.core import serializers
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_datetime
@@ -219,12 +220,12 @@ def show_projects(request):
     )
     project_list = [item.object for item in project_list]
 
-    category_query = request.GET.get("category", "").strip()
+    search_query = request.GET.get("q", "").strip()
 
     context = {
         "name": "Faza",
         "project_list": project_list,
-        "category_query": category_query,
+        "search_query": search_query,
     }
     return render(request, "projects.html", context)
 
@@ -272,11 +273,13 @@ def update_project(request, project_id):
 
 
 def get_project_json(request):
-    category_query = request.GET.get("category", "").strip()
+    search_query = request.GET.get("q", "").strip()
     projects = Project.objects.all()
 
-    if category_query:
-        projects = projects.filter(category__icontains=category_query)
+    if search_query:
+        projects = projects.filter(
+            Q(title__icontains=search_query) | Q(description__icontains=search_query)
+        )
 
     projects_json = serializers.serialize("json", projects)
     return HttpResponse(projects_json, content_type="application/json")

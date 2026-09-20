@@ -36,18 +36,18 @@ class ExperienceForm(ModelForm):
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        fields = ["title", "description", "category", "project_url", "completed_at"]
+        fields = ["title", "description", "category", "thumbnail", "project_url"]
         labels = {
             "title": "Project Name",
             "description": "Description",
             "category": "Category",
-            "project_url": "Project URL (optional)",
-            "completed_at": "Completion Date (leave blank if ongoing)",
+            "thumbnail": "Thumbnail Photo URL",
+            "project_url": "Project URL",
         }
         widgets = {
             "title": TextInput(attrs={"placeholder": "Nabastala"}),
             "description": Textarea(attrs={"rows": 3, "placeholder": "Tell us about this project"}),
             "category": Select(),
+            "thumbnail": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
             "project_url": URLInput(attrs={"placeholder": "https://youtube.com/..."}),
-            "completed_at": DateInput(attrs={"type": "date"}),
         }
