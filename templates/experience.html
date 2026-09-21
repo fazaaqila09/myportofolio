@@ -57,13 +57,21 @@
                             <h3 class="exp-org">{{ experience.title }}</h3>
                             <p class="exp-role">{{ experience.role }}</p>
                         </div>
-                        <button type="button"
-                            class="exp-delete-btn"
-                            popovertarget="delete-experience-{{ experience.id }}"
-                            aria-label="Delete {{ experience.title }}"
-                            title="Delete">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
+                        <div class="exp-actions">
+                            <a href="{% url 'main:update_experience' experience.id %}"
+                                class="exp-edit-btn"
+                                aria-label="Edit {{ experience.title }}"
+                                title="Edit">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <button type="button"
+                                class="exp-delete-btn"
+                                popovertarget="delete-experience-{{ experience.id }}"
+                                aria-label="Delete {{ experience.title }}"
+                                title="Delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <span class="exp-period">

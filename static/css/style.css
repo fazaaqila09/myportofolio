@@ -1551,6 +1551,32 @@ a:focus-visible {
 }
 .exp-delete-btn:hover { background: #b42318; color: #fff; }
 
+/* Tombol edit (pena) di samping tombol hapus */
+.exp-actions {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.exp-actions .exp-delete-btn { margin-left: 0; }
+.exp-edit-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: #F4F7FC;
+    color: #112D4E;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s ease, color .2s ease;
+}
+.exp-edit-btn:hover { background: #3F72AF; color: #fff; }
+
 /* Form (add experience & delete modal) */
 .exp-form { width: 90%; max-width: 600px; margin: 0 auto; }
 .form-group { margin-bottom: 1.25rem; }

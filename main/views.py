@@ -43,7 +43,7 @@ def show_experience(request):
             title="COMPFEST 18",
             role="VPIC of Transportation & Venue",
             description="Managed venue logistics and coordinated transportation schedules to ensure the timely distribution of event equipment.",
-            category="comittee",
+            category="committee",
             thumbnail="/static/img/exp-cf.jpg",
             logo="/static/img/logo-cf.png"
         )
@@ -54,7 +54,7 @@ def show_experience(request):
             title="BETIS Fasilkom UI",
             role="VPIC of Operational",
             description="Oversaw daily operational workflows, managed equipment procurement, and ensured all logistical requirements were executed on schedule.",
-            category="comittee",
+            category="committee",
             thumbnail="/static/img/exp-betis.jpeg",
             logo="/static/img/logo-betis.png"
         )
@@ -66,7 +66,7 @@ def show_experience(request):
             title="Open House Fasilkom UI",
             role="VPIC of Operational",
             description="Directed operational preparations and coordinated cross-team equipment distribution to guarantee a seamless event execution.",
-            category="comittee",
+            category="committee",
             thumbnail="/static/img/exp-oh.jpg",
             logo="/static/img/logo-oh.png"
         )
@@ -145,6 +145,34 @@ def create_experience(request):
     context = {
         "name": "Faza",
         "form": form,
+        "auth_error": auth_error,
+    }
+    return render(request, "experience_form.html", context)
+
+
+def update_experience(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+    # started_at bukan field model yang bisa diedit (auto_now_add), jadi
+    # diisi manual ke form sebagai tanggal awal.
+    initial = {"started_at": timezone.localtime(experience.started_at).date()}
+    form = ExperienceForm(request.POST or None, instance=experience, initial=initial)
+    auth_error = None
+
+    if request.method == "POST":
+        if not is_authorized(request):
+            auth_error = "Invalid access code."
+        elif form.is_valid():
+            experience = form.save(commit=False)
+            started_date = form.cleaned_data["started_at"]
+            experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
+            experience.save()
+            messages.success(request, "Experience updated successfully!")
+            return redirect("main:show_experience")
+
+    context = {
+        "name": "Faza",
+        "form": form,
+        "experience": experience,
         "auth_error": auth_error,
     }
     return render(request, "experience_form.html", context)

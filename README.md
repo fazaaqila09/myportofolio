@@ -47,3 +47,26 @@ Contoh: misalnya di model Education mau menambah kolom baru, seperti logo = mode
 Sama seperti tugas sebelumnya, AI sangat efisien untuk membuat kerangka kode, tapi sering kali kurang paham dengan flow atau logika sistem secara keseluruhan. Pada tugas 2 ini, saya menemukan kode dari AI justru memicu error dan mengharuskan saya melakukan troubleshoot manual:
 
     1. Konteks Database Lokal (Broken Image): Saat mengganti logo dari ekstensi .jpg menjadi .png, AI menyarankan untuk sekadar mengubah teks rutenya di dalam skrip views.py. Secara sintaks itu benar, tapi saat dijalankan, gambar logonya tetap pecah (hilang). AI tidak menyadari bahwa data dengan format lama sudah terlanjur tersimpan di dalam database lokal db.sqlite3 milik saya, dan perubahan skrip AI tersebut tidak akan tereksekusi karena tabelnya tidak dalam keadaan kosong. Perbaikan manual: Saya menyadari masalah state ini, lalu menghapus sendiri berkas db.sqlite3 lokal saya dan melakukan migrate ulang dari nol agar skrip barunya bisa menyuntikkan path gambar yang benar.
+
+### Tugas 3
+1. Penggunaan ModelForm jauh lebih praktis karena Django otomatis membuatkan elemen input, label, dan aturan validasi langsung dari struktur model yang sudah ada. Hal ini menghemat waktu dan mencegah ketidaksinkronan antara form HTML dan database. Sementara itu, tag {% csrf_token %} wajib ditambahkan untuk mengamankan form POST dari serangan CSRF (Cross-Site Request Forgery). Token ini memastikan bahwa request yang masuk benar-benar berasal dari aksi pengguna sah di situs kita, bukan dari situs peretas.
+
+2. JSON jauh lebih disukai dalam web modern karena strukturnya lebih ringkas dan ringan. Berbeda dengan XML yang boros karakter karena membutuhkan tag pembuka dan penutup untuk setiap data, JSON hanya menggunakan pasangan key-value. Selain itu, format JSON langsung sepadan dengan struktur dictionary di Python dan objek di JavaScript, sehingga datanya bisa langsung dibaca dan diolah tanpa perlu parser yang rumit.
+
+3. Saat browser meminta data, URL akan meneruskannya ke fungsi view. View kemudian mengambil data dari database yang masih berbentuk objek Python / QuerySet. Karena protokol HTTP hanya bisa mengirim format teks atau byte, data objek ini tidak bisa dikirim mentah-mentah. Di sinilah proses serialisasi diperlukan untuk menerjemahkan objek Python tersebut, termasuk tipe data khusus seperti tanggal menjadi format string teks JSON standar. Setelah menjadi JSON, barulah data dibungkus menjadi response dan dikirim ke browser.
+
+### Disclosure AI
+
+**Alat:** Claude.
+
+**Link percakapan AI:** https://claude.ai/share/a86a498f-a8be-4065-a790-dcebc10847f3
+
+**Strategi Prompting:** Pengerjaan dilakukan secara iteratif dengan prompt pendek. Karena AI tidak bisa melihat hasil layar, screenshot browser selalu dilampirkan sebagai umpan balik. Jika ada keputusan desain, saran ditanyakan terlebih dahulu. Apabila kode dari AI terasa berlebihan atau rumit, instruksi untuk menyederhanakan dan mengembalikan ke kode awal langsung diberikan.
+
+**Bagian yang dibantu:** Membangun section baru untuk "Projects" lengkap dengan fitur CRUD, serta merancang desain card yang memuat foto/logo, nama proyek, posisi, hingga deskripsinya.
+
+**Keterbatasan AI dan Perbaikan Manual:** AI cepat untuk membuat kerangka kode, tetapi tidak bisa melihat browser maupun server saya, sehingga beberapa hasilnya baru ketahuan bermasalah setelah saya coba sendiri:
+
+    1. Jarak ke Footer dan Cache CSS: Saat saya meminta konten halaman Add Project tidak menempel ke footer, AI menambahkan padding bawah lewat aturan .projects di style.css. Ketika dijalankan di browser saya, tampilannya tidak berubah karena browser masih memakai CSS lama, dan AI tidak bisa melihat hasil render untuk menyadarinya. Debugging manual: Memasang padding langsung di tag <section> pada halaman form "padding: 130px 0 80px; min-height: 100vh; box-sizing: border-box;" dan melakukan refresh supaya CSS terbaru terbaca.
+
+    2. Pencarian Berdasarkan Kategori: Pencarian awal pada halaman Projects mencocokkan kata yang diketik dengan nilai yang tersimpan di database atau berdasarkan kategori, bukan label yang tampil di card (Film & Video), sehingga mengetik label yang terlihat tidak menemukan hasil. Debugging manual: Mengganti pencarian menjadi berdasarkan judul dan deskripsi "Q(title__icontains=...) | Q(description__icontains=...)", lalu mencobanya sendiri di browser.
