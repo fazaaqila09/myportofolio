@@ -70,3 +70,43 @@ Sama seperti tugas sebelumnya, AI sangat efisien untuk membuat kerangka kode, ta
     1. Jarak ke Footer dan Cache CSS: Saat saya meminta konten halaman Add Project tidak menempel ke footer, AI menambahkan padding bawah lewat aturan .projects di style.css. Ketika dijalankan di browser saya, tampilannya tidak berubah karena browser masih memakai CSS lama, dan AI tidak bisa melihat hasil render untuk menyadarinya. Debugging manual: Memasang padding langsung di tag <section> pada halaman form "padding: 130px 0 80px; min-height: 100vh; box-sizing: border-box;" dan melakukan refresh supaya CSS terbaru terbaca.
 
     2. Pencarian Berdasarkan Kategori: Pencarian awal pada halaman Projects mencocokkan kata yang diketik dengan nilai yang tersimpan di database atau berdasarkan kategori, bukan label yang tampil di card (Film & Video), sehingga mengetik label yang terlihat tidak menemukan hasil. Debugging manual: Mengganti pencarian menjadi berdasarkan judul dan deskripsi "Q(title__icontains=...) | Q(description__icontains=...)", lalu mencobanya sendiri di browser.
+
+### Tugas 4
+
+Pada Tugas 4 tidak ada pertanyaan reflektif (dihilangkan untuk pekan ini), jadi bagian ini berisi ringkasan fitur dan cara menjalankan proyek.
+
+**Fitur yang ditambahkan**
+- Registrasi, login, dan logout memakai sistem autentikasi bawaan Django (`UserCreationForm` dan `AuthenticationForm`), dengan username akun ditampilkan di navbar.
+- Cookie `last_login` dibuat saat login dan dihapus saat logout, lalu ditampilkan di halaman profil sebagai "Sesi Terakhir Login".
+- Empat peran dengan hak akses berikut. Peran Editor dibuat lewat Django Group bernama `Editor` di Django Admin.
+
+| Peran | Lihat data | Star | Edit | Tambah / Hapus |
+|---|---|---|---|---|
+| Pengunjung (belum login) | Ya | Tidak (diarahkan ke login) | Tidak | Tidak |
+| Pengguna biasa | Ya | Ya | Tidak | Tidak |
+| Editor | Ya | Ya | Ya | Tidak |
+| Pemilik (superuser) | Ya | Ya | Ya | Ya |
+
+- Pemeriksaan hak akses dilakukan di sisi server dengan `@login_required` (pengunjung diarahkan ke halaman login) dan `PermissionDenied` (HTTP 403 untuk aksi yang tidak diizinkan). Tombol tambah, edit, dan hapus di template disembunyikan sesuai peran.
+- Fitur star memakai `ManyToManyField` ke `User` pada model `Experience` dan `Project` (migrasi `0008` dan `0009`). View `toggle_star` dan `toggle_star_experience` hanya mengubah data lewat POST dengan `{% csrf_token %}`, dan maksimal satu star per pengguna. Jumlah star dan status pengguna ditampilkan pada tombol.
+- Endpoint JSON `/api/experience/` dan `/api/projects/` tetap berfungsi. Field `starred_by` diserialisasi dengan `use_natural_foreign_keys=True` sehingga berisi username, bukan id database, dan tidak ada data sensitif yang ikut keluar.
+- Sistem Access Code dari Tugas 3 dihapus karena sudah digantikan login dan peran.
+- Test otomatis ditambahkan untuk hak akses tiap peran, visibilitas tombol, dan fitur star.
+
+### Disclosure AI
+
+**Alat:** Claude.
+
+**Link percakapan AI:** https://claude.ai/share/dab33ecf-9da1-49d6-a18c-f6e53409dc3f
+
+**Strategi Prompting:** Pengerjaan dilakukan secara iteratif. Saya mengunggah PDF tutorial dan tugas beserta ZIP project supaya AI bisa membaca kode saya, lalu meminta panduan langkah demi langkah dengan kode yang bisa langsung di-copy-paste. Ketika terjadi error, saya melampirkan screenshot atau output terminal (misalnya `NameError` dan hasil `python manage.py test`) supaya AI bisa menunjuk bagian yang salah, kemudian mengunggah project yang sudah saya perbarui untuk diperiksa ulang.
+
+**Bagian yang dibantu:** Menyusun panduan Tutorial 04 (register, login, logout, cookie `last_login`, dan otorisasi), merancang peran Editor lewat Django Group, pembatasan hak akses di sisi server, fitur star pada Experience dan Projects, penyesuaian endpoint JSON, penulisan test untuk tiap peran, serta panduan Git dan penyusunan README ini.
+
+**Keterbatasan AI dan Perbaikan Manual:** AI cepat menyusun kode dan langkah kerja, tetapi tidak bisa menjalankan proyek di laptop saya, sehingga beberapa masalah baru ketahuan setelah saya coba sendiri:
+
+    1. Kode Contoh Tidak Cocok dengan Project: Kode di PDF menulis `datetime.datetime.now()` untuk cookie `last_login`, padahal `views.py` saya sudah memakai `from datetime import date, datetime`, sehingga kode itu akan error. CSS tombol star di PDF juga memakai variabel `--ink` dan `--accent` yang tidak ada di `style.css` saya. Perbaikan manual: memakai `datetime.now()` dan mengganti warna tombol dengan palet biru-kuning yang sudah dipakai di website.
+
+    2. Access Code Bertabrakan dengan Login: Sistem Access Code dari Tugas 3 masih dipakai di form Experience, Projects, dan modal hapus, sehingga akan bertabrakan dengan pembatasan berbasis login dan peran. Perbaikan manual: menghapus input Access Code dari template, menghapus fungsi `is_authorized` dari `views.py`, dan menulis ulang `ExperienceEditTest` yang sebelumnya bergantung pada `secret_key` agar memakai login.
+
+    3. Potongan Kode yang Terlewat: Karena panduan berupa potongan kode yang harus disisipkan ke beberapa file, ada bagian yang terlewat saat saya menyalin. `toggle_star` dan `toggle_star_experience` belum di-import di `main/urls.py` sehingga `runserver` gagal dengan `NameError`, dan konstanta `PASSWORD` tidak ikut tertempel di `tests.py` sehingga 14 test error. Keduanya ketahuan saat menjalankan `runserver` dan `python manage.py test`, lalu saya perbaiki manual.
