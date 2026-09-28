@@ -41,16 +41,18 @@
                 <div class="proj-body">
                     <div class="proj-head">
                         <span class="proj-category">{{ project.get_category_display }}</span>
-                        {% if user.is_superuser %}
+                        {% if can_edit %}
                         <div class="proj-actions">
                             <a href="{% url 'main:update_project' project.id %}" class="proj-icon-btn" aria-label="Edit {{ project.title }}" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </a>
+                            {% if user.is_superuser %}
                             <button type="button" class="proj-icon-btn proj-icon-btn--danger"
                                 popovertarget="delete-project-{{ project.id }}"
                                 aria-label="Delete {{ project.title }}" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>

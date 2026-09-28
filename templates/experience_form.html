@@ -23,14 +23,6 @@
             </div>
         {% endfor %}
 
-        <div class="form-group">
-            <label for="id_secret_key">Access Code</label>
-            <input type="password" id="id_secret_key" name="secret_key" placeholder="Enter the access code" required>
-            {% if auth_error %}
-                <p class="form-error">{{ auth_error }}</p>
-            {% endif %}
-        </div>
-
         <button type="submit" class="button">{% if experience %}Save Changes{% else %}Add Experience{% endif %}</button>
         <a href="{% url 'main:show_experience' %}" class="button button-secondary">Cancel</a>
     </form>

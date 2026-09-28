@@ -12,9 +12,11 @@
     </div>
 
     <div class="exp-toolbar">
+        {% if user.is_superuser %}
         <a href="{% url 'main:create_experience' %}" class="button exp-add-button">
             <span aria-hidden="true">+</span> Add Experience
         </a>
+        {% endif %}
         <form method="get" action="{% url 'main:show_experience' %}" class="exp-search">
             <input type="search" name="title" value="{{ title_query }}"
                 placeholder="Search by organization/activity name"
@@ -57,6 +59,7 @@
                             <h3 class="exp-org">{{ experience.title }}</h3>
                             <p class="exp-role">{{ experience.role }}</p>
                         </div>
+                        {% if can_edit %}
                         <div class="exp-actions">
                             <a href="{% url 'main:update_experience' experience.id %}"
                                 class="exp-edit-btn"
@@ -64,6 +67,7 @@
                                 title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </a>
+                            {% if user.is_superuser %}
                             <button type="button"
                                 class="exp-delete-btn"
                                 popovertarget="delete-experience-{{ experience.id }}"
@@ -71,7 +75,9 @@
                                 title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
+                            {% endif %}
                         </div>
+                        {% endif %}
                     </div>
 
                     <span class="exp-period">
@@ -84,9 +90,15 @@
                     </span>
 
                     <p class="exp-desc">{{ experience.description }}</p>
+
+                    <div class="exp-star">
+                        {% include "components/experience_star.html" with experience=experience %}
+                    </div>
                 </div>
 
+                {% if user.is_superuser %}
                 {% include "components/experience_delete_modal.html" with experience=experience %}
+                {% endif %}
             </article>
         {% empty %}
             {% if title_query %}
