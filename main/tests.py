@@ -1,4 +1,5 @@
-from django.test import TestCase, override_settings
+from django.contrib.auth.models import Group, User
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.template.loader import render_to_string
@@ -6,8 +7,14 @@ from datetime import date
 
 from main.models import Experience, Education, Project
 
-SECRET = "rahasia"
+PASSWORD = "Namorstrange33"
 
+def make_users():
+    """Buat akun untuk tiap peran: pemilik (superuser), editor (grup Editor), dan user biasa."""
+    User.objects.create_superuser("pemilik", password=PASSWORD)
+    editor = User.objects.create_user("editor1", password=PASSWORD)
+    editor.groups.add(Group.objects.get_or_create(name="Editor")[0])
+    User.objects.create_user("biasa", password=PASSWORD)
 
 class MainTest(TestCase):
     def setUp(self):
@@ -61,7 +68,6 @@ class MainTest(TestCase):
         self.assertNotContains(response, "Ongoing")
 
 
-@override_settings(PORTFOLIO_SECRET_KEY=SECRET)
 class ExperienceEditTest(TestCase):
     def setUp(self):
         self.experience = Experience.objects.create(
@@ -70,6 +76,8 @@ class ExperienceEditTest(TestCase):
             category="part-time",
         )
         self.url = reverse("main:update_experience", args=[self.experience.id])
+        make_users()
+        self.client.login(username="pemilik", password=PASSWORD)
 
     def form_data(self, **overrides):
         data = {
@@ -81,7 +89,6 @@ class ExperienceEditTest(TestCase):
             "logo": "",
             "started_at": "2026-04-01",
             "ended_at": "",
-            "secret_key": SECRET,
         }
         data.update(overrides)
         return data
@@ -96,8 +103,8 @@ class ExperienceEditTest(TestCase):
         self.assertTemplateUsed(response, "experience_form.html")
         self.assertContains(response, 'value="Asisten Dosen PBP"')
 
-    # 2. Data berubah kalau kode akses benar
-    def test_update_with_valid_code(self):
+    # 2. Data berubah kalau yang mengubah berhak (tanpa access code lagi)
+    def test_update_by_authorized_user(self):
         response = self.client.post(self.url, self.form_data())
 
         self.assertRedirects(response, reverse("main:show_experience"))
@@ -106,13 +113,10 @@ class ExperienceEditTest(TestCase):
         self.assertEqual(self.experience.category, "organization")
         self.assertEqual(Experience.objects.count(), 1)  # diubah, bukan ditambah
 
-    # 3. Data tidak berubah kalau kode akses salah
-    def test_update_with_wrong_code_is_rejected(self):
-        response = self.client.post(self.url, self.form_data(secret_key="salah"))
-
-        self.assertContains(response, "Invalid access code.")
-        self.experience.refresh_from_db()
-        self.assertEqual(self.experience.title, "Asisten Dosen PBP")
+    # 3. Form tidak lagi meminta Access Code
+    def test_form_has_no_access_code_field(self):
+        response = self.client.get(self.url)
+        self.assertNotContains(response, "secret_key")
 
 
 class EducationTest(TestCase):
@@ -189,3 +193,168 @@ class ProjectTest(TestCase):
 
         by_category = self.client.get(reverse("main:show_projects"), {"q": "software"})
         self.assertContains(by_category, "No projects match your search.")
+
+class RoleAccessTest(TestCase):
+    """Hak akses 4 peran (pengunjung, user biasa, Editor, pemilik) pada Experience dan Project."""
+
+    def setUp(self):
+        self.experience = Experience.objects.create(
+            title="COMPFEST", description="Panitia.", category="committee",
+        )
+        self.project = Project.objects.create(
+            title="Solilokui", description="Film pendek.", category="film",
+            project_url="https://example.com",
+        )
+        make_users()
+        self.add_urls = [reverse("main:create_experience"), reverse("main:create_project")]
+        self.edit_urls = [
+            reverse("main:update_experience", args=[self.experience.id]),
+            reverse("main:update_project", args=[self.project.id]),
+        ]
+        self.delete_urls = [
+            reverse("main:delete_experience", args=[self.experience.id]),
+            reverse("main:delete_project", args=[self.project.id]),
+        ]
+
+    def login(self, username):
+        self.client.login(username=username, password=PASSWORD)
+
+    def data_still_exists(self):
+        return (
+            Experience.objects.filter(pk=self.experience.pk).exists()
+            and Project.objects.filter(pk=self.project.pk).exists()
+        )
+
+    # --- Pengunjung: diarahkan ke login ---
+    def test_visitor_is_redirected_to_login(self):
+        for url in self.add_urls + self.edit_urls:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(response.url.startswith("/login/?next="))
+        for url in self.delete_urls:
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(response.url.startswith("/login/"))
+        self.assertTrue(self.data_still_exists())
+
+    # --- User biasa: 403 untuk semua aksi ubah data ---
+    def test_regular_user_gets_403(self):
+        self.login("biasa")
+        for url in self.add_urls + self.edit_urls:
+            self.assertEqual(self.client.get(url).status_code, 403)
+        for url in self.delete_urls:
+            self.assertEqual(self.client.post(url).status_code, 403)
+        self.assertTrue(self.data_still_exists())
+
+    # --- Editor: boleh edit, tidak boleh tambah/hapus ---
+    def test_editor_can_edit_but_not_create_or_delete(self):
+        self.login("editor1")
+        for url in self.edit_urls:
+            self.assertEqual(self.client.get(url).status_code, 200)
+        for url in self.add_urls:
+            self.assertEqual(self.client.get(url).status_code, 403)
+        for url in self.delete_urls:
+            self.assertEqual(self.client.post(url).status_code, 403)
+        self.assertTrue(self.data_still_exists())
+
+    def test_editor_can_save_changes(self):
+        self.login("editor1")
+        self.client.post(self.edit_urls[0], {
+            "title": "COMPFEST 18", "role": "", "description": "Panitia.",
+            "category": "committee", "thumbnail": "", "logo": "",
+            "started_at": "2026-04-01", "ended_at": "",
+        })
+        self.client.post(self.edit_urls[1], {
+            "title": "Solilokui 2", "description": "Film pendek.", "category": "film",
+            "thumbnail": "", "project_url": "https://example.com",
+        })
+        self.experience.refresh_from_db()
+        self.project.refresh_from_db()
+        self.assertEqual(self.experience.title, "COMPFEST 18")
+        self.assertEqual(self.project.title, "Solilokui 2")
+
+    # --- Pemilik: semua boleh ---
+    def test_owner_has_full_access(self):
+        self.login("pemilik")
+        for url in self.add_urls + self.edit_urls:
+            self.assertEqual(self.client.get(url).status_code, 200)
+        for url in self.delete_urls:
+            self.assertEqual(self.client.post(url).status_code, 302)
+        self.assertFalse(Experience.objects.exists())
+        self.assertFalse(Project.objects.exists())
+
+    # --- Tombol di template mengikuti peran ---
+    def assert_buttons(self, username, add, edit, delete):
+        if username:
+            self.login(username)
+        for page in ("main:show_experience", "main:show_projects"):
+            html = self.client.get(reverse(page)).content.decode()
+            self.assertEqual(any(u in html for u in self.add_urls), add, f"{username}: add di {page}")
+            self.assertEqual(any(u in html for u in self.edit_urls), edit, f"{username}: edit di {page}")
+            self.assertEqual("delete-experience-" in html or "delete-project-" in html, delete, f"{username}: delete di {page}")
+        self.client.logout()
+
+    def test_buttons_follow_role(self):
+        self.assert_buttons(None, add=False, edit=False, delete=False)
+        self.assert_buttons("biasa", add=False, edit=False, delete=False)
+        self.assert_buttons("editor1", add=False, edit=True, delete=False)
+        self.assert_buttons("pemilik", add=True, edit=True, delete=True)
+
+
+class StarTest(TestCase):
+    """Star pada Experience dan Project: butuh login, maksimal satu per pengguna, API tidak bocor."""
+
+    def setUp(self):
+        self.experience = Experience.objects.create(
+            title="COMPFEST", description="Panitia.", category="committee",
+        )
+        self.project = Project.objects.create(
+            title="Solilokui", description="Film pendek.", category="film",
+            project_url="https://example.com",
+        )
+        make_users()
+        self.targets = [
+            (self.experience, reverse("main:toggle_star_experience", args=[self.experience.id])),
+            (self.project, reverse("main:toggle_star", args=[self.project.id])),
+        ]
+
+    def test_visitor_cannot_star(self):
+        for obj, url in self.targets:
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(response.url.startswith("/login/"))
+            self.assertEqual(obj.starred_by.count(), 0)
+
+    def test_toggle_adds_then_removes_and_max_one_per_user(self):
+        self.client.login(username="biasa", password=PASSWORD)
+        for obj, url in self.targets:
+            self.client.post(url)
+            self.assertEqual(obj.starred_by.count(), 1)
+            self.client.post(url)
+            self.assertEqual(obj.starred_by.count(), 0)
+
+    def test_get_does_not_change_star(self):
+        self.client.login(username="biasa", password=PASSWORD)
+        for obj, url in self.targets:
+            self.client.get(url)
+            self.assertEqual(obj.starred_by.count(), 0)
+
+    def test_page_shows_count_and_user_state(self):
+        self.client.login(username="biasa", password=PASSWORD)
+        for obj, url in self.targets:
+            self.client.post(url)
+        for page in ("main:show_experience", "main:show_projects"):
+            html = self.client.get(reverse(page)).content.decode()
+            self.assertIn("Unstar", html)
+            self.assertIn("star-count", html)
+
+    def test_api_shows_usernames_only(self):
+        user = User.objects.get(username="biasa")
+        self.experience.starred_by.add(user)
+        self.project.starred_by.add(user)
+        for name in ("main:get_experience_json", "main:get_project_json"):
+            response = self.client.get(reverse(name))
+            self.assertEqual(response.json()[0]["fields"]["starred_by"], [["biasa"]])
+            body = response.content.decode().lower()
+            self.assertNotIn("password", body)
+            self.assertNotIn("email", body)

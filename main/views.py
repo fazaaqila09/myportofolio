@@ -282,6 +282,7 @@ def show_projects(request):
         "name": "Faza",
         "project_list": project_list,
         "search_query": search_query,
+        "can_edit": can_edit(request.user),
     }
     return render(request, "projects.html", context)
 
