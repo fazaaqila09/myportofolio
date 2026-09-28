@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -15,15 +14,19 @@ from main.models import Experience, Education, Project
 from main.forms import ExperienceForm, ProjectForm
 
 
-def is_authorized(request):
-    """Cek kode rahasia: dari header (buat klien non-browser seperti
-    Postman/fetch) atau dari field form 'secret_key' (buat form HTML
-    biasa yang nggak bisa set custom header tanpa JavaScript)."""
-    secret = getattr(settings, "PORTFOLIO_SECRET_KEY", "")
-    if not secret:
-        return False
-    provided = request.POST.get("secret_key") or request.headers.get("X-Portfolio-Key", "")
-    return provided == secret
+EDITOR_GROUP = "Editor"
+
+
+def is_editor(user):
+    """True jika user sudah login dan tergabung dalam grup 'Editor'
+    (grup dibuat dan diisi lewat Django Admin)."""
+    return user.is_authenticated and user.groups.filter(name=EDITOR_GROUP).exists()
+
+
+def can_edit(user):
+    """Hak mengubah data: pemilik portofolio (superuser) atau Editor.
+    Membuat dan menghapus data tetap khusus superuser."""
+    return user.is_superuser or is_editor(user)
 
 
 def show_main(request):
@@ -128,58 +131,59 @@ def show_experience(request):
         "name": "Faza",
         "experience_list": experience_list,
         "title_query": title_query,
+        "can_edit": can_edit(request.user),
     }
     return render(request, "experience.html", context)
 
 
+@login_required(login_url="/login/")
 def create_experience(request):
-    form = ExperienceForm(request.POST or None)
-    auth_error = None
+    # Hanya pemilik portofolio (superuser) yang boleh menambah data.
+    if not request.user.is_superuser:
+        raise PermissionDenied
 
-    if request.method == "POST":
-        if not is_authorized(request):
-            auth_error = "Invalid access code."
-        elif form.is_valid():
-            experience = form.save(commit=False)
-            experience.save()  # INSERT pertama -> auto_now_add mengisi started_at = sekarang
-            started_date = form.cleaned_data["started_at"]
-            experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
-            experience.save()  # UPDATE -> pakai tanggal dari form (jam otomatis 00:00)
-            messages.success(request, "New experience added successfully!")
-            return redirect("main:show_experience")
+    form = ExperienceForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        experience = form.save(commit=False)
+        experience.save()  # INSERT pertama -> auto_now_add mengisi started_at = sekarang
+        started_date = form.cleaned_data["started_at"]
+        experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
+        experience.save()  # UPDATE -> pakai tanggal dari form (jam otomatis 00:00)
+        messages.success(request, "New experience added successfully!")
+        return redirect("main:show_experience")
 
     context = {
         "name": "Faza",
         "form": form,
-        "auth_error": auth_error,
     }
     return render(request, "experience_form.html", context)
 
 
+@login_required(login_url="/login/")
 def update_experience(request, experience_id):
+    # Pemilik (superuser) dan Editor boleh mengubah data.
+    if not can_edit(request.user):
+        raise PermissionDenied
+
     experience = get_object_or_404(Experience, pk=experience_id)
     # started_at bukan field model yang bisa diedit (auto_now_add), jadi
     # diisi manual ke form sebagai tanggal awal.
     initial = {"started_at": timezone.localtime(experience.started_at).date()}
     form = ExperienceForm(request.POST or None, instance=experience, initial=initial)
-    auth_error = None
 
-    if request.method == "POST":
-        if not is_authorized(request):
-            auth_error = "Invalid access code."
-        elif form.is_valid():
-            experience = form.save(commit=False)
-            started_date = form.cleaned_data["started_at"]
-            experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
-            experience.save()
-            messages.success(request, "Experience updated successfully!")
-            return redirect("main:show_experience")
+    if request.method == "POST" and form.is_valid():
+        experience = form.save(commit=False)
+        started_date = form.cleaned_data["started_at"]
+        experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
+        experience.save()
+        messages.success(request, "Experience updated successfully!")
+        return redirect("main:show_experience")
 
     context = {
         "name": "Faza",
         "form": form,
         "experience": experience,
-        "auth_error": auth_error,
     }
     return render(request, "experience_form.html", context)
 
@@ -191,18 +195,36 @@ def get_experience_json(request):
     if title_query:
         experience = experience.filter(title__icontains=title_query)
 
-    experience_json = serializers.serialize("json", experience)
+    # use_natural_foreign_keys: starred_by berisi username, bukan id database.
+    experience_json = serializers.serialize(
+        "json", experience, use_natural_foreign_keys=True
+    )
     return HttpResponse(experience_json, content_type="application/json")
 
 
+@login_required(login_url="/login/")
 def delete_experience(request, experience_id):
+    # Hanya pemilik portofolio (superuser) yang boleh menghapus data.
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     experience = get_object_or_404(Experience, pk=experience_id)
     if request.method == "POST":
-        if not is_authorized(request):
-            messages.error(request, "Invalid access code. Experience was not deleted.")
-            return redirect("main:show_experience")
         experience.delete()
         messages.success(request, "Experience deleted successfully!")
+    return redirect("main:show_experience")
+
+
+# Semua akun yang sudah login boleh memberi star (tanpa cek peran).
+@login_required(login_url="/login/")
+def toggle_star_experience(request, experience_id):
+    experience = get_object_or_404(Experience, pk=experience_id)
+    if request.method == "POST":
+        # Sudah pernah di-star akun ini -> batalkan; belum -> tambahkan.
+        if request.user in experience.starred_by.all():
+            experience.starred_by.remove(request.user)
+        else:
+            experience.starred_by.add(request.user)
     return redirect("main:show_experience")
 
 
@@ -279,13 +301,14 @@ def create_project(request):
     context = {
         "name": "Faza",
         "form": form,
+        "can_edit": can_edit(request.user),
     }
     return render(request, "project_form.html", context)
 
 
 @login_required(login_url="/login/")
 def update_project(request, project_id):
-    if not request.user.is_superuser:
+    if not can_edit(request.user):
         raise PermissionDenied
 
     project = get_object_or_404(Project, pk=project_id)
