@@ -12,9 +12,11 @@
     </div>
 
     <div class="proj-toolbar">
+        {% if user.is_superuser %}
         <a href="{% url 'main:create_project' %}" class="button proj-add-button">
             <span aria-hidden="true">+</span> Add Project
         </a>
+        {% endif %}
         <form method="get" action="{% url 'main:show_projects' %}" class="proj-search">
             <input type="search" name="q" value="{{ search_query }}"
                 placeholder="Search by title or description"
@@ -39,6 +41,7 @@
                 <div class="proj-body">
                     <div class="proj-head">
                         <span class="proj-category">{{ project.get_category_display }}</span>
+                        {% if user.is_superuser %}
                         <div class="proj-actions">
                             <a href="{% url 'main:update_project' project.id %}" class="proj-icon-btn" aria-label="Edit {{ project.title }}" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
@@ -49,15 +52,20 @@
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
+                        {% endif %}
                     </div>
 
                     <h3 class="proj-name">{{ project.title }}</h3>
                     <p class="proj-desc">{{ project.description }}</p>
 
-                    <a href="{{ project.project_url }}" target="_blank" rel="noopener" class="button proj-view-button">View Project</a>
+                    <div class="proj-links">
+                        <a href="{{ project.project_url }}" target="_blank" rel="noopener" class="button proj-view-button">View Project</a>
+                        {% include "components/project_star.html" with project=project %}
+                    </div>
                 </div>
-
+                {% if user.is_superuser %}
                 {% include "components/project_delete_modal.html" with project=project %}
+                {% endif %}
             </article>
         {% empty %}
             {% if search_query %}

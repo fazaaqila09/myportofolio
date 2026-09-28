@@ -1,17 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}{% if project %}Edit Project{% else %}Add New Project{% endif %} - {{ name }}{% endblock %}
+{% block title %}Login - {{ name }}{% endblock %}
 {% block nav_class %}nav-solid{% endblock %}
 {% block content %}
 
 <section class="projects" style="padding: 130px 0 80px; min-height: 100vh; box-sizing: border-box;">
     <div class="section-head">
-        <h2 class="section-title">{% if project %}Edit Project{% else %}Add New Project{% endif %}</h2>
+        <h2 class="section-title">Login</h2>
     </div>
 
-    <form method="post"
-        action="{% if project %}{% url 'main:update_project' project.id %}{% else %}{% url 'main:create_project' %}{% endif %}"
-        class="proj-form">
+    <form method="post" action="{% url 'main:login' %}" class="proj-form">
         {% csrf_token %}
         {% for field in form %}
             <div class="form-group">
@@ -22,9 +20,12 @@
                 {% endfor %}
             </div>
         {% endfor %}
+        {% for error in form.non_field_errors %}
+            <p class="form-error">{{ error }}</p>
+        {% endfor %}
 
-        <button type="submit" class="button">{% if project %}Save Changes{% else %}Add Project{% endif %}</button>
-        <a href="{% url 'main:show_projects' %}" class="button button-secondary">Cancel</a>
+        <button type="submit" class="button">Login</button>
+        <p class="auth-switch">Belum punya akun? <a href="{% url 'main:register' %}">Daftar di sini</a>.</p>
     </form>
 </section>
 
