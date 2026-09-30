@@ -1,5 +1,26 @@
 // Star tanpa reload: mencegat submit form.star-form (Projects dan Experience),
-// mengirimnya lewat fetch, lalu memperbarui tombol di tempat.
+// mengirimnya lewat fetch, lalu memperbarui tombol di tempat dengan animasi.
+
+// Ledakan bintang kecil dari tombol saat memberi star
+function burstStars(button) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !button.animate) return;
+    for (let i = 0; i < 7; i++) {
+        const particle = document.createElement('i');
+        particle.className = 'star-particle';
+        particle.setAttribute('aria-hidden', 'true');
+        particle.innerHTML = '&#9733;';
+        button.appendChild(particle);
+
+        const angle = (Math.PI * 2 * i) / 7 + Math.random() * 0.5;
+        const distance = 26 + Math.random() * 22;
+        const animation = particle.animate([
+            { transform: 'translate(-50%, -50%) scale(.4)', opacity: 1 },
+            { transform: 'translate(calc(-50% + ' + (Math.cos(angle) * distance).toFixed(1) + 'px), calc(-50% + ' + (Math.sin(angle) * distance).toFixed(1) + 'px)) scale(1.1)', opacity: 0 },
+        ], { duration: 650, easing: 'cubic-bezier(.2,.8,.3,1)' });
+        animation.onfinish = () => particle.remove();
+    }
+}
+
 document.addEventListener('submit', async function (event) {
     const form = event.target.closest('form.star-form');
     if (!form) return;
@@ -35,6 +56,14 @@ document.addEventListener('submit', async function (event) {
             '<span aria-hidden="true">&#9733;</span> ' +
             (data.is_starred ? 'Unstar' : 'Star') +
             ' <span class="star-count">' + Number(data.star_count) + '</span>';
+
+        // Animasi: bintang membesar (hanya saat memberi star) dan angka "memantul"
+        const countElement = button.querySelector('.star-count');
+        countElement.classList.add('star-count--bump');
+        if (data.is_starred) {
+            button.querySelector('span[aria-hidden="true"]').classList.add('star-pop');
+            burstStars(button);
+        }
     } catch (error) {
         console.error('Error toggling star:', error);
         if (typeof showToast === 'function') {

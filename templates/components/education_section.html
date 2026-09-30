@@ -1,0 +1,36 @@
+{% load static %}
+<!-- Education: daftar riwayat pendidikan (dipakai di halaman utama dan /education/) -->
+<section id="education" class="education">
+    <div class="education-inner">
+        <div class="edu-layout">
+            <div class="edu-intro">
+                <h2 class="section-title">Education</h2>
+                <p class="section-sub">Where I've studied, learned, and grown</p>
+            </div>
+
+            <ol class="edu-list">
+                {% for education in education_list %}
+                    <li class="edu-item">
+                        <span class="edu-year">
+                            {% if education.is_ongoing %}<i class="edu-now" aria-hidden="true"></i>{% endif %}
+                            {{ education.started_at|date:"Y" }} &ndash; {% if education.is_ongoing %}Present{% else %}{{ education.ended_at|date:"Y" }}{% endif %}
+                        </span>
+                        <div class="edu-main">
+                            <h3 class="edu-school">{{ education.school }}</h3>
+                            <p class="edu-major">{{ education.major }}</p>
+                        </div>
+                        <div class="edu-logo">
+                            {% if education.logo %}
+                                <img src="{{ education.logo }}" alt="Logo {{ education.school }}">
+                            {% else %}
+                                <img src="{% static 'img/logo-ui.png' %}" alt="Logo default">
+                            {% endif %}
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="edu-empty">Belum ada riwayat pendidikan yang ditambahkan.</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+</section>

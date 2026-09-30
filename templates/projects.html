@@ -25,9 +25,44 @@
         </form>
     </div>
 
-    <!-- Loading State -->
-    <div id="loading" class="empty-state hide">
-        <p>Loading projects...</p>
+    <!-- Filter kategori (dibuat otomatis dari data) + keterangan jumlah -->
+    <div id="category-chips" class="chip-row hide" role="group" aria-label="Filter kategori"></div>
+    <p id="result-info" class="result-info hide" aria-live="polite">
+        Menampilkan <strong id="shown-count">0</strong> dari <strong id="total-count">0</strong> proyek
+    </p>
+
+    <!-- Loading State: kartu kerangka (skeleton) -->
+    <div id="loading" class="proj-grid hide" aria-busy="true" aria-label="Loading projects">
+        <div class="proj-card skeleton-card" aria-hidden="true">
+            <div class="skeleton skeleton-photo"></div>
+            <div class="proj-body">
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-line mid"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-btn"></div>
+            </div>
+        </div>
+        <div class="proj-card skeleton-card" aria-hidden="true">
+            <div class="skeleton skeleton-photo"></div>
+            <div class="proj-body">
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-line mid"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-btn"></div>
+            </div>
+        </div>
+        <div class="proj-card skeleton-card" aria-hidden="true">
+            <div class="skeleton skeleton-photo"></div>
+            <div class="proj-body">
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-line mid"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-btn"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Error State -->
@@ -42,6 +77,11 @@
 
     <!-- Project Grid -->
     <div id="grid" class="proj-grid hide"></div>
+
+    <!-- Load more (juga otomatis terpicu saat tombol ini terlihat = infinite scroll) -->
+    <div id="load-more-wrap" class="load-more-wrap hide">
+        <button type="button" id="load-more" class="button load-more">Load more</button>
+    </div>
 </section>
 
 {% if user.is_superuser %}
@@ -56,8 +96,14 @@
     const CAN_EDIT = "{{ can_edit|yesno:'true,false' }}" === "true";
     const SEARCH_DEBOUNCE_DELAY = 300;
     const DUMMY_ID = '00000000-0000-0000-0000-000000000000';
+    const PAGE_SIZE = 6;                 // jumlah kartu per "halaman"
+    const LOADING_DELAY = 120;           // skeleton baru tampil bila fetch lebih lama dari ini (ms)
     let projectsAbortController;
     let searchDebounceTimer;
+    let loadingTimer;
+    let allProjects = [];                // hasil fetch terakhir (sudah terfilter pencarian)
+    let activeCategory = 'all';
+    let visibleCount = PAGE_SIZE;
 
     // Elemen DOM
     const loadingState = document.getElementById('loading');
@@ -68,6 +114,12 @@
     const searchForm = document.getElementById('project-search-form');
     const searchInput = document.getElementById('search-input');
     const projectForm = document.getElementById('project-form');
+    const chipRow = document.getElementById('category-chips');
+    const resultInfo = document.getElementById('result-info');
+    const shownCount = document.getElementById('shown-count');
+    const totalCount = document.getElementById('total-count');
+    const loadMoreWrap = document.getElementById('load-more-wrap');
+    const loadMoreButton = document.getElementById('load-more');
 
     // Menyembunyikan/Menampilkan section halaman
     function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
@@ -75,6 +127,12 @@
         errorState.classList.toggle('hide', !showError);
         emptyState.classList.toggle('hide', !showEmpty);
         gridContainer.classList.toggle('hide', !showGrid);
+        if (showLoading) loadMoreWrap.classList.add('hide');
+        if (showEmpty || showError) {
+            chipRow.classList.add('hide');
+            resultInfo.classList.add('hide');
+            loadMoreWrap.classList.add('hide');
+        }
     }
 
     // Mengubah karakter khusus HTML menjadi entity agar ditampilkan sebagai teks
@@ -155,14 +213,83 @@
         return articleElement;
     }
 
+    // Data yang sedang ditampilkan: semua, atau hanya kategori yang dipilih
+    function getFilteredProjects() {
+        return activeCategory === 'all'
+            ? allProjects
+            : allProjects.filter(item => item.fields.category === activeCategory);
+    }
+
+    // Chip filter kategori dibuat dari data yang ada
+    function renderCategoryChips() {
+        const categories = new Map();
+        allProjects.forEach(item => categories.set(item.fields.category, item.fields.category_display));
+
+        chipRow.innerHTML = '';
+        if (categories.size < 2) {
+            chipRow.classList.add('hide');
+            return;
+        }
+        const entries = [['all', 'All'], ...categories.entries()];
+        entries.forEach(([value, label]) => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'chip';
+            chip.dataset.category = value;
+            chip.textContent = label;          // textContent: aman dari XSS
+            chip.setAttribute('aria-pressed', String(value === activeCategory));
+            chipRow.appendChild(chip);
+        });
+        chipRow.classList.remove('hide');
+    }
+
+    // Menggambar kartu: append=false -> ulang dari awal, append=true -> tambah kartu berikutnya
+    function renderProjects(append = false) {
+        const filtered = getFilteredProjects();
+
+        if (filtered.length === 0) {
+            emptyMessage.textContent = searchInput.value.trim()
+                ? 'No projects match your search.'
+                : (allProjects.length === 0
+                    ? 'No projects added yet — click "Add Project" to add your first one.'
+                    : 'No projects in this category.');
+            displayPageSection({ showEmpty: true });
+            return;
+        }
+
+        if (!append) gridContainer.innerHTML = '';
+        const alreadyShown = append ? gridContainer.children.length : 0;
+        filtered.slice(alreadyShown, visibleCount).forEach((item, index) => {
+            const card = buildProjectCardElement(item);
+            card.classList.add('proj-card--enter');
+            card.style.setProperty('--i', index);   // jeda animasi berurutan (stagger)
+            gridContainer.appendChild(card);
+        });
+        displayPageSection({ showGrid: true });
+
+        // Keterangan jumlah + tombol load more
+        const shown = Math.min(visibleCount, filtered.length);
+        resultInfo.classList.remove('hide');
+        animateNumberSafe(shownCount, shown);
+        animateNumberSafe(totalCount, filtered.length);
+        loadMoreWrap.classList.toggle('hide', shown >= filtered.length);
+    }
+
+    function animateNumberSafe(element, value) {
+        if (typeof animateNumber === 'function') animateNumber(element, value);
+        else element.textContent = value;
+    }
+
     // Fetch data project
     async function fetchProjects(searchQuery = "") {
         if (projectsAbortController) projectsAbortController.abort();
         projectsAbortController = new AbortController();
 
-        try {
-            displayPageSection({ showLoading: true });
+        // Skeleton hanya muncul kalau server lebih lambat dari LOADING_DELAY (tanpa kedip)
+        clearTimeout(loadingTimer);
+        loadingTimer = setTimeout(() => displayPageSection({ showLoading: true }), LOADING_DELAY);
 
+        try {
             const url = searchQuery
                 ? `${PROJECTS_ENDPOINT}?q=${encodeURIComponent(searchQuery)}`
                 : PROJECTS_ENDPOINT;
@@ -174,25 +301,46 @@
 
             if (!response.ok) throw new Error('Failed to fetch data');
 
-            const projectData = await response.json();
+            allProjects = await response.json();
+            clearTimeout(loadingTimer);
 
-            if (projectData.length === 0) {
-                emptyMessage.textContent = searchQuery
-                    ? 'No projects match your search.'
-                    : 'No projects added yet — click "Add Project" to add your first one.';
-                displayPageSection({ showEmpty: true });
-            } else {
-                gridContainer.innerHTML = '';
-                projectData.forEach(item => {
-                    gridContainer.appendChild(buildProjectCardElement(item));
-                });
-                displayPageSection({ showGrid: true });
+            // Reset tampilan: kategori lama yang sudah tidak ada dikembalikan ke "All"
+            if (activeCategory !== 'all' && !allProjects.some(item => item.fields.category === activeCategory)) {
+                activeCategory = 'all';
             }
+            visibleCount = PAGE_SIZE;
+            renderCategoryChips();
+            renderProjects();
         } catch (error) {
             if (error.name === 'AbortError') return;
+            clearTimeout(loadingTimer);
             console.error('Error loading projects:', error);
             displayPageSection({ showError: true });
         }
+    }
+
+    // Klik chip kategori
+    chipRow.addEventListener('click', function (event) {
+        const chip = event.target.closest('.chip');
+        if (!chip) return;
+        activeCategory = chip.dataset.category;
+        visibleCount = PAGE_SIZE;
+        chipRow.querySelectorAll('.chip').forEach(button => {
+            button.setAttribute('aria-pressed', String(button === chip));
+        });
+        renderProjects();
+    });
+
+    // Load more: tombol, dan otomatis saat tombol terlihat (infinite scroll)
+    function loadMoreProjects() {
+        visibleCount += PAGE_SIZE;
+        renderProjects(true);
+    }
+    loadMoreButton.addEventListener('click', loadMoreProjects);
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+            if (entries[0].isIntersecting && !loadMoreWrap.classList.contains('hide')) loadMoreProjects();
+        }, { rootMargin: '0px 0px 120px 0px' }).observe(loadMoreWrap);
     }
 
     // Pencarian dengan debouncing

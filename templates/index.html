@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Faza - Portfolio{% endblock %}
+{% block nav_class %}nav-solid{% endblock %}
 {% block content %}
 
 <!-- Area Hero: sapaan, nama, subtitle, dan link sosial media -->
@@ -72,5 +73,8 @@
         </div>
     </div>
 </section>
+
+<!-- Education: ikut di-scroll di halaman utama, sama seperti About -->
+{% include "components/education_section.html" %}
 
 {% endblock content %}

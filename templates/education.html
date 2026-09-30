@@ -1,51 +1,8 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}Education - {{ name }}{% endblock %}
 {% block nav_class %}nav-solid{% endblock %}
 {% block content %}
-
-<section id="education" class="education" style="padding-top: 130px; min-height: 100vh;">
-    <div class="education-inner">
-
-        <div class="section-head">
-            <h2 class="section-title">Education</h2>
-            <p class="section-sub">	Where I've studied, learned, and grown</p>
-        </div>
-
-        <div class="timeline">
-            {% for education in education_list %}
-                <div class="timeline-item">
-                    <div class="timeline-card">
-                        <div class="card-head">
-                            <div class="school-logo">
-                                {% if education.logo %}
-                                    <img src="{{ education.logo }}" alt="Logo {{ education.school }}">
-                                {% else %}
-                                    <img src="{% static 'img/logo-ui.png' %}" alt="Logo Default">
-                                {% endif %}
-                            </div>
-                            <div class="card-heading">
-                                <span class="timeline-year">
-                                    {{ education.started_at|date:"Y" }} &ndash;
-                                    {% if education.is_ongoing %}
-                                        Present
-                                    {% else %}
-                                        {{ education.ended_at|date:"Y" }}
-                                    {% endif %}
-                                </span>
-                                <h3 class="school-name">{{ education.school }}</h3>
-                            </div>
-                        </div>
-                        <p class="school-desc">{{ education.major }}</p>
-                    </div>
-                </div>
-            {% empty %}
-                <p class="empty-state" style="text-align: center; padding: 40px;">
-                    Belum ada riwayat pendidikan yang ditambahkan.
-                </p>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
+<div class="education-page">
+    {% include "components/education_section.html" %}
+</div>
 {% endblock content %}

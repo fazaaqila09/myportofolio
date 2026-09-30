@@ -11,9 +11,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/effects.css' %}">
+    <link rel="stylesheet" href="{% static 'css/extras.css' %}">
+    <!-- Terapkan tema (terang/gelap) sebelum halaman tampil supaya tidak berkedip -->
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme');
+                if (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+                if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+            } catch (e) { /* abaikan */ }
+        })();
+    </script>
     {% block meta %}{% endblock meta %}
 </head>
 <body>
+    <!-- Lapisan background dekoratif (lihat extras.css) -->
+    <div class="bg-mesh" aria-hidden="true"></div>
+    <div class="bg-dots" aria-hidden="true"></div>
 
     <nav class="top-nav {% block nav_class %}{% endblock nav_class %}">
         <a href="{% url 'main:show_main' %}" class="nav-brand">Faza</a>
@@ -21,12 +36,12 @@
         <div class="nav-menu">
             <a href="{% url 'main:show_main' %}#home">Home</a>
             <a href="{% url 'main:show_main' %}#about">About</a>
-            <a href="{% url 'main:show_education' %}">Education</a>
+            <a href="{% url 'main:show_main' %}#education">Education</a>
             <a href="{% url 'main:show_experience' %}">Experience</a>
             <a href="{% url 'main:show_projects' %}">Projects</a>
         </div>
 
-        <!-- Akun: satu item. Belum login = "Login", sudah login = username (klik untuk menu Logout) -->
+        <!-- Akun: ikon orang + "Login" (pengunjung) atau + username (sudah login) -->
         {% if user.is_authenticated %}
             <a href="#" class="nav-account" id="account-trigger" role="button"
                 aria-haspopup="menu" aria-expanded="false">
@@ -41,7 +56,7 @@
         {% endif %}
     </nav>
 
-    <!-- Menu Logout: di luar <nav> supaya tidak terpotong overflow navbar -->
+    <!-- Menu akun (hanya saat sudah login): di luar <nav> supaya tidak terpotong overflow navbar -->
     {% if user.is_authenticated %}
     <div id="profile-menu" class="profile-menu" popover="auto">
         <a href="{% url 'main:logout' %}" class="profile-menu__item profile-menu__item--logout">
@@ -62,46 +77,71 @@
     {% block content %}{% endblock content %}
 
     <footer class="site-footer">
-        <p>&copy; 2026 Muhammad Faza Aqila. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <a href="{% url 'main:show_main' %}" class="footer-logo">Faza</a>
+                <p class="footer-tagline">Computer Science student at Universitas Indonesia, interested in Data Science and Web Development.</p>
+            </div>
+
+            <nav class="footer-col" aria-label="Footer">
+                <h3>Explore</h3>
+                <ul class="footer-links">
+                    <li><a href="{% url 'main:show_main' %}#home">Home</a></li>
+                    <li><a href="{% url 'main:show_main' %}#about">About</a></li>
+                    <li><a href="{% url 'main:show_main' %}#education">Education</a></li>
+                    <li><a href="{% url 'main:show_experience' %}">Experience</a></li>
+                    <li><a href="{% url 'main:show_projects' %}">Projects</a></li>
+                </ul>
+            </nav>
+
+            <div class="footer-col">
+                <h3>Connect</h3>
+                <div class="footer-social">
+                    <a href="https://github.com/fazaaqila09" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                    <a href="https://instagram.com/fazaaqilaaaa" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+                <a href="{% url 'main:show_projects' %}" class="footer-cta">See my projects <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Muhammad Faza Aqila. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+        </div>
     </footer>
 
     {% include 'components/toast.html' %}
     <script src="{% static 'js/star.js' %}"></script>
+    <script src="{% static 'js/effects.js' %}"></script>
+    <script src="{% static 'js/extras.js' %}"></script>
     <script>
-        // Menu akun: dibuka/ditutup dari item username, ditempatkan tepat di bawahnya
+        // Klik username -> buka menu Logout tepat di bawahnya
         (function () {
-            var trigger = document.getElementById('account-trigger');
             var menu = document.getElementById('profile-menu');
-            if (!trigger || !menu) return;
-            var wasOpen = false;
+            var trigger = document.getElementById('account-trigger');
+            if (!menu || !trigger) return;
 
+            var wasOpen = false;
             function place() {
                 var rect = trigger.getBoundingClientRect();
                 menu.style.top = (rect.bottom + 10) + 'px';
                 menu.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
             }
-
+            function toggle() {
+                // Klik di luar menu menutupnya lebih dulu; jangan dibuka lagi jika tadi sudah terbuka
+                if (wasOpen) { wasOpen = false; return; }
+                place();
+                menu.showPopover();
+            }
             menu.addEventListener('beforetoggle', function (e) {
-                if (e.newState === 'open') place();
                 trigger.setAttribute('aria-expanded', e.newState === 'open' ? 'true' : 'false');
             });
-
-            // Mencatat apakah menu sedang terbuka sebelum klik, supaya klik pada
-            // username saat menu terbuka benar-benar menutupnya (bukan membuka lagi)
-            trigger.addEventListener('pointerdown', function () {
-                wasOpen = menu.matches(':popover-open');
-            });
-            trigger.addEventListener('click', function (e) {
-                e.preventDefault();
-                if (wasOpen) { wasOpen = false; return; }
-                menu.togglePopover();
-            });
+            trigger.addEventListener('pointerdown', function () { wasOpen = menu.matches(':popover-open'); });
+            trigger.addEventListener('click', function (e) { e.preventDefault(); toggle(); });
             trigger.addEventListener('keydown', function (e) {
-                if (e.key === ' ') { e.preventDefault(); trigger.click(); }
+                if (e.key === ' ') { e.preventDefault(); wasOpen = menu.matches(':popover-open'); toggle(); }
             });
-            window.addEventListener('resize', function () {
-                if (menu.matches(':popover-open')) place();
-            });
+            window.addEventListener('resize', function () { if (menu.matches(':popover-open')) place(); });
         })();
     </script>
 </body>

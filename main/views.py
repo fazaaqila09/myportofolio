@@ -79,6 +79,7 @@ def show_main(request):
             "and translating those findings into intuitive, user-friendly web applications."
         ),
         "last_login": last_login,
+        "education_list": get_education_list(),
     }
     return render(request, "index.html", context)
 
@@ -258,7 +259,8 @@ def toggle_star_experience(request, experience_id):
     return toggle_star_for(request, experience, "main:show_experience")
 
 
-def show_education(request):
+def get_education_list():
+    """Isi data awal (sekali saja) lalu kembalikan semua riwayat pendidikan."""
     if not Education.objects.exists():
         Education.objects.create(
             school="Universitas Indonesia",
@@ -291,12 +293,16 @@ def show_education(request):
             started_at=date(2018, 7, 1),
             ended_at=date(2021, 6, 1),
         )
+    return Education.objects.all()
 
+
+def show_education(request):
     context = {
         "name": "Faza",
-        "education_list": Education.objects.all(),
+        "education_list": get_education_list(),
     }
     return render(request, "education.html", context)
+
 
 def show_projects(request):
     # Data proyek tidak lagi dikirim lewat context: halaman mengambilnya
