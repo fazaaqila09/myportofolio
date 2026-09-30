@@ -1890,3 +1890,224 @@ a:focus-visible {
     .project-form-modal__actions .button { width: 100%; text-align: center; }
     .toast-component { inset: auto 1rem 1rem 1rem; }
 }
+
+
+
+/* ===== Navbar: logo kiri, menu tengah, akun kanan ===== */
+/* space-between: jarak logo ke menu SAMA dengan jarak menu ke akun,
+   berapa pun lebar logo dan teks akun (Login / username panjang). */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Akun: ikon orang + teks. Font, warna, dan padding mengikuti aturan ".top-nav a" */
+.top-nav .nav-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-right: -6px;
+}
+/* Tanpa kotak saat hover/fokus: hanya teksnya yang bergaris bawah */
+.top-nav .nav-account:hover,
+.top-nav .nav-account:focus,
+.top-nav.nav-solid .nav-account:hover {
+    background: none;
+    box-shadow: none;
+    transform: none;
+}
+.top-nav .nav-account:focus:not(:focus-visible) { outline: none; }
+.top-nav .nav-account:hover .nav-account__name,
+.top-nav .nav-account:focus-visible .nav-account__name {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+.nav-account__icon { flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25)); }
+.top-nav.nav-solid .nav-account__icon { filter: none; }
+.nav-account__name {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Menu Logout (popover): fontnya sama dengan menu navbar (Poppins 12px, spasi 1px) */
+.profile-menu {
+    position: fixed;
+    inset: auto;
+    top: 0;
+    right: 0;
+    margin: 0;
+    min-width: 130px;
+    padding: 6px;
+    border: 1px solid #DBE2EF;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 16px 40px -8px rgba(17, 45, 78, 0.35);
+    z-index: 200;
+}
+.profile-menu:popover-open { display: flex; flex-direction: column; }
+.profile-menu__item {
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: #0D2237;
+    text-decoration: none;
+    padding: 9px 14px;
+    border-radius: 999px;
+    transition: background 0.2s ease;
+}
+.profile-menu__item:hover { background: #F4F7FC; }
+
+@media (max-width: 900px) and (min-width: 701px) {
+    .top-nav a { padding: 8px 8px; letter-spacing: 0.5px; }
+}
+
+/* Layar kecil: baris 1 = logo kiri + akun kanan, baris 2 = menu */
+@media (max-width: 700px) {
+    .top-nav {
+        display: grid;
+        justify-content: normal;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "brand account"
+            "menu  menu";
+        row-gap: 6px;
+    }
+    .top-nav .nav-brand { grid-area: brand; }
+    .top-nav .nav-account { grid-area: account; margin-right: 0; gap: 5px; }
+    .nav-account__icon { width: 12px; height: 12px; }
+    .nav-account__name { max-width: 90px; }
+    .nav-menu { grid-area: menu; justify-self: stretch; }
+}
+
+
+/* ============================================================
+   NAVBAR AKUN (kanan): ikon orang + Login / username, dengan bingkai
+   Taruh di PALING BAWAH style.css supaya menimpa aturan navbar lama.
+   Susunan: logo kiri | menu tengah | akun kanan (jarak kiri = kanan)
+   ============================================================ */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.top-nav .nav-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    padding: 5px 14px;
+    border-radius: 999px;
+    /* bingkai ikut warna teks: putih di atas hero, gelap saat navbar putih */
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    border: 1.5px solid color-mix(in srgb, currentColor 55%, transparent);
+    background: rgba(255, 255, 255, 0.10);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.top-nav .nav-account:hover,
+.top-nav .nav-account:focus-visible,
+.top-nav .nav-account[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: currentColor;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+    text-decoration: none;
+}
+
+.top-nav.nav-solid .nav-account { background: rgba(13, 34, 55, 0.04); }
+.top-nav.nav-solid .nav-account:hover,
+.top-nav.nav-solid .nav-account:focus-visible,
+.top-nav.nav-solid .nav-account[aria-expanded="true"] {
+    background: rgba(13, 34, 55, 0.09);
+    box-shadow: none;
+}
+
+.top-nav .nav-account:hover .nav-account__name { text-decoration: none; }
+
+.nav-account__icon {
+    flex: none;
+    display: block;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.30));
+}
+
+.top-nav.nav-solid .nav-account__icon { filter: none; }
+
+.nav-account__name {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------- Menu dropdown akun ---------- */
+.profile-menu {
+    position: fixed;
+    inset: auto;            /* top & right diisi lewat JS di base.html */
+    margin: 0;
+    padding: 6px;
+    min-width: 150px;
+    border: 1px solid #DBE2EF;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 16px 40px -12px rgba(17, 45, 78, 0.35);
+}
+
+.profile-menu:popover-open {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: #0D2237;
+    text-decoration: none;
+    border-radius: 999px;
+    transition: background .2s ease, color .2s ease;
+}
+
+.profile-menu__item:hover { background: #F4F7FC; }
+
+/* Logout: merah + ikon pintu */
+.profile-menu__item--logout { color: #b42318; }
+.profile-menu__item--logout:hover { background: #FDECEA; color: #912018; }
+.profile-menu__item--logout i { width: 16px; text-align: center; font-size: 14px; }
+
+/* ---------- Responsif ---------- */
+@media (max-width: 900px) and (min-width: 701px) {
+    .top-nav .nav-account { padding: 5px 12px; }
+    .nav-account__name { max-width: 100px; }
+}
+
+@media (max-width: 700px) {
+    /* baris 1: logo kiri, akun kanan. baris 2: menu penuh */
+    .top-nav {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "brand account" "menu menu";
+        justify-content: normal;
+        align-items: center;
+        row-gap: 4px;
+    }
+    .top-nav .nav-brand   { grid-area: brand; justify-self: start; }
+    .top-nav .nav-account { grid-area: account; justify-self: end; padding: 4px 11px; font-size: 10px; }
+    .top-nav .nav-menu    { grid-area: menu; }
+    .nav-account__name    { max-width: 96px; }
+}
+
+@media (max-width: 380px) {
+    .top-nav .nav-account { padding: 4px 9px; font-size: 9px; gap: 5px; }
+    .nav-account__name    { max-width: 70px; }
+}

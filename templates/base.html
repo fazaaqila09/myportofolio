@@ -26,27 +26,30 @@
             <a href="{% url 'main:show_projects' %}">Projects</a>
         </div>
 
-        <!-- Ikon profil (avatar kosong): membuka menu Login/Register atau Logout -->
-        <button type="button" class="nav-profile-btn" popovertarget="profile-menu"
-            aria-label="Menu akun" title="{% if user.is_authenticated %}{{ user.username }}{% else %}Akun{% endif %}">
-            <svg viewBox="0 0 40 40" aria-hidden="true">
-                <circle cx="20" cy="20" r="20" fill="#DFE5E7"/>
-                <circle cx="20" cy="15.5" r="6.5" fill="#fff"/>
-                <path d="M6.5 34.5c1.6-6.6 7.3-10.5 13.5-10.5s11.9 3.9 13.5 10.5A19.9 19.9 0 0 1 20 40a19.9 19.9 0 0 1-13.5-5.5z" fill="#fff"/>
-            </svg>
-        </button>
+        <!-- Akun: satu item. Belum login = "Login", sudah login = username (klik untuk menu Logout) -->
+        {% if user.is_authenticated %}
+            <a href="#" class="nav-account" id="account-trigger" role="button"
+                aria-haspopup="menu" aria-expanded="false">
+                <svg class="nav-account__icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></svg>
+                <span class="nav-account__name">{{ user.username }}</span>
+            </a>
+        {% else %}
+            <a href="{% url 'main:login' %}" class="nav-account">
+                <svg class="nav-account__icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></svg>
+                <span class="nav-account__name">Login</span>
+            </a>
+        {% endif %}
     </nav>
 
-    <!-- Menu akun: di luar <nav> supaya tidak terpotong overflow navbar -->
+    <!-- Menu Logout: di luar <nav> supaya tidak terpotong overflow navbar -->
+    {% if user.is_authenticated %}
     <div id="profile-menu" class="profile-menu" popover="auto">
-        {% if user.is_authenticated %}
-            <span class="profile-menu__name">{{ user.username }}</span>
-            <a href="{% url 'main:logout' %}" class="profile-menu__item">Logout</a>
-        {% else %}
-            <a href="{% url 'main:login' %}" class="profile-menu__item">Login</a>
-            <a href="{% url 'main:register' %}" class="profile-menu__item">Register</a>
-        {% endif %}
+        <a href="{% url 'main:logout' %}" class="profile-menu__item profile-menu__item--logout">
+            <i class="fa-solid fa-door-open" aria-hidden="true"></i>
+            <span>Logout</span>
+        </a>
     </div>
+    {% endif %}
 
     {% if messages %}
     <div class="site-messages">
@@ -65,18 +68,40 @@
     {% include 'components/toast.html' %}
     <script src="{% static 'js/star.js' %}"></script>
     <script>
-        // Menempatkan menu akun tepat di bawah ikon profil setiap kali dibuka
+        // Menu akun: dibuka/ditutup dari item username, ditempatkan tepat di bawahnya
         (function () {
+            var trigger = document.getElementById('account-trigger');
             var menu = document.getElementById('profile-menu');
-            var button = document.querySelector('.nav-profile-btn');
-            if (!menu || !button) return;
+            if (!trigger || !menu) return;
+            var wasOpen = false;
+
             function place() {
-                var rect = button.getBoundingClientRect();
+                var rect = trigger.getBoundingClientRect();
                 menu.style.top = (rect.bottom + 10) + 'px';
                 menu.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
             }
-            menu.addEventListener('beforetoggle', function (e) { if (e.newState === 'open') place(); });
-            window.addEventListener('resize', function () { if (menu.matches(':popover-open')) place(); });
+
+            menu.addEventListener('beforetoggle', function (e) {
+                if (e.newState === 'open') place();
+                trigger.setAttribute('aria-expanded', e.newState === 'open' ? 'true' : 'false');
+            });
+
+            // Mencatat apakah menu sedang terbuka sebelum klik, supaya klik pada
+            // username saat menu terbuka benar-benar menutupnya (bukan membuka lagi)
+            trigger.addEventListener('pointerdown', function () {
+                wasOpen = menu.matches(':popover-open');
+            });
+            trigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (wasOpen) { wasOpen = false; return; }
+                menu.togglePopover();
+            });
+            trigger.addEventListener('keydown', function (e) {
+                if (e.key === ' ') { e.preventDefault(); trigger.click(); }
+            });
+            window.addEventListener('resize', function () {
+                if (menu.matches(':popover-open')) place();
+            });
         })();
     </script>
 </body>

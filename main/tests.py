@@ -473,22 +473,24 @@ class StarTest(TestCase):
             self.assertEqual(obj.starred_by.count(), 0)
 
 class NavbarTest(TestCase):
-    """Navbar: ikon profil membuka Login/Register (pengunjung) atau username + Logout (sudah login)."""
+    """Navbar: ikon orang + "Login" (pengunjung) atau + username dan menu Logout (sudah login)."""
 
-    def test_guest_menu(self):
+    def test_guest_sees_login(self):
         html = self.client.get(reverse("main:show_main")).content.decode()
-        self.assertIn('id="profile-menu"', html)
+        self.assertIn('class="nav-account"', html)
         self.assertIn(f'href="{reverse("main:login")}"', html)
-        self.assertIn(f'href="{reverse("main:register")}"', html)
+        self.assertIn('class="nav-account__name">Login<', html)
+        self.assertNotIn('id="profile-menu"', html)
         self.assertNotIn(reverse("main:logout"), html)
 
-    def test_logged_in_menu(self):
+    def test_logged_in_sees_username_and_logout(self):
         make_users()
         self.client.login(username="biasa", password=PASSWORD)
         html = self.client.get(reverse("main:show_main")).content.decode()
-        self.assertIn('class="profile-menu__name">biasa<', html)
+        self.assertIn('class="nav-account__name">biasa<', html)
+        self.assertIn('id="profile-menu"', html)
         self.assertIn(f'href="{reverse("main:logout")}"', html)
-        self.assertNotIn(f'href="{reverse("main:login")}"', html)
+        self.assertNotIn('class="nav-account__name">Login<', html)
 
     def test_about_has_no_email(self):
         html = self.client.get(reverse("main:show_main")).content.decode()
