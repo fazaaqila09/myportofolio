@@ -449,3 +449,49 @@ class StarTest(TestCase):
             body = response.content.decode().lower()
             self.assertNotIn("password", body)
             self.assertNotIn("email", body)
+
+    
+    # --- Star lewat AJAX (tanpa reload) ---
+    def test_ajax_toggle_returns_json(self):
+        self.client.login(username="biasa", password=PASSWORD)
+        for obj, url in self.targets:
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                response.json(),
+                {"is_starred": True, "star_count": 1, "starred_by_names": "biasa"},
+            )
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+            self.assertEqual(response.json()["is_starred"], False)
+            self.assertEqual(response.json()["star_count"], 0)
+
+    def test_ajax_visitor_gets_401_json(self):
+        for obj, url in self.targets:
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+            self.assertEqual(response.status_code, 401)
+            self.assertEqual(response.json()["login_url"], "/login/")
+            self.assertEqual(obj.starred_by.count(), 0)
+
+class NavbarTest(TestCase):
+    """Navbar: ikon profil membuka Login/Register (pengunjung) atau username + Logout (sudah login)."""
+
+    def test_guest_menu(self):
+        html = self.client.get(reverse("main:show_main")).content.decode()
+        self.assertIn('id="profile-menu"', html)
+        self.assertIn(f'href="{reverse("main:login")}"', html)
+        self.assertIn(f'href="{reverse("main:register")}"', html)
+        self.assertNotIn(reverse("main:logout"), html)
+
+    def test_logged_in_menu(self):
+        make_users()
+        self.client.login(username="biasa", password=PASSWORD)
+        html = self.client.get(reverse("main:show_main")).content.decode()
+        self.assertIn('class="profile-menu__name">biasa<', html)
+        self.assertIn(f'href="{reverse("main:logout")}"', html)
+        self.assertNotIn(f'href="{reverse("main:login")}"', html)
+
+    def test_about_has_no_email(self):
+        html = self.client.get(reverse("main:show_main")).content.decode()
+        about = html[html.index('id="about"'):]
+        self.assertNotIn("Email", about)
+        self.assertNotIn("mailto:", about)

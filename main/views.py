@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
@@ -28,6 +29,41 @@ def can_edit(user):
     """Hak mengubah data: pemilik portofolio (superuser) atau Editor.
     Membuat dan menghapus data tetap khusus superuser."""
     return user.is_superuser or is_editor(user)
+
+
+def is_ajax(request):
+    """True jika permintaan dikirim lewat fetch() dari star.js."""
+    return request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+def toggle_star_for(request, obj, fallback_url_name):
+    """Tambah/batalkan star milik user yang sedang login pada obj (Project/Experience).
+
+    Permintaan AJAX dijawab JSON supaya halaman tidak perlu reload;
+    permintaan biasa tetap di-redirect seperti sebelumnya."""
+    if not request.user.is_authenticated:
+        if is_ajax(request):
+            return JsonResponse(
+                {"message": "Login dulu untuk memberi star.", "login_url": "/login/"},
+                status=401,
+            )
+        return redirect_to_login(request.get_full_path(), login_url="/login/")
+
+    if request.method == "POST":
+        # Sudah pernah di-star akun ini -> batalkan; belum -> tambahkan.
+        if request.user in obj.starred_by.all():
+            obj.starred_by.remove(request.user)
+        else:
+            obj.starred_by.add(request.user)
+
+    if is_ajax(request):
+        starred_users = list(obj.starred_by.all())
+        return JsonResponse({
+            "is_starred": request.user in starred_users,
+            "star_count": len(starred_users),
+            "starred_by_names": ", ".join(u.username for u in starred_users),
+        })
+    return redirect(fallback_url_name)
 
 
 def show_main(request):
@@ -217,16 +253,9 @@ def delete_experience(request, experience_id):
 
 
 # Semua akun yang sudah login boleh memberi star (tanpa cek peran).
-@login_required(login_url="/login/")
 def toggle_star_experience(request, experience_id):
     experience = get_object_or_404(Experience, pk=experience_id)
-    if request.method == "POST":
-        # Sudah pernah di-star akun ini -> batalkan; belum -> tambahkan.
-        if request.user in experience.starred_by.all():
-            experience.starred_by.remove(request.user)
-        else:
-            experience.starred_by.add(request.user)
-    return redirect("main:show_experience")
+    return toggle_star_for(request, experience, "main:show_experience")
 
 
 def show_education(request):
@@ -391,17 +420,10 @@ def delete_project(request, project_id):
 
 
 # Tanpa cek is_superuser: semua akun yang sudah login boleh memberi star
-@login_required(login_url="/login/")
 def toggle_star(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-    if request.method == "POST":
-        # Kalau akun ini sudah pernah memberi star, batalkan star-nya.
-        # Kalau belum, tambahkan star.
-        if request.user in project.starred_by.all():
-            project.starred_by.remove(request.user)
-        else:
-            project.starred_by.add(request.user)
-    return redirect("main:show_projects")
+    return toggle_star_for(request, project, "main:show_projects")
+
 
 def register(request):
     form = UserCreationForm(request.POST or None)

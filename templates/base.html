@@ -17,21 +17,36 @@
 
     <nav class="top-nav {% block nav_class %}{% endblock nav_class %}">
         <a href="{% url 'main:show_main' %}" class="nav-brand">Faza</a>
+
         <div class="nav-menu">
             <a href="{% url 'main:show_main' %}#home">Home</a>
             <a href="{% url 'main:show_main' %}#about">About</a>
             <a href="{% url 'main:show_education' %}">Education</a>
             <a href="{% url 'main:show_experience' %}">Experience</a>
             <a href="{% url 'main:show_projects' %}">Projects</a>
-            {% if user.is_authenticated %}
-                <span class="nav-user">{{ user.username }}</span>
-                <a href="{% url 'main:logout' %}">Logout</a>
-            {% else %}
-                <a href="{% url 'main:login' %}">Login</a>
-                <a href="{% url 'main:register' %}">Register</a>
-            {% endif %}
         </div>
+
+        <!-- Ikon profil (avatar kosong): membuka menu Login/Register atau Logout -->
+        <button type="button" class="nav-profile-btn" popovertarget="profile-menu"
+            aria-label="Menu akun" title="{% if user.is_authenticated %}{{ user.username }}{% else %}Akun{% endif %}">
+            <svg viewBox="0 0 40 40" aria-hidden="true">
+                <circle cx="20" cy="20" r="20" fill="#DFE5E7"/>
+                <circle cx="20" cy="15.5" r="6.5" fill="#fff"/>
+                <path d="M6.5 34.5c1.6-6.6 7.3-10.5 13.5-10.5s11.9 3.9 13.5 10.5A19.9 19.9 0 0 1 20 40a19.9 19.9 0 0 1-13.5-5.5z" fill="#fff"/>
+            </svg>
+        </button>
     </nav>
+
+    <!-- Menu akun: di luar <nav> supaya tidak terpotong overflow navbar -->
+    <div id="profile-menu" class="profile-menu" popover="auto">
+        {% if user.is_authenticated %}
+            <span class="profile-menu__name">{{ user.username }}</span>
+            <a href="{% url 'main:logout' %}" class="profile-menu__item">Logout</a>
+        {% else %}
+            <a href="{% url 'main:login' %}" class="profile-menu__item">Login</a>
+            <a href="{% url 'main:register' %}" class="profile-menu__item">Register</a>
+        {% endif %}
+    </div>
 
     {% if messages %}
     <div class="site-messages">
@@ -48,5 +63,21 @@
     </footer>
 
     {% include 'components/toast.html' %}
+    <script src="{% static 'js/star.js' %}"></script>
+    <script>
+        // Menempatkan menu akun tepat di bawah ikon profil setiap kali dibuka
+        (function () {
+            var menu = document.getElementById('profile-menu');
+            var button = document.querySelector('.nav-profile-btn');
+            if (!menu || !button) return;
+            function place() {
+                var rect = button.getBoundingClientRect();
+                menu.style.top = (rect.bottom + 10) + 'px';
+                menu.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
+            }
+            menu.addEventListener('beforetoggle', function (e) { if (e.newState === 'open') place(); });
+            window.addEventListener('resize', function () { if (menu.matches(':popover-open')) place(); });
+        })();
+    </script>
 </body>
 </html>
