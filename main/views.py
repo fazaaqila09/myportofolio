@@ -5,11 +5,12 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_datetime
 from datetime import date, datetime
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from main.models import Experience, Education, Project
 from main.forms import ExperienceForm, ProjectForm
 
@@ -269,20 +270,13 @@ def show_education(request):
     return render(request, "education.html", context)
 
 def show_projects(request):
-    json_response = get_project_json(request)
-    project_list = serializers.deserialize(
-        "json",
-        json_response.content.decode("utf-8"),
-    )
-    project_list = [item.object for item in project_list]
-
-    search_query = request.GET.get("q", "").strip()
-
+    # Data proyek tidak lagi dikirim lewat context: halaman mengambilnya
+    # sendiri lewat AJAX ke get_project_json.
     context = {
         "name": "Faza",
-        "project_list": project_list,
-        "search_query": search_query,
+        "search_query": request.GET.get("q", "").strip(),
         "can_edit": can_edit(request.user),
+        "form": ProjectForm(),  # form kosong untuk modal Add Project
     }
     return render(request, "projects.html", context)
 
@@ -329,7 +323,7 @@ def update_project(request, project_id):
 
 def get_project_json(request):
     search_query = request.GET.get("q", "").strip()
-    projects = Project.objects.all()
+    projects = Project.objects.prefetch_related("starred_by")
 
     if search_query:
         projects = projects.filter(
@@ -337,8 +331,52 @@ def get_project_json(request):
             | Q(description__icontains=search_query)
         )
 
-    projects_json = serializers.serialize("json", projects, use_natural_foreign_keys=True)
-    return HttpResponse(projects_json, content_type="application/json")
+    # JSON dirakit manual (bukan serializers.serialize) supaya bisa memuat
+    # is_starred, yaitu status star untuk user yang sedang login.
+    data = []
+    for project in projects:
+        starred_users = list(project.starred_by.all())
+        is_starred = request.user.is_authenticated and request.user in starred_users
+
+        data.append({
+            "pk": str(project.id),
+            "fields": {
+                "title": project.title,
+                "description": project.description,
+                "category": project.category,
+                "category_display": project.get_category_display(),
+                "thumbnail": project.thumbnail or "",
+                "project_url": project.project_url,
+                "starred_by": [[u.username] for u in starred_users],  # hanya username
+                "star_count": len(starred_users),
+                "is_starred": is_starred,
+                "starred_by_names": ", ".join(u.username for u in starred_users),
+            },
+        })
+
+    return JsonResponse(data, safe=False)
+
+
+@require_POST
+def create_project_ajax(request):
+    # Tanpa @login_required: dekorator itu me-redirect ke halaman login (HTML, status 200
+    # setelah diikuti fetch), sehingga JavaScript tidak bisa mengenali kegagalannya.
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan proyek."},
+            status=403,
+        )
+
+    form = ProjectForm(request.POST)
+    if form.is_valid():
+        project = form.save()
+        return JsonResponse(
+            {"message": "Proyek berhasil ditambahkan.", "pk": str(project.id)},
+            status=201,
+        )
+
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
+
 
 @login_required(login_url="/login/")
 def delete_project(request, project_id):

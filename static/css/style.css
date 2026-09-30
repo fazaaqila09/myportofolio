@@ -1828,3 +1828,65 @@ a:focus-visible {
 .star-count { padding: .05rem .4rem; border-radius: 999px; background: rgba(255,255,255,.25); font-size: .8rem; }
 .button-star.is-starred .star-count { background: rgba(17,45,78,.12); }
 .exp-star { margin-top: 14px; }
+
+/* ===== Tutorial 05: helper, toast, modal form ===== */
+.hide { display: none !important; }
+
+.empty-state { text-align: center; padding: 40px; color: #4a5568; }
+
+/* toast */
+.toast-component {
+    position: fixed;
+    inset: auto 2rem 2rem auto;
+    margin: 0;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(17, 45, 78, 0.18);
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    border: 1px solid #DBE2EF;
+    color: inherit;
+}
+.toast-component:popover-open { display: flex; }
+.toast-hidden { opacity: 0; transform: translateY(150%); pointer-events: none; }
+.toast-show { opacity: 1; transform: translateY(0); }
+.toast-title { font-size: 1rem; font-weight: 700; margin: 0 0 .15rem; color: #112D4E; }
+.toast-message { font-size: .85rem; margin: 0; color: #4a5568; }
+.toast-success { border-left: 4px solid #22c55e; }
+.toast-error { border-left: 4px solid #b42318; }
+.toast-normal { border-left: 4px solid #3F72AF; }
+
+/* modal form tambah proyek */
+.project-form-modal {
+    display: none; position: fixed; inset: 0; width: 100%; height: 100%;
+    max-width: none; max-height: none; margin: 0; padding: 1rem; border: 0;
+    background: transparent; z-index: 50; align-items: center; justify-content: center;
+}
+.project-form-modal:popover-open { display: flex; }
+.project-form-modal__backdrop {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: 0; padding: 0;
+    background: rgba(17, 45, 78, .55); cursor: default;
+}
+.project-form-modal__content {
+    position: relative; z-index: 1; width: min(100%, 640px); max-height: calc(100vh - 2rem);
+    overflow-y: auto; padding: 1.5rem; background: #fff; border-radius: 8px;
+    box-shadow: 0 1rem 3rem rgba(17, 45, 78, .22);
+}
+.project-form-modal__content h2 { margin: 0 2.5rem 1.25rem 0; font-size: 1.5rem; color: #112D4E; }
+.project-form-modal__close {
+    position: absolute; top: 1rem; right: 1rem; border: 0; padding: 0; background: transparent;
+    color: #4a5568; font-size: 1.8rem; line-height: 1; cursor: pointer;
+}
+.project-form-modal__actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.5rem; }
+.project-form-modal .project-form { width: 100%; max-width: none; padding-bottom: 0; }
+
+@media (max-width: 600px) {
+    .project-form-modal { align-items: flex-end; padding: 0; }
+    .project-form-modal__content { width: 100%; max-height: 90vh; padding: 1.25rem; border-radius: 8px 8px 0 0; }
+    .project-form-modal__actions { flex-direction: column-reverse; }
+    .project-form-modal__actions .button { width: 100%; text-align: center; }
+    .toast-component { inset: auto 1rem 1rem 1rem; }
+}

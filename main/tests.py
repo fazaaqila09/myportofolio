@@ -165,21 +165,26 @@ class ProjectTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "projects.html")
 
-    # 2. Data model muncul di card (judul, kategori, foto), tanpa tulisan Completed
-    def test_projects_page_shows_data(self):
-        response = self.client.get(reverse("main:show_projects"))
-        self.assertContains(response, "Solilokui")
-        self.assertContains(response, "Film &amp; Video")  # tanda & di-escape di HTML
-        self.assertContains(response, 'src="https://example.com/poster.jpg"')
-        self.assertNotContains(response, "Completed")
+    # 2. Data proyek kini diambil lewat AJAX: cek endpoint JSON-nya
+    def test_projects_api_shows_data(self):
+        response = self.client.get(reverse("main:get_project_json"))
+        self.assertEqual(response.status_code, 200)
+        fields = response.json()[0]["fields"]
+        self.assertEqual(fields["title"], "Solilokui")
+        self.assertEqual(fields["category_display"], "Film & Video")
+        self.assertEqual(fields["thumbnail"], "https://example.com/poster.jpg")
+        self.assertEqual(fields["star_count"], 0)
+        self.assertFalse(fields["is_starred"])
 
-    # 3. Halaman menampilkan pesan kondisi kosong ketika belum ada data
+    # 3. Halaman hanya berisi kerangka + pesan kondisi kosong; API mengembalikan []
     def test_empty_projects_page(self):
         Project.objects.all().delete()
+        self.assertEqual(self.client.get(reverse("main:get_project_json")).json(), [])
         response = self.client.get(reverse("main:show_projects"))
         self.assertContains(response, "No projects added yet")
+        self.assertContains(response, 'id="grid"')
 
-    # 4. Search mencari di judul, bukan di kategori
+    # 4. Search mencari di judul/deskripsi, bukan di kategori
     def test_search_by_title(self):
         Project.objects.create(
             title="Portfolio Website",
@@ -187,12 +192,90 @@ class ProjectTest(TestCase):
             category="software",
             project_url="https://example.com",
         )
-        by_title = self.client.get(reverse("main:show_projects"), {"q": "portfolio"})
-        self.assertContains(by_title, "Portfolio Website")
-        self.assertNotContains(by_title, "Solilokui")
+        url = reverse("main:get_project_json")
+        by_title = self.client.get(url, {"q": "portfolio"}).json()
+        self.assertEqual([p["fields"]["title"] for p in by_title], ["Portfolio Website"])
 
-        by_category = self.client.get(reverse("main:show_projects"), {"q": "software"})
-        self.assertContains(by_category, "No projects match your search.")
+        by_category = self.client.get(url, {"q": "software"}).json()
+        self.assertEqual(by_category, [])
+
+    # 5. is_starred mengikuti user yang sedang login
+    def test_api_is_starred_follows_user(self):
+        make_users()
+        self.project.starred_by.add(User.objects.get(username="biasa"))
+        url = reverse("main:get_project_json")
+        self.assertFalse(self.client.get(url).json()[0]["fields"]["is_starred"])
+        self.client.login(username="biasa", password=PASSWORD)
+        fields = self.client.get(url).json()[0]["fields"]
+        self.assertTrue(fields["is_starred"])
+        self.assertEqual(fields["star_count"], 1)
+
+
+class CreateProjectAjaxTest(TestCase):
+    """Endpoint POST /projects/add-ajax/: hanya pemilik, validasi lewat ProjectForm."""
+
+    VALID = {
+        "title": "Proyek Baru", "description": "Deskripsi.", "category": "software",
+        "thumbnail": "", "project_url": "https://example.com",
+    }
+
+    def setUp(self):
+        make_users()
+        self.url = reverse("main:create_project_ajax")
+
+    def test_get_not_allowed(self):
+        self.client.login(username="pemilik", password=PASSWORD)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_visitor_regular_user_and_editor_get_403_json(self):
+        for username in (None, "biasa", "editor1"):
+            if username:
+                self.client.login(username=username, password=PASSWORD)
+            response = self.client.post(self.url, self.VALID)
+            self.assertEqual(response.status_code, 403)
+            self.assertIn("message", response.json())
+            self.client.logout()
+        self.assertFalse(Project.objects.exists())
+
+    def test_owner_creates_project(self):
+        self.client.login(username="pemilik", password=PASSWORD)
+        response = self.client.post(self.url, self.VALID)
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(Project.objects.filter(title="Proyek Baru").exists())
+
+    def test_invalid_data_returns_400_with_errors(self):
+        self.client.login(username="pemilik", password=PASSWORD)
+        response = self.client.post(self.url, {**self.VALID, "title": "   ", "project_url": "nope"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("title", response.json()["errors"])
+        self.assertIn("project_url", response.json()["errors"])
+        self.assertFalse(Project.objects.exists())
+
+    def test_javascript_url_is_rejected(self):
+        self.client.login(username="pemilik", password=PASSWORD)
+        response = self.client.post(self.url, {**self.VALID, "project_url": "javascript:alert(1)"})
+        self.assertEqual(response.status_code, 400)
+
+    def test_html_tags_are_stripped(self):
+        self.client.login(username="pemilik", password=PASSWORD)
+        self.client.post(self.url, {**self.VALID, "title": "Halo <b>dunia</b>", "description": "<script>x</script>Isi"})
+        project = Project.objects.get()
+        self.assertEqual(project.title, "Halo dunia")
+        self.assertNotIn("<", project.description)
+
+    def test_title_of_only_tags_is_rejected(self):
+        self.client.login(username="pemilik", password=PASSWORD)
+        response = self.client.post(self.url, {**self.VALID, "title": "<img src=x onerror=alert(1)>"})
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Project.objects.exists())
+
+    def test_csrf_is_enforced(self):
+        from django.test import Client
+        client = Client(enforce_csrf_checks=True)
+        client.login(username="pemilik", password=PASSWORD)
+        self.assertEqual(client.post(self.url, self.VALID).status_code, 403)
+        self.assertFalse(Project.objects.exists())
+
 
 class RoleAccessTest(TestCase):
     """Hak akses 4 peran (pengunjung, user biasa, Editor, pemilik) pada Experience dan Project."""
@@ -287,11 +370,16 @@ class RoleAccessTest(TestCase):
     def assert_buttons(self, username, add, edit, delete):
         if username:
             self.login(username)
-        for page in ("main:show_experience", "main:show_projects"):
-            html = self.client.get(reverse(page)).content.decode()
-            self.assertEqual(any(u in html for u in self.add_urls), add, f"{username}: add di {page}")
-            self.assertEqual(any(u in html for u in self.edit_urls), edit, f"{username}: edit di {page}")
-            self.assertEqual("delete-experience-" in html or "delete-project-" in html, delete, f"{username}: delete di {page}")
+        # Experience masih dirender server
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertEqual(reverse("main:create_experience") in html, add, f"{username}: add di experience")
+        self.assertEqual(self.edit_urls[0] in html, edit, f"{username}: edit di experience")
+        self.assertEqual("delete-experience-" in html, delete, f"{username}: delete di experience")
+        # Project dirender lewat AJAX: yang ada di HTML hanya modal dan flag peran untuk JavaScript
+        html = self.client.get(reverse("main:show_projects")).content.decode()
+        self.assertEqual('id="add-project-modal"' in html, add, f"{username}: modal add di projects")
+        self.assertEqual('const CAN_EDIT = "true"' in html, edit, f"{username}: CAN_EDIT di projects")
+        self.assertEqual('const IS_SUPERUSER = "true"' in html, delete, f"{username}: IS_SUPERUSER di projects")
         self.client.logout()
 
     def test_buttons_follow_role(self):
@@ -343,10 +431,13 @@ class StarTest(TestCase):
         self.client.login(username="biasa", password=PASSWORD)
         for obj, url in self.targets:
             self.client.post(url)
-        for page in ("main:show_experience", "main:show_projects"):
-            html = self.client.get(reverse(page)).content.decode()
-            self.assertIn("Unstar", html)
-            self.assertIn("star-count", html)
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertIn("Unstar", html)
+        self.assertIn("star-count", html)
+        # Project: status star datang dari API, bukan dari HTML halaman
+        fields = self.client.get(reverse("main:get_project_json")).json()[0]["fields"]
+        self.assertTrue(fields["is_starred"])
+        self.assertEqual(fields["star_count"], 1)
 
     def test_api_shows_usernames_only(self):
         user = User.objects.get(username="biasa")
