@@ -1,3 +1,4 @@
+import json
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
@@ -21,6 +22,9 @@ class Experience(models.Model):
     description_indo = models.TextField("Description (Indonesian)", blank=True, default="")
     category = models.CharField(max_length=20, choices=EXPERIENCE_CHOICES, default='full-time')
     thumbnail = models.URLField(blank=True, null=True)
+    # Foto dokumentasi tambahan (satu URL per baris). Foto utama tetap `thumbnail`;
+    # semuanya bisa digeser di lightbox pada kartu Experience yang sama.
+    photos = models.TextField("More photos (one URL per line)", blank=True, default="")
     logo = models.URLField(blank=True, null=True) 
     started_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(blank=True, null=True)
@@ -35,6 +39,21 @@ class Experience(models.Model):
     @property
     def is_ongoing(self):
         return self.ended_at is None
+
+    @property
+    def all_photos(self):
+        """Semua foto kegiatan ini: foto utama dulu, lalu foto tambahan (tanpa duplikat)."""
+        urls = [self.thumbnail] if self.thumbnail else []
+        for line in (self.photos or "").splitlines():
+            line = line.strip()
+            if line and line not in urls:
+                urls.append(line)
+        return urls
+
+    @property
+    def photos_json(self):
+        """all_photos sebagai teks JSON, untuk atribut data-photos di template."""
+        return json.dumps(self.all_photos)
 
 class Education(models.Model):
     """Riwayat pendidikan, ditampilkan sebagai timeline di halaman Education.

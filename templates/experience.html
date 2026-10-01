@@ -39,12 +39,15 @@
                     {% endif %}
                 </div>
 
-                <div class="exp-photo">
+                <div class="exp-photo" data-photos="{{ experience.photos_json }}">
                     {% if experience.thumbnail %}
                         <img src="{{ experience.thumbnail }}" alt="Documentation {{ experience.title }}">
                     {% else %}
                         <img src="{% static 'img/exp-cf.jpg' %}" alt="Default Documentation">
                     {% endif %}
+                    {% with total=experience.all_photos|length %}{% if total > 1 %}
+                        <span class="exp-photo__count" aria-hidden="true"><i class="fa-regular fa-images"></i> {{ total }}</span>
+                    {% endif %}{% endwith %}
                 </div>
 
                 <div class="exp-body">

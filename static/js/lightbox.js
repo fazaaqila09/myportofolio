@@ -1,8 +1,9 @@
 /* ============================================================
    LIGHTBOX FOTO EXPERIENCE
-   Klik foto kegiatan -> terbuka besar. Pindah foto dengan tombol
-   panah, tombol keyboard (← →), atau geser jari di HP. Esc / klik
-   latar / tombol X untuk menutup. Teks mengikuti bahasa (ID/EN).
+   Klik foto kegiatan -> terbuka besar. Tombol panah, keyboard (← →)
+   dan geser jari memindahkan foto DI DALAM kegiatan yang sama
+   (foto utama + foto tambahan dari kolom "More photos").
+   Esc / klik latar / tombol X untuk menutup. Teks mengikuti bahasa (ID/EN).
    ============================================================ */
 (function () {
     'use strict';
@@ -42,11 +43,28 @@
     var prevBtn = box.querySelector('.lb__prev');
     var nextBtn = box.querySelector('.lb__next');
     var closeBtn = box.querySelector('.lb__close');
-    var single = cards.length < 2;
-    if (single) { prevBtn.hidden = true; nextBtn.hidden = true; }
+    var dotsEl = document.createElement('div');
+    dotsEl.className = 'lb__dots';
+    box.querySelector('.lb__stage').insertBefore(dotsEl, box.querySelector('.lb__cap'));
 
-    var current = 0;
+    var card = null;        // kartu Experience yang sedang dibuka
+    var photos = [];        // daftar foto milik kartu itu
+    var current = 0;        // indeks foto yang tampil
     var opener = null;
+    var single = true;      // hanya satu foto -> panah & titik disembunyikan
+
+    // Foto milik satu kartu: dari data-photos (JSON), cadangannya gambar yang tampil di kartu
+    function photosOf(c) {
+        var photo = c.querySelector('.exp-photo');
+        var list = [];
+        try { list = JSON.parse(photo.getAttribute('data-photos') || '[]'); } catch (e) { list = []; }
+        list = list.filter(function (u) { return typeof u === 'string' && u; });
+        if (!list.length) {
+            var shown = photo.querySelector('img');
+            if (shown) list = [shown.currentSrc || shown.src];
+        }
+        return list;
+    }
 
     function labels() {
         box.setAttribute('aria-label', tr('lb.label', 'Photo viewer'));
@@ -61,29 +79,51 @@
         });
     }
 
-    function fill(index) {
-        var card = cards[current = (index + cards.length) % cards.length];
-        var photo = card.querySelector('.exp-photo img');
-        img.src = photo.currentSrc || photo.src;
-        img.alt = text(card, '.exp-org');
-        titleEl.textContent = text(card, '.exp-org');
-        subEl.textContent = [text(card, '.exp-role'), text(card, '.exp-period')].filter(Boolean).join(' · ');
-        countEl.textContent = (current + 1) + ' / ' + cards.length;
-        // muat foto tetangga lebih dulu supaya perpindahan terasa instan
-        [current + 1, current - 1].forEach(function (i) {
-            var n = cards[(i + cards.length) % cards.length].querySelector('.exp-photo img');
-            if (n) (new Image()).src = n.currentSrc || n.src;
+    function buildDots() {
+        dotsEl.innerHTML = '';
+        dotsEl.hidden = single;
+        photos.forEach(function (_, i) {
+            var d = document.createElement('button');
+            d.type = 'button';
+            d.className = 'lb__dot';
+            d.addEventListener('click', function () { jump(i); });
+            dotsEl.appendChild(d);
         });
     }
 
-    function go(step) {
+    function fill(index) {
+        current = (index + photos.length) % photos.length;
+        img.src = photos[current];
+        img.alt = text(card, '.exp-org');
+        titleEl.textContent = text(card, '.exp-org');
+        subEl.textContent = [text(card, '.exp-role'), text(card, '.exp-period')].filter(Boolean).join(' \u00b7 ');
+        countEl.textContent = (current + 1) + ' / ' + photos.length;
+        countEl.hidden = single;
+        Array.prototype.forEach.call(dotsEl.children, function (d, i) {
+            d.classList.toggle('is-on', i === current);
+            d.setAttribute('aria-label', tr('lb.photo', 'Photo') + ' ' + (i + 1));
+            if (i === current) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current');
+        });
+        // muat foto tetangga lebih dulu supaya perpindahan terasa instan
+        [current + 1, current - 1].forEach(function (i) {
+            (new Image()).src = photos[(i + photos.length) % photos.length];
+        });
+    }
+
+    function jump(index) {
+        if (single || index === current) return;
+        go(index > current ? 1 : -1, index);
+    }
+
+    function go(step, target) {
         if (single) return;
-        if (reduced) { fill(current + step); return; }
+        var next = target === undefined ? current + step : target;
+        if (reduced) { fill(next); return; }
         var out = step > 0 ? 'lb-out-left' : 'lb-out-right';
         var inn = step > 0 ? 'lb-in-right' : 'lb-in-left';
         img.classList.add(out);
         window.setTimeout(function () {
-            fill(current + step);
+            fill(next);
             img.classList.remove(out);
             img.classList.add(inn);
             void img.offsetWidth;                       // mulai ulang animasi
@@ -92,9 +132,15 @@
     }
 
     function open(index, trigger) {
+        card = cards[index];
+        photos = photosOf(card);
+        single = photos.length < 2;
+        prevBtn.hidden = single;
+        nextBtn.hidden = single;
         opener = trigger || null;
+        buildDots();
         labels();
-        fill(index);
+        fill(0);
         box.hidden = false;
         document.documentElement.classList.add('lb-lock');
         void box.offsetWidth;
@@ -145,7 +191,8 @@
         else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
         else if (e.key === 'Tab') {
             // fokus tidak boleh keluar dari lightbox
-            var focusable = [closeBtn, prevBtn, nextBtn].filter(function (b) { return !b.hidden; });
+            var focusable = [closeBtn, prevBtn, nextBtn].filter(function (b) { return !b.hidden; })
+                .concat(Array.prototype.slice.call(dotsEl.children));
             var first = focusable[0], last = focusable[focusable.length - 1];
             if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
             else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
@@ -169,6 +216,6 @@
     // ganti bahasa: perbarui label & keterangan foto yang sedang terbuka
     document.addEventListener('langchange', function () {
         labels();
-        if (!box.hidden) fill(current);
+        if (!box.hidden && card) fill(current);
     });
 })();

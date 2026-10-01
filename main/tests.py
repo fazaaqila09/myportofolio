@@ -861,3 +861,55 @@ class FillMissingTranslationsTest(TestCase):
         Experience.objects.create(title="DDP0", role="Mentor", role_indo="Pembimbing Kelas", description="x")
         self.client.get(reverse("main:show_experience"))
         self.assertEqual(Experience.objects.get(title="DDP0").role_indo, "Pembimbing Kelas")
+
+
+class ExperienceGalleryTest(TestCase):
+    """Satu Experience bisa punya beberapa foto; lightbox hanya memindah foto di kegiatan itu."""
+
+    def make(self, **extra):
+        return Experience.objects.create(title="Lomba", description="Deskripsi", thumbnail="https://example.com/a.jpg", **extra)
+
+    def test_all_photos_main_first_then_extras_without_duplicates(self):
+        exp = self.make(photos="https://example.com/b.jpg\n\n  https://example.com/c.jpg  \nhttps://example.com/a.jpg")
+        self.assertEqual(exp.all_photos, ["https://example.com/a.jpg", "https://example.com/b.jpg", "https://example.com/c.jpg"])
+
+    def test_no_extra_photos_gives_just_the_main_one(self):
+        self.assertEqual(self.make().all_photos, ["https://example.com/a.jpg"])
+        self.assertEqual(Experience.objects.create(title="Kosong", description="x").all_photos, [])
+
+    def test_card_carries_photo_list_and_count_badge(self):
+        self.make(photos="https://example.com/b.jpg")
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertIn("data-photos=", html)
+        self.assertIn("https://example.com/b.jpg", html)
+        self.assertIn("exp-photo__count", html)
+
+    def test_single_photo_has_no_count_badge(self):
+        self.make()
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertNotIn('class="exp-photo__count"', html)
+
+    def test_form_accepts_urls_one_per_line_and_cleans_them(self):
+        from main.forms import ExperienceForm
+        form = ExperienceForm({"title": "T", "description": "D", "category": "committee", "started_at": "2026-01-01",
+                               "photos": "https://example.com/1.jpg\r\n\r\nhttps://example.com/2.jpg\r\nhttps://example.com/1.jpg"})
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["photos"], "https://example.com/1.jpg\nhttps://example.com/2.jpg")
+
+    def test_form_rejects_a_line_that_is_not_a_url(self):
+        from main.forms import ExperienceForm
+        form = ExperienceForm({"title": "T", "description": "D", "category": "committee", "started_at": "2026-01-01",
+                               "photos": "https://example.com/1.jpg\nbukan url\njavascript:alert(1)"})
+        self.assertFalse(form.is_valid())
+        self.assertIn("photos", form.errors)
+
+    def test_photos_are_optional(self):
+        from main.forms import ExperienceForm
+        form = ExperienceForm({"title": "T", "description": "D", "category": "committee", "started_at": "2026-01-01"})
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_lightbox_script_stays_inside_one_experience(self):
+        from pathlib import Path
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "lightbox.js").read_text(encoding="utf-8")
+        self.assertIn("data-photos", js)
+        self.assertNotIn("cards.length", js.split("function open(")[1])   # tidak memutar antar kartu

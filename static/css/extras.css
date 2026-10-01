@@ -1599,6 +1599,45 @@ html.no-vt.is-leaving body { opacity: 0; transition: opacity .22s ease; }
     html.no-vt body { animation: none; }
 }
 
+/* Jumlah foto pada kartu (hanya bila kegiatan punya lebih dari satu foto) */
+.exp-photo__count {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgba(13, 34, 55, .72);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font: 600 12px 'Poppins', sans-serif;
+    pointer-events: none;
+}
+.exp-photo__count i { color: #FFBB00; }
+
+/* Titik penunjuk foto di lightbox (klik untuk loncat ke foto itu) */
+.lb__dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.lb__dots[hidden] { display: none; }
+.lb__dot {
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .35);
+    cursor: pointer;
+    transition: width .3s cubic-bezier(.22, 1, .36, 1), background .25s ease;
+}
+.lb__dot:hover { background: rgba(255, 255, 255, .7); }
+.lb__dot.is-on { width: 26px; background: #FFBB00; }
+.lb__dot:focus-visible { outline: 2px solid #FFBB00; outline-offset: 3px; }
+.lb__count[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .lb__dot { transition: none; } }
+
 /* Navbar desktop selebar Home/About/Skills dll: 88% layar, maks 1320px.
    (HP dan tablet kecil tetap memakai layout bertumpuk di bawah.) */
 @media (min-width: 901px) {

@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.utils.html import strip_tags
 from django.forms import ModelForm, TextInput, Textarea, URLInput, Select, DateInput
 from main.models import ContactMessage, Experience, Project
@@ -11,11 +12,11 @@ class ExperienceForm(ModelForm):
         widget=DateInput(attrs={"type": "date"}),
     )
 
-    field_order = ["title", "role", "role_indo", "description", "description_indo", "category", "thumbnail", "logo", "started_at", "ended_at"]
+    field_order = ["title", "role", "role_indo", "description", "description_indo", "category", "thumbnail", "photos", "logo", "started_at", "ended_at"]
 
     class Meta:
         model = Experience
-        fields = ["title", "role", "role_indo", "description", "description_indo", "category", "thumbnail", "logo", "ended_at"]
+        fields = ["title", "role", "role_indo", "description", "description_indo", "category", "thumbnail", "photos", "logo", "ended_at"]
         labels = {
             "title": "Organization / Activity Name",
             "role": "Role / Position",
@@ -24,6 +25,7 @@ class ExperienceForm(ModelForm):
             "description_indo": "Description (Indonesian, optional)",
             "category": "Category",
             "thumbnail": "Documentation Photo URL",
+            "photos": "More Photo URLs (one per line, optional)",
             "logo": "Logo URL",
             "ended_at": "End Date (leave blank if ongoing)",
         }
@@ -35,9 +37,28 @@ class ExperienceForm(ModelForm):
             "description_indo": Textarea(attrs={"rows": 3, "placeholder": "Ceritakan pengalaman Anda (opsional)"}),
             "category": Select(),
             "thumbnail": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
+            "photos": Textarea(attrs={"rows": 3, "placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000\nhttps://drive.google.com/thumbnail?id=...&sz=w1000"}),
             "logo": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
             "ended_at": DateInput(attrs={"type": "date"}),
         }
+
+    def clean_photos(self):
+        """Satu URL per baris; baris kosong dibuang, tag HTML dibuang, tiap baris harus URL yang valid."""
+        validate = URLValidator(schemes=["http", "https"])
+        lines = []
+        for raw in strip_tags(self.cleaned_data.get("photos", "")).splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                validate(line)
+            except ValidationError:
+                raise ValidationError("Each line must be a valid URL (starting with http:// or https://).")
+            if line not in lines:
+                lines.append(line)
+        if len(lines) > 20:
+            raise ValidationError("Please add at most 20 extra photos.")
+        return "\n".join(lines)
 
 class ProjectForm(ModelForm):
     class Meta:

@@ -126,7 +126,7 @@
             'inbox.empty.filter': 'No messages match.',
             'inbox.prev': 'Previous', 'inbox.next': 'Next',
             // Lightbox foto
-            'lb.label': 'Photo viewer', 'lb.close': 'Close',
+            'lb.label': 'Photo viewer', 'lb.photo': 'Photo', 'lb.close': 'Close',
             'lb.prev': 'Previous photo', 'lb.next': 'Next photo',
             'lb.enlarge': 'Enlarge photo', 'lb.enlarge.short': 'Enlarge',
             'lb.hint.switch': 'switch photo', 'lb.hint.close': 'close'
@@ -239,7 +239,7 @@
             'inbox.empty.filter': 'Tidak ada pesan yang cocok.',
             'inbox.prev': 'Sebelumnya', 'inbox.next': 'Berikutnya',
             // Lightbox foto
-            'lb.label': 'Penampil foto', 'lb.close': 'Tutup',
+            'lb.label': 'Penampil foto', 'lb.photo': 'Foto', 'lb.close': 'Tutup',
             'lb.prev': 'Foto sebelumnya', 'lb.next': 'Foto berikutnya',
             'lb.enlarge': 'Perbesar foto', 'lb.enlarge.short': 'Perbesar',
             'lb.hint.switch': 'pindah foto', 'lb.hint.close': 'tutup'
