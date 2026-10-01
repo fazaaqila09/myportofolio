@@ -151,6 +151,9 @@
     function buildProjectCardElement(item) {
         const project = item.fields;
         const projectId = item.pk;
+        // Judul & deskripsi mengikuti bahasa aktif (terjemahan kosong -> pakai teks Inggris)
+        const shownTitle = I18N.field(project.title, project.title_indo);
+        const shownDesc = I18N.field(project.description, project.description_indo);
 
         const articleElement = document.createElement('article');
         articleElement.className = 'proj-card';
@@ -161,14 +164,14 @@
         const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}".replace(DUMMY_ID, projectId);
 
         const photoHtml = project.thumbnail
-            ? `<img src="${escapeHtml(project.thumbnail)}" alt="Thumbnail ${escapeHtml(project.title)}" loading="lazy">`
+            ? `<img src="${escapeHtml(project.thumbnail)}" alt="Thumbnail ${escapeHtml(shownTitle)}" loading="lazy">`
             : `<div class="proj-photo--empty" aria-hidden="true"><i class="fa-solid fa-image"></i></div>`;
 
         const deleteHtml = IS_SUPERUSER
             ? `<form method="post" action="${deleteUrl}" style="display:inline;margin:0;">
                     {% csrf_token %}
                     <button type="submit" class="proj-icon-btn proj-icon-btn--danger"
-                        aria-label="Delete ${escapeHtml(project.title)}" title="Delete"
+                        aria-label="Delete ${escapeHtml(shownTitle)}" title="Delete"
                         onclick="return confirm(t('proj.confirm.delete'));">
                         <i class="fa-solid fa-trash"></i>
                     </button>
@@ -177,7 +180,7 @@
 
         const actionsHtml = CAN_EDIT
             ? `<div class="proj-actions">
-                    <a href="${editUrl}" class="proj-icon-btn" aria-label="Edit ${escapeHtml(project.title)}" title="Edit">
+                    <a href="${editUrl}" class="proj-icon-btn" aria-label="Edit ${escapeHtml(shownTitle)}" title="Edit">
                         <i class="fa-solid fa-pen"></i>
                     </a>
                     ${deleteHtml}
@@ -197,8 +200,8 @@
                     <span class="proj-category">${escapeHtml(I18N.auto(project.category_display))}</span>
                     ${actionsHtml}
                 </div>
-                <h3 class="proj-name">${escapeHtml(project.title)}</h3>
-                <p class="proj-desc">${escapeHtml(project.description)}</p>
+                <h3 class="proj-name">${escapeHtml(shownTitle)}</h3>
+                <p class="proj-desc">${escapeHtml(shownDesc)}</p>
                 <div class="proj-links">
                     <a href="${escapeHtml(project.project_url)}" target="_blank" rel="noopener" class="button proj-view-button">${t('proj.view')}</a>
                     <form method="post" action="${starUrl}" class="star-form">

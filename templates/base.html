@@ -1,4 +1,4 @@
-{% load static %}
+{% load static inbox_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +22,10 @@
                 if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
             } catch (e) { /* abaikan */ }
         })();
+    </script>
+    <!-- Browser tanpa View Transitions memakai transisi cadangan di motion.js -->
+    <script>
+        if (!('CSSViewTransitionRule' in window)) document.documentElement.classList.add('no-vt');
     </script>
     <!-- Kamus & logika bahasa ID/EN (mengatur <html lang> lebih dulu agar tidak berkedip) -->
     <script src="{% static 'js/i18n.js' %}"></script>
@@ -56,10 +60,12 @@
 
             <!-- Akun: ikon orang + "Login" (pengunjung) atau + username (sudah login) -->
             {% if user.is_authenticated %}
+                {% unread_messages as unread_count %}
                 <a href="#" class="nav-account" id="account-trigger" role="button"
                     aria-haspopup="menu" aria-expanded="false">
                     <svg class="nav-account__icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></svg>
                     <span class="nav-account__name">{{ user.username }}</span>
+                    {% if user.is_superuser %}<span class="nav-badge" data-inbox-badge{% if not unread_count %} hidden{% endif %} aria-hidden="true">{{ unread_count }}</span>{% endif %}
                 </a>
             {% else %}
                 <a href="{% url 'main:login' %}" class="nav-account">
@@ -73,6 +79,13 @@
     <!-- Menu akun (hanya saat sudah login): di luar <nav> supaya tidak terpotong overflow navbar -->
     {% if user.is_authenticated %}
     <div id="profile-menu" class="profile-menu" popover="auto">
+        {% if user.is_superuser %}
+        <a href="{% url 'main:show_inbox' %}" class="profile-menu__item">
+            <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+            <span data-i18n="nav.inbox">Inbox</span>
+            <span class="nav-badge nav-badge--menu" data-inbox-badge{% if not unread_count %} hidden{% endif %}>{{ unread_count }}</span>
+        </a>
+        {% endif %}
         <a href="{% url 'main:logout' %}" class="profile-menu__item profile-menu__item--logout">
             <i class="fa-solid fa-door-open" aria-hidden="true"></i>
             <span data-i18n="nav.logout">Logout</span>
@@ -116,6 +129,7 @@
                     <a href="https://github.com/fazaaqila09" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
                     <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
                     <a href="https://instagram.com/fazaaqilaaaa" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="mailto:muhammadfazaaqila09@gmail.com" title="Email" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
                 </div>
                 <a href="{% url 'main:show_contact' %}" class="footer-cta"><span data-i18n="footer.cta">Get in touch</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
@@ -130,6 +144,7 @@
     <script src="{% static 'js/star.js' %}"></script>
     <script src="{% static 'js/effects.js' %}"></script>
     <script src="{% static 'js/extras.js' %}"></script>
+    <script src="{% static 'js/motion.js' %}"></script>
     <script>
         // Klik username -> buka menu Logout tepat di bawahnya
         (function () {

@@ -1,5 +1,5 @@
 /* ============================================================
-   EXTRAS.JS: garis menu aktif selebar teks
+   EXTRAS.JS: garis menu aktif selebar teks (diukur ulang otomatis saat teks menu berubah)
    ============================================================ */
 (function () {
     'use strict';
@@ -22,8 +22,17 @@
         };
         new MutationObserver(measureUnderline).observe(menu, { subtree: true, attributes: true, attributeFilter: ['class'] });
         window.addEventListener('resize', measureUnderline);
+        window.addEventListener('load', measureUnderline);
         document.addEventListener('langchange', function () { requestAnimationFrame(measureUnderline); });   // teks menu berubah lebar
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureUnderline);
+
+        // Kunci perbaikannya: ukur ulang setiap kali LEBAR menu berubah, apa pun penyebabnya
+        // (teks diterjemahkan ke Indonesia setelah halaman dimuat, font web selesai dimuat, dll).
+        // Tanpa ini garis tetap selebar kata bahasa Inggris saat halaman dibuka dalam bahasa ID.
+        if ('ResizeObserver' in window) {
+            var resizeWatcher = new ResizeObserver(function () { requestAnimationFrame(measureUnderline); });
+            menu.querySelectorAll('a').forEach(function (link) { resizeWatcher.observe(link); });
+        }
         measureUnderline();
     }
 })();

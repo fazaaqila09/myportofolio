@@ -58,7 +58,7 @@
                         </div>
                         <div class="exp-heading">
                             <h3 class="exp-org">{{ experience.title }}</h3>
-                            <p class="exp-role">{{ experience.role }}</p>
+                            <p class="exp-role" data-id-text="{{ experience.role_indo }}">{{ experience.role }}</p>
                         </div>
                         {% if can_edit %}
                         <div class="exp-actions">
@@ -90,7 +90,7 @@
                         {% endif %}
                     </span>
 
-                    <p class="exp-desc">{{ experience.description }}</p>
+                    <p class="exp-desc" data-id-text="{{ experience.description_indo }}">{{ experience.description }}</p>
 
                     <div class="exp-star">
                         {% include "components/experience_star.html" with experience=experience %}
@@ -115,4 +115,6 @@
     </div>
 </section>
 
+
+<script src="{% static 'js/lightbox.js' %}"></script>
 {% endblock content %}

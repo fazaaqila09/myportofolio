@@ -16,6 +16,9 @@ class Experience(models.Model):
     title = models.CharField(max_length=255)
     role = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField()
+    # Terjemahan Bahasa Indonesia (opsional). Kosong = pakai teks Inggris di atas.
+    role_indo = models.CharField("Role (Indonesian)", max_length=100, blank=True, default="")
+    description_indo = models.TextField("Description (Indonesian)", blank=True, default="")
     category = models.CharField(max_length=20, choices=EXPERIENCE_CHOICES, default='full-time')
     thumbnail = models.URLField(blank=True, null=True)
     logo = models.URLField(blank=True, null=True) 
@@ -54,6 +57,8 @@ class Education(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     school = models.CharField(max_length=255)
     major = models.CharField(max_length=255, null=True, blank=True)
+    # Terjemahan Bahasa Indonesia (opsional). Kosong = pakai teks Inggris di atas.
+    major_indo = models.CharField("Major (Indonesian)", max_length=255, blank=True, default="")
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='bachelor')
     logo = models.URLField(blank=True, null=True)
     started_at = models.DateField()
@@ -83,6 +88,9 @@ class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     description = models.TextField()
+    # Terjemahan Bahasa Indonesia (opsional). Kosong = pakai teks Inggris di atas.
+    title_indo = models.CharField("Title (Indonesian)", max_length=255, blank=True, default="")
+    description_indo = models.TextField("Description (Indonesian)", blank=True, default="")
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="other")
     thumbnail = models.URLField(blank=True, null=True)
     project_url = models.URLField()

@@ -11,15 +11,17 @@ class ExperienceForm(ModelForm):
         widget=DateInput(attrs={"type": "date"}),
     )
 
-    field_order = ["title", "role", "description", "category", "thumbnail", "logo", "started_at", "ended_at"]
+    field_order = ["title", "role", "role_indo", "description", "description_indo", "category", "thumbnail", "logo", "started_at", "ended_at"]
 
     class Meta:
         model = Experience
-        fields = ["title", "role", "description", "category", "thumbnail", "logo", "ended_at"]
+        fields = ["title", "role", "role_indo", "description", "description_indo", "category", "thumbnail", "logo", "ended_at"]
         labels = {
             "title": "Organization / Activity Name",
             "role": "Role / Position",
+            "role_indo": "Role / Position (Indonesian, optional)",
             "description": "Description",
+            "description_indo": "Description (Indonesian, optional)",
             "category": "Category",
             "thumbnail": "Documentation Photo URL",
             "logo": "Logo URL",
@@ -28,7 +30,9 @@ class ExperienceForm(ModelForm):
         widgets = {
             "title": TextInput(attrs={"placeholder": "COMPFEST 18"}),
             "role": TextInput(attrs={"placeholder": "VPIC of Transportation"}),
+            "role_indo": TextInput(attrs={"placeholder": "VPIC Transportasi"}),
             "description": Textarea(attrs={"rows": 3, "placeholder": "Tell us about your experience"}),
+            "description_indo": Textarea(attrs={"rows": 3, "placeholder": "Ceritakan pengalaman Anda (opsional)"}),
             "category": Select(),
             "thumbnail": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
             "logo": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
@@ -38,17 +42,21 @@ class ExperienceForm(ModelForm):
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        fields = ["title", "description", "category", "thumbnail", "project_url"]
+        fields = ["title", "title_indo", "description", "description_indo", "category", "thumbnail", "project_url"]
         labels = {
             "title": "Project Name",
+            "title_indo": "Project Name (Indonesian, optional)",
             "description": "Description",
+            "description_indo": "Description (Indonesian, optional)",
             "category": "Category",
             "thumbnail": "Thumbnail Photo URL",
             "project_url": "Project URL",
         }
         widgets = {
             "title": TextInput(attrs={"placeholder": "Nabastala"}),
+            "title_indo": TextInput(attrs={"placeholder": "Kosongkan jika sama dengan nama Inggris"}),
             "description": Textarea(attrs={"rows": 3, "placeholder": "Tell us about this project"}),
+            "description_indo": Textarea(attrs={"rows": 3, "placeholder": "Ceritakan proyek ini (opsional)"}),
             "category": Select(),
             "thumbnail": URLInput(attrs={"placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000"}),
             "project_url": URLInput(attrs={"placeholder": "https://youtube.com/..."}),
@@ -62,6 +70,12 @@ class ProjectForm(ModelForm):
 
     def clean_description(self):
         return strip_tags(self.cleaned_data["description"]).strip()
+
+    def clean_title_indo(self):
+        return strip_tags(self.cleaned_data["title_indo"]).strip()
+
+    def clean_description_indo(self):
+        return strip_tags(self.cleaned_data["description_indo"]).strip()
 
 
 class ContactForm(ModelForm):

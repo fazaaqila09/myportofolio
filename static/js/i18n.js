@@ -29,7 +29,7 @@
 
             'nav.home': 'Home', 'nav.about': 'About', 'nav.skills': 'Skills', 'nav.education': 'Education',
             'nav.experience': 'Experience', 'nav.projects': 'Projects', 'nav.contact': 'Contact',
-            'nav.login': 'Login', 'nav.logout': 'Logout',
+            'nav.login': 'Login', 'nav.logout': 'Logout', 'nav.inbox': 'Inbox',
 
             'footer.tagline': 'Computer Science student at Universitas Indonesia, interested in Data Science and Web Development.',
             'footer.explore': 'Explore', 'footer.connect': 'Connect', 'footer.cta': 'Get in touch',
@@ -108,7 +108,28 @@
             'contact.ph.subject': 'What is this about?',
             'contact.ph.message': 'Write your message here...',
             'contact.send': 'Send Message',
-            'contact.sending': 'Sending...'
+            'contact.sending': 'Sending...',
+            // Inbox (khusus pemilik)
+            'inbox.title': 'Inbox',
+            'inbox.sub': 'Messages sent through the Contact form',
+            'inbox.filter.all': 'All', 'inbox.filter.unread': 'Unread', 'inbox.filter.read': 'Read',
+            'inbox.search.ph': 'Search name, email, or message',
+            'inbox.search.label': 'Search messages',
+            'inbox.markall': 'Mark all as read',
+            'inbox.mark.read': 'Mark as read', 'inbox.mark.unread': 'Mark as unread',
+            'inbox.reply': 'Reply by email',
+            'inbox.delete': 'Delete',
+            'inbox.delete.title': 'Delete message?',
+            'inbox.delete.text': 'This message will be permanently deleted.',
+            'inbox.delete.cancel': 'Cancel', 'inbox.delete.confirm': 'Yes, Delete',
+            'inbox.empty': 'Your inbox is empty. Messages from the Contact form will show up here.',
+            'inbox.empty.filter': 'No messages match.',
+            'inbox.prev': 'Previous', 'inbox.next': 'Next',
+            // Lightbox foto
+            'lb.label': 'Photo viewer', 'lb.close': 'Close',
+            'lb.prev': 'Previous photo', 'lb.next': 'Next photo',
+            'lb.enlarge': 'Enlarge photo', 'lb.enlarge.short': 'Enlarge',
+            'lb.hint.switch': 'switch photo', 'lb.hint.close': 'close'
         },
 
         id: {
@@ -116,7 +137,7 @@
 
             'nav.home': 'Beranda', 'nav.about': 'Tentang', 'nav.skills': 'Keahlian', 'nav.education': 'Pendidikan',
             'nav.experience': 'Pengalaman', 'nav.projects': 'Proyek', 'nav.contact': 'Kontak',
-            'nav.login': 'Masuk', 'nav.logout': 'Keluar',
+            'nav.login': 'Masuk', 'nav.logout': 'Keluar', 'nav.inbox': 'Kotak Masuk',
 
             'footer.tagline': 'Mahasiswa Computer Science di Universitas Indonesia, tertarik pada Data Science dan Web Development.',
             'footer.explore': 'Jelajahi', 'footer.connect': 'Terhubung', 'footer.cta': 'Hubungi saya',
@@ -200,7 +221,28 @@
             'contact.ph.subject': 'Tentang apa ini?',
             'contact.ph.message': 'Tulis pesan Anda di sini...',
             'contact.send': 'Kirim Pesan',
-            'contact.sending': 'Mengirim...'
+            'contact.sending': 'Mengirim...',
+            // Inbox (khusus pemilik)
+            'inbox.title': 'Kotak Masuk',
+            'inbox.sub': 'Pesan yang dikirim lewat formulir Contact',
+            'inbox.filter.all': 'Semua', 'inbox.filter.unread': 'Belum dibaca', 'inbox.filter.read': 'Sudah dibaca',
+            'inbox.search.ph': 'Cari nama, email, atau pesan',
+            'inbox.search.label': 'Cari pesan',
+            'inbox.markall': 'Tandai semua dibaca',
+            'inbox.mark.read': 'Tandai dibaca', 'inbox.mark.unread': 'Tandai belum dibaca',
+            'inbox.reply': 'Balas lewat email',
+            'inbox.delete': 'Hapus',
+            'inbox.delete.title': 'Hapus pesan?',
+            'inbox.delete.text': 'Pesan ini akan dihapus permanen.',
+            'inbox.delete.cancel': 'Batal', 'inbox.delete.confirm': 'Ya, Hapus',
+            'inbox.empty': 'Kotak masuk masih kosong. Pesan dari formulir Contact akan muncul di sini.',
+            'inbox.empty.filter': 'Tidak ada pesan yang cocok.',
+            'inbox.prev': 'Sebelumnya', 'inbox.next': 'Berikutnya',
+            // Lightbox foto
+            'lb.label': 'Penampil foto', 'lb.close': 'Tutup',
+            'lb.prev': 'Foto sebelumnya', 'lb.next': 'Foto berikutnya',
+            'lb.enlarge': 'Perbesar foto', 'lb.enlarge.short': 'Perbesar',
+            'lb.hint.switch': 'pindah foto', 'lb.hint.close': 'tutup'
         }
     };
 
@@ -223,6 +265,8 @@
         ['Project deleted successfully!', 'Proyek berhasil dihapus!'],
         ['Account created. Please log in.', 'Akun berhasil dibuat. Silakan login.'],
         // Contact
+        ['All messages marked as read.', 'Semua pesan ditandai sudah dibaca.'],
+        ['Message deleted.', 'Pesan dihapus.'],
         ['Thank you! Your message has been sent.', 'Terima kasih! Pesan Anda sudah terkirim.'],
         ['Please wait a moment before sending another message.', 'Mohon tunggu sebentar sebelum mengirim pesan lagi.'],
         ['Please enter your name.', 'Silakan isi nama Anda.'],
@@ -292,6 +336,14 @@
             el.textContent = auto(el.dataset.i18nOrig);
         });
 
+        // Isi dari database: teks Inggris ada di elemen, terjemahan Indonesia di data-id-text.
+        // Bila terjemahan kosong, teks Inggris tetap dipakai.
+        root.querySelectorAll('[data-id-text]').forEach(function (el) {
+            if (el.dataset.enText === undefined) el.dataset.enText = el.textContent;
+            var idText = el.dataset.idText;
+            el.textContent = (lang === 'id' && idText) ? idText : el.dataset.enText;
+        });
+
         root.querySelectorAll('[data-i18n-attr]').forEach(function (el) {
             el.dataset.i18nAttr.split(';').forEach(function (pair) {
                 var parts = pair.split(':');
@@ -314,8 +366,14 @@
         document.dispatchEvent(new CustomEvent('langchange', { detail: { lang: lang } }));
     }
 
+    // field(en, id): pilih teks sesuai bahasa untuk data dari database (id kosong -> en)
+    function field(en, id) {
+        return (lang === 'id' && id) ? id : en;
+    }
+
     window.I18N = {
         t: t,
+        field: field,
         get: raw,
         auto: auto,
         apply: apply,

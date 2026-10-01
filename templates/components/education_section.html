@@ -17,13 +17,13 @@
                         </span>
                         <div class="edu-main">
                             <h3 class="edu-school">{{ education.school }}</h3>
-                            <p class="edu-major">{{ education.major }}</p>
+                            <p class="edu-major" data-id-text="{{ education.major_indo }}">{{ education.major }}</p>
                         </div>
                         <div class="edu-logo">
                             {% if education.logo %}
-                                <img src="{{ education.logo }}" alt="Logo {{ education.school }}">
+                                <img src="{{ education.logo }}" alt="Logo {{ education.school }}" draggable="false">
                             {% else %}
-                                <img src="{% static 'img/logo-ui.png' %}" alt="Logo default">
+                                <img src="{% static 'img/logo-ui.png' %}" alt="Logo default" draggable="false">
                             {% endif %}
                         </div>
                     </li>

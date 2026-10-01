@@ -494,7 +494,8 @@ class NavbarTest(TestCase):
 
     def test_about_has_no_email(self):
         html = self.client.get(reverse("main:show_main")).content.decode()
-        about = html[html.index('id="about"'):]
+        # hanya section About (sampai section Skills); footer boleh memuat email
+        about = html[html.index('id="about"'):html.index('id="skills"')]
         self.assertNotIn("Email", about)
         self.assertNotIn("mailto:", about)
 
@@ -640,3 +641,223 @@ class LanguageToggleTest(TestCase):
             self.assertIn(f"'{key}'", indonesian, f"Kunci '{key}' belum ada di kamus ID")
             if key not in server_text_only:
                 self.assertIn(f"'{key}'", english, f"Kunci '{key}' belum ada di kamus EN")
+
+
+class InboxTest(TestCase):
+    """Kotak masuk pesan Contact: hanya untuk pemilik (superuser)."""
+
+    def setUp(self):
+        make_users()
+        self.unread = ContactMessage.objects.create(
+            name="Budi", email="budi@example.com", subject="Tanya proyek", message="Halo, saya ingin bertanya soal proyekmu.")
+        self.read = ContactMessage.objects.create(
+            name="Sari", email="sari@example.com", subject="Kolaborasi", message="Ayo kolaborasi bikin film pendek!", is_read=True)
+
+    def login(self, username="pemilik"):
+        self.client.login(username=username, password=PASSWORD)
+
+    def test_anonymous_is_redirected_to_login(self):
+        response = self.client.get(reverse("main:show_inbox"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+    def test_non_owner_is_forbidden(self):
+        for username in ("editor1", "biasa"):
+            self.client.logout()
+            self.login(username)
+            self.assertEqual(self.client.get(reverse("main:show_inbox")).status_code, 403, username)
+
+    def test_owner_sees_messages_and_counts(self):
+        self.login()
+        response = self.client.get(reverse("main:show_inbox"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inbox.html")
+        self.assertContains(response, "Tanya proyek")
+        self.assertContains(response, "Kolaborasi")
+        self.assertEqual(response.context["counts"], {"all": 2, "unread": 1, "read": 1})
+
+    def test_filter_and_search(self):
+        self.login()
+        unread = self.client.get(reverse("main:show_inbox"), {"filter": "unread"})
+        self.assertContains(unread, "Tanya proyek")
+        self.assertNotContains(unread, "Ayo kolaborasi")
+        found = self.client.get(reverse("main:show_inbox"), {"q": "sari"})
+        self.assertContains(found, "Kolaborasi")
+        self.assertNotContains(found, "Tanya proyek")
+        # filter yang tidak dikenal jatuh kembali ke "all"
+        weird = self.client.get(reverse("main:show_inbox"), {"filter": "<script>"})
+        self.assertEqual(weird.context["status"], "all")
+
+    def test_message_html_is_escaped(self):
+        ContactMessage.objects.create(name="X", email="x@example.com", subject="s", message="<script>alert(1)</script> pesan cukup panjang")
+        self.login()
+        html = self.client.get(reverse("main:show_inbox")).content.decode()
+        self.assertNotIn("<script>alert(1)</script>", html)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", html)
+
+    def test_toggle_read_and_unread(self):
+        self.login()
+        url = reverse("main:inbox_toggle_read", args=[self.unread.id])
+        self.client.post(url)
+        self.unread.refresh_from_db()
+        self.assertTrue(self.unread.is_read)
+        self.client.post(url)
+        self.unread.refresh_from_db()
+        self.assertFalse(self.unread.is_read)
+
+    def test_ajax_mark_read_returns_json_with_unread_count(self):
+        self.login()
+        response = self.client.post(
+            reverse("main:inbox_toggle_read", args=[self.unread.id]), {"set": "read"},
+            headers={"X-Requested-With": "XMLHttpRequest"})
+        self.assertEqual(response.json(), {"is_read": True, "unread": 0})
+
+    def test_toggle_requires_post_and_owner(self):
+        url = reverse("main:inbox_toggle_read", args=[self.unread.id])
+        self.login("editor1")
+        self.assertEqual(self.client.post(url).status_code, 403)
+        self.client.logout()
+        self.login()
+        self.assertEqual(self.client.get(url).status_code, 405)
+
+    def test_mark_all_read(self):
+        self.login()
+        response = self.client.post(reverse("main:inbox_mark_all_read"))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ContactMessage.objects.filter(is_read=False).count(), 0)
+
+    def test_delete_message(self):
+        self.login()
+        response = self.client.post(reverse("main:inbox_delete", args=[self.read.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(ContactMessage.objects.filter(pk=self.read.pk).exists())
+
+    def test_non_owner_cannot_delete(self):
+        self.login("editor1")
+        response = self.client.post(reverse("main:inbox_delete", args=[self.read.id]))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ContactMessage.objects.filter(pk=self.read.pk).exists())
+
+    def test_nav_badge_only_for_owner(self):
+        self.login()
+        html = self.client.get(reverse("main:show_main")).content.decode()
+        self.assertIn("data-inbox-badge", html)
+        self.assertIn(reverse("main:show_inbox"), html)
+        self.client.logout()
+        self.login("biasa")
+        html = self.client.get(reverse("main:show_main")).content.decode()
+        self.assertNotIn("data-inbox-badge", html)
+        self.assertNotIn(reverse("main:show_inbox"), html)
+
+    def test_unread_tag_counts(self):
+        from main.templatetags.inbox_tags import unread_messages
+        class R:  # permintaan tiruan
+            def __init__(self, user): self.user = user
+        owner = User.objects.get(username="pemilik")
+        biasa = User.objects.get(username="biasa")
+        self.assertEqual(unread_messages({"request": R(owner)}), 1)
+        self.assertEqual(unread_messages({"request": R(biasa)}), 0)
+
+
+class DatabaseTranslationTest(TestCase):
+    """Isi database punya terjemahan Indonesia (kolom *_indo) yang dipakai toggle bahasa."""
+
+    def test_experience_page_carries_indonesian_text(self):
+        Experience.objects.create(
+            title="Lomba", role="Mentor", role_indo="Pembimbing",
+            description="Guided students.", description_indo="Membimbing mahasiswa.",
+        )
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertIn('data-id-text="Pembimbing">Mentor<', html)
+        self.assertIn('data-id-text="Membimbing mahasiswa.">Guided students.<', html)
+
+    def test_education_page_carries_indonesian_text(self):
+        Education.objects.create(school="UI", major="Computer Science", major_indo="Ilmu Komputer", started_at=date(2025, 8, 1))
+        html = self.client.get(reverse("main:show_education")).content.decode()
+        self.assertIn('data-id-text="Ilmu Komputer">Computer Science<', html)
+
+    def test_seeded_data_has_indonesian_text(self):
+        self.client.get(reverse("main:show_experience"))
+        self.client.get(reverse("main:show_education"))
+        self.assertFalse(Experience.objects.filter(role_indo="").exists())
+        self.assertFalse(Experience.objects.filter(description_indo="").exists())
+        self.assertFalse(Education.objects.filter(major_indo="").exists())
+
+    def test_project_json_includes_and_searches_indonesian_text(self):
+        Project.objects.create(
+            title="Film", title_indo="Film Pendek", description="A short film.",
+            description_indo="Sebuah film pendek tentang kota.", project_url="https://example.com")
+        data = self.client.get(reverse("main:get_project_json")).json()
+        self.assertEqual(data[0]["fields"]["title_indo"], "Film Pendek")
+        found = self.client.get(reverse("main:get_project_json"), {"q": "tentang kota"}).json()
+        self.assertEqual(len(found), 1)
+
+    def test_translation_fields_are_optional_in_forms(self):
+        from main.forms import ProjectForm
+        form = ProjectForm({"title": "Tanpa Terjemahan", "description": "Cuma Inggris.",
+                            "category": "other", "project_url": "https://example.com"})
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.save().title_indo, "")
+
+    def test_indonesian_text_is_stripped_of_html(self):
+        from main.forms import ProjectForm
+        form = ProjectForm({"title": "T", "title_indo": "<b>Judul</b>", "description": "D",
+                            "description_indo": "<script>x</script>Deskripsi", "category": "other",
+                            "project_url": "https://example.com"})
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["title_indo"], "Judul")
+        self.assertNotIn("<script>", form.cleaned_data["description_indo"])
+
+
+class MotionAndLightboxTest(TestCase):
+    """Lightbox foto Experience, tombol magnetik, bentuk kursor, dan transisi halaman."""
+
+    def setUp(self):
+        Experience.objects.create(title="Lomba", description="Deskripsi", thumbnail="/static/img/exp-cf.jpg")
+
+    def test_experience_photo_is_lightbox_ready(self):
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertIn("js/lightbox.js", html)
+        self.assertIn('class="exp-photo"', html)
+
+    def test_motion_script_and_fallback_flag_on_every_page(self):
+        for name in ("main:show_main", "main:show_experience", "main:show_projects", "main:show_contact", "main:login"):
+            html = self.client.get(reverse(name)).content.decode()
+            self.assertIn("js/motion.js", html, name)
+            self.assertIn("CSSViewTransitionRule", html, name)   # penanda cadangan 'no-vt'
+
+    def test_page_transition_css_is_present(self):
+        from pathlib import Path
+        base = Path(__file__).resolve().parent.parent / "static" / "css"
+        self.assertIn("@view-transition", (base / "effects.css").read_text(encoding="utf-8"))
+        extras = (base / "extras.css").read_text(encoding="utf-8")
+        self.assertIn("view-transition-name: site-nav", extras)
+        self.assertIn("prefers-reduced-motion", extras)
+
+    def test_dictionary_has_lightbox_and_inbox_keys_in_both_languages(self):
+        from pathlib import Path
+        source = (Path(__file__).resolve().parent.parent / "static" / "js" / "i18n.js").read_text(encoding="utf-8")
+        english = source[source.index("en: {"):source.index("id: {")]
+        indonesian = source[source.index("id: {"):source.index("AUTO_PAIRS")]
+        keys = ["lb.label", "lb.close", "lb.prev", "lb.next", "lb.enlarge", "lb.enlarge.short",
+                "lb.hint.switch", "lb.hint.close", "nav.inbox", "inbox.title", "inbox.empty", "inbox.delete.confirm"]
+        for key in keys:
+            self.assertIn(f"'{key}'", english, key)
+            self.assertIn(f"'{key}'", indonesian, key)
+
+
+class FillMissingTranslationsTest(TestCase):
+    """Data lama yang kolom Indonesia-nya kosong diisi otomatis (tanpa migrasi data)."""
+
+    def test_existing_seed_rows_get_translations_when_pages_open(self):
+        Experience.objects.create(title="COMPFEST 18", role="VPIC of Transportation & Venue", description="x")
+        Education.objects.create(school="UI", major="Bachelor of Computer Science", started_at=date(2025, 8, 1))
+        self.client.get(reverse("main:show_experience"))
+        self.client.get(reverse("main:show_education"))
+        self.assertEqual(Experience.objects.get(title="COMPFEST 18").role_indo, "VPIC Transportasi & Venue")
+        self.assertEqual(Education.objects.get(school="UI").major_indo, "S1 Ilmu Komputer")
+
+    def test_own_translation_is_not_overwritten(self):
+        Experience.objects.create(title="DDP0", role="Mentor", role_indo="Pembimbing Kelas", description="x")
+        self.client.get(reverse("main:show_experience"))
+        self.assertEqual(Experience.objects.get(title="DDP0").role_indo, "Pembimbing Kelas")

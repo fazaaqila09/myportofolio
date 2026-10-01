@@ -5,16 +5,71 @@ from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from datetime import date, datetime
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 import time
-from main.models import Experience, Education, Project
+from urllib.parse import urlencode
+from main.models import ContactMessage, Experience, Education, Project
 from main.forms import ContactForm, ExperienceForm, ProjectForm
+
+
+# Terjemahan Indonesia untuk data awal portofolio. Dipakai untuk mengisi baris
+# lama yang kolom *_indo-nya masih kosong (lihat fill_missing_translations).
+EXPERIENCE_ID = {
+    "COMPFEST 18": (
+        "VPIC Transportasi & Venue",
+        "Mengelola logistik venue dan mengoordinasikan jadwal transportasi agar distribusi perlengkapan acara berjalan tepat waktu.",
+    ),
+    "BETIS Fasilkom UI": (
+        "VPIC Operasional",
+        "Mengawasi alur kerja operasional harian, mengelola pengadaan perlengkapan, dan memastikan seluruh kebutuhan logistik terlaksana sesuai jadwal.",
+    ),
+    "Open House Fasilkom UI": (
+        "VPIC Operasional",
+        "Memimpin persiapan operasional dan mengoordinasikan distribusi perlengkapan antartim demi pelaksanaan acara yang lancar.",
+    ),
+    "DDP0": (
+        "Mentor",
+        "Membimbing mahasiswa, mengelola logistik kelas, dan memberikan arahan untuk konsep dasar pemrograman.",
+    ),
+    "Nabastala Production": (
+        "Produser",
+        "Mengawasi jadwal produksi, mengelola logistik peralatan penting, dan mengoordinasikan distribusi tim demi keberhasilan proyek.",
+    ),
+    "RISMANSA": (
+        "Kepala Divisi PSDI",
+        "Merancang program acara yang komprehensif dan berkolaborasi erat dengan divisi lintas fungsi demi pelaksanaan acara yang lancar dan sukses.",
+    ),
+}
+
+EDUCATION_MAJOR_ID = {
+    "Bachelor of Computer Science": "S1 Ilmu Komputer",
+    "Senior High School (STEM)": "SMA (IPA)",
+    "Middle High School": "SMP",
+}
+
+
+def fill_missing_translations():
+    """Isi otomatis terjemahan Indonesia untuk data awal yang sudah ada di database.
+
+    Hanya menyentuh baris yang kolom *_indo-nya MASIH KOSONG dan teks Inggrisnya
+    cocok dengan data awal, jadi terjemahan yang Anda tulis sendiri tidak
+    tertimpa. Pemeriksaan awal murah (satu query) sehingga aman dipanggil
+    di setiap permintaan."""
+    if Experience.objects.filter(Q(role_indo="") | Q(description_indo="")).exists():
+        for title, (role, description) in EXPERIENCE_ID.items():
+            Experience.objects.filter(title=title, role_indo="").update(role_indo=role)
+            Experience.objects.filter(title=title, description_indo="").update(description_indo=description)
+    if Education.objects.filter(major_indo="").exists():
+        for major, major_indo in EDUCATION_MAJOR_ID.items():
+            Education.objects.filter(major=major, major_indo="").update(major_indo=major_indo)
 
 
 EDITOR_GROUP = "Editor"
@@ -141,6 +196,106 @@ def show_contact(request):
     return render(request, "contact.html", context)
 
 
+INBOX_PAGE_SIZE = 15
+
+
+@login_required(login_url="/login/")
+def show_inbox(request):
+    """Kotak masuk pesan Contact. Khusus pemilik portofolio (superuser)."""
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
+    status = request.GET.get("filter", "all")
+    if status not in ("all", "unread", "read"):
+        status = "all"
+    query = request.GET.get("q", "").strip()
+
+    everything = ContactMessage.objects.all()
+    counts = {
+        "all": everything.count(),
+        "unread": everything.filter(is_read=False).count(),
+        "read": everything.filter(is_read=True).count(),
+    }
+
+    shown = everything
+    if status == "unread":
+        shown = shown.filter(is_read=False)
+    elif status == "read":
+        shown = shown.filter(is_read=True)
+    if query:
+        shown = shown.filter(
+            Q(name__icontains=query) | Q(email__icontains=query)
+            | Q(subject__icontains=query) | Q(message__icontains=query)
+        )
+
+    page = Paginator(shown, INBOX_PAGE_SIZE).get_page(request.GET.get("page"))
+    context = {
+        "name": "Faza",
+        "page": page,
+        "status": status,
+        "query": query,
+        "counts": counts,
+    }
+    return render(request, "inbox.html", context)
+
+
+def inbox_redirect(request):
+    """Kembali ke kotak masuk dengan filter/pencarian/halaman yang sama."""
+    params = {
+        key: request.POST.get(key, "").strip()
+        for key in ("filter", "q", "page")
+        if request.POST.get(key, "").strip()
+    }
+    url = reverse("main:show_inbox")
+    return redirect(f"{url}?{urlencode(params)}" if params else url)
+
+
+@login_required(login_url="/login/")
+@require_POST
+def inbox_toggle_read(request, message_id):
+    """Ubah status baca. 'set' = read / unread / (kosong = balik status).
+    Dipanggil juga lewat fetch() saat pesan dibuka (dijawab JSON)."""
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
+    message = get_object_or_404(ContactMessage, pk=message_id)
+    wanted = request.POST.get("set")
+    if wanted == "read":
+        message.is_read = True
+    elif wanted == "unread":
+        message.is_read = False
+    else:
+        message.is_read = not message.is_read
+    message.save(update_fields=["is_read"])
+
+    if is_ajax(request):
+        return JsonResponse({
+            "is_read": message.is_read,
+            "unread": ContactMessage.objects.filter(is_read=False).count(),
+        })
+    return inbox_redirect(request)
+
+
+@login_required(login_url="/login/")
+@require_POST
+def inbox_mark_all_read(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    ContactMessage.objects.filter(is_read=False).update(is_read=True)
+    messages.success(request, "All messages marked as read.")
+    return inbox_redirect(request)
+
+
+@login_required(login_url="/login/")
+@require_POST
+def inbox_delete(request, message_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    get_object_or_404(ContactMessage, pk=message_id).delete()
+    messages.success(request, "Message deleted.")
+    return inbox_redirect(request)
+
+
 def show_main(request):
     last_login = request.COOKIES.get("last_login", "Belum ada sesi login / Cookie tidak ditemukan")
     context = {
@@ -161,11 +316,14 @@ def show_main(request):
 
 
 def show_experience(request):
+    fill_missing_translations()
     if not Experience.objects.exists():
         e1 = Experience.objects.create(
             title="COMPFEST 18",
             role="VPIC of Transportation & Venue",
+            role_indo="VPIC Transportasi & Venue",
             description="Managed venue logistics and coordinated transportation schedules to ensure the timely distribution of event equipment.",
+            description_indo="Mengelola logistik venue dan mengoordinasikan jadwal transportasi agar distribusi perlengkapan acara berjalan tepat waktu.",
             category="committee",
             thumbnail="/static/img/exp-cf.jpg",
             logo="/static/img/logo-cf.png"
@@ -176,7 +334,9 @@ def show_experience(request):
         e2 = Experience.objects.create(
             title="BETIS Fasilkom UI",
             role="VPIC of Operational",
+            role_indo="VPIC Operasional",
             description="Oversaw daily operational workflows, managed equipment procurement, and ensured all logistical requirements were executed on schedule.",
+            description_indo="Mengawasi alur kerja operasional harian, mengelola pengadaan perlengkapan, dan memastikan seluruh kebutuhan logistik terlaksana sesuai jadwal.",
             category="committee",
             thumbnail="/static/img/exp-betis.jpeg",
             logo="/static/img/logo-betis.png"
@@ -188,7 +348,9 @@ def show_experience(request):
         e3 = Experience.objects.create(
             title="Open House Fasilkom UI",
             role="VPIC of Operational",
+            role_indo="VPIC Operasional",
             description="Directed operational preparations and coordinated cross-team equipment distribution to guarantee a seamless event execution.",
+            description_indo="Memimpin persiapan operasional dan mengoordinasikan distribusi perlengkapan antartim demi pelaksanaan acara yang lancar.",
             category="committee",
             thumbnail="/static/img/exp-oh.jpg",
             logo="/static/img/logo-oh.png"
@@ -199,7 +361,9 @@ def show_experience(request):
         e4 = Experience.objects.create(
             title="DDP0",
             role="Mentor",
+            role_indo="Mentor",
             description="Mentored students, managed class logistics, and provided guidance for foundational programming concepts.",
+            description_indo="Membimbing mahasiswa, mengelola logistik kelas, dan memberikan arahan untuk konsep dasar pemrograman.",
             category="volunteer",
             thumbnail="/static/img/exp-ddp0.jpeg",
             logo="/static/img/logo-ddp0.png"
@@ -211,7 +375,9 @@ def show_experience(request):
         e5 = Experience.objects.create(
             title="Nabastala Production",
             role="Producer",
+            role_indo="Produser",
             description="Supervised production timelines, managed essential equipment logistics, and coordinated team distributions for successful project delivery.",
+            description_indo="Mengawasi jadwal produksi, mengelola logistik peralatan penting, dan mengoordinasikan distribusi tim demi keberhasilan proyek.",
             category="organization",
             thumbnail="/static/img/exp-nabastala.jpeg",
             logo="/static/img/logo-nabastala.png"
@@ -223,7 +389,9 @@ def show_experience(request):
         e6 = Experience.objects.create(
             title="RISMANSA",
             role="Head Division of PSDI",
+            role_indo="Kepala Divisi PSDI",
             description="Designed comprehensive event programs and collaborated closely with cross-functional divisions to ensure smooth and successful event executions.",
+            description_indo="Merancang program acara yang komprehensif dan berkolaborasi erat dengan divisi lintas fungsi demi pelaksanaan acara yang lancar dan sukses.",
             category="organization",
             thumbnail="/static/img/exp-rismansa.jpeg",
             logo="/static/img/logo-risma.png"
@@ -341,6 +509,7 @@ def get_education_list():
         Education.objects.create(
             school="Universitas Indonesia",
             major="Bachelor of Computer Science",
+            major_indo="S1 Ilmu Komputer",
             level="bachelor",
             logo="/static/img/logo-ui.png",
             started_at=date(2025, 8, 1),
@@ -348,6 +517,7 @@ def get_education_list():
         Education.objects.create(
             school="Universitas Diponegoro",
             major="Bachelor of Computer Science",
+            major_indo="S1 Ilmu Komputer",
             level="bachelor",
             logo="/static/img/logo-undip.png",
             started_at=date(2024, 8, 1),
@@ -356,6 +526,7 @@ def get_education_list():
         Education.objects.create(
             school="SMAN 1 Kota Serang",
             major="Senior High School (STEM)",
+            major_indo="SMA (IPA)",
             level="senior",
             logo="/static/img/logo-sma.png",
             started_at=date(2021, 7, 1),
@@ -364,11 +535,13 @@ def get_education_list():
         Education.objects.create(
             school="SMPN 1 Kota Serang",
             major="Middle High School",
+            major_indo="SMP",
             level="junior",
             logo="/static/img/logo-smp.png",
             started_at=date(2018, 7, 1),
             ended_at=date(2021, 6, 1),
         )
+    fill_missing_translations()
     return Education.objects.all()
 
 
@@ -440,6 +613,8 @@ def get_project_json(request):
         projects = projects.filter(
             Q(title__icontains=search_query)
             | Q(description__icontains=search_query)
+            | Q(title_indo__icontains=search_query)
+            | Q(description_indo__icontains=search_query)
         )
 
     # JSON dirakit manual (bukan serializers.serialize) supaya bisa memuat
@@ -454,6 +629,8 @@ def get_project_json(request):
             "fields": {
                 "title": project.title,
                 "description": project.description,
+                "title_indo": project.title_indo,
+                "description_indo": project.description_indo,
                 "category": project.category,
                 "category_display": project.get_category_display(),
                 "thumbnail": project.thumbnail or "",
