@@ -577,6 +577,9 @@ html[data-theme="dark"] .edu-item:hover .edu-logo img { filter: none; }
     .edu-logo img { transition: none; }
 }
 
+/* Lebar section Education & Skills disamakan dengan Home dan About (88%, maks 1320px) */
+.education-inner { width: 88%; max-width: 1320px; }
+
 /* ---------- 6. Halaman Experience: daftar editorial ----------
    Tanpa kotak kartu, bayangan, atau gradasi. Foto di kiri, teks di kanan,
    dipisah garis tipis; nomor urut kecil di atas teks. Isi teks sama persis
@@ -737,4 +740,397 @@ html[data-theme="dark"] .exp-desc { color: #B8C6DB; }
     .exp-status.is-ongoing::before { animation: none; }
     .exp-photo img,
     .exp-org { transition: none; }
+}
+
+/* ============================================================
+   7. Toggle bahasa (ID | EN) di navbar
+   ============================================================ */
+.top-nav .nav-right {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-lang {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px;
+    border: 1.5px solid rgba(13, 34, 55, .3);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .4);
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: box-shadow .25s ease, border-color .25s ease;
+}
+.nav-lang:hover,
+.nav-lang:focus-visible { box-shadow: 0 4px 12px rgba(13, 34, 55, .14); border-color: #0D2237; outline: none; }
+
+.nav-lang__opt {
+    min-width: 28px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .6px;
+    line-height: 1.3;
+    text-align: center;
+    color: #0D2237;
+    opacity: .6;
+    transition: background .25s ease, color .25s ease, opacity .25s ease;
+}
+/* pilihan yang aktif: kuning brand */
+html[lang="id"] .nav-lang [data-l="id"],
+html[lang="en"] .nav-lang [data-l="en"] {
+    background: #FFBB00;
+    color: #112D4E;
+    opacity: 1;
+    box-shadow: 0 1px 4px rgba(255, 187, 0, .45);
+}
+
+html[data-theme="dark"] .nav-lang { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .35); }
+html[data-theme="dark"] .nav-lang:hover,
+html[data-theme="dark"] .nav-lang:focus-visible { border-color: #F1F5FB; box-shadow: 0 4px 12px rgba(0, 0, 0, .4); }
+html[data-theme="dark"] .nav-lang__opt { color: #F1F5FB; }
+html[data-theme="dark"][lang="id"] .nav-lang [data-l="id"],
+html[data-theme="dark"][lang="en"] .nav-lang [data-l="en"] { color: #112D4E; }
+
+/* ---------- Navbar dengan 7 menu + toggle bahasa ----------
+   901-1100px: menu dirapatkan supaya tetap satu baris.
+   <= 900px: dua baris (logo + toggle + akun di atas, menu di bawah),
+   sama seperti tampilan ponsel. */
+@media (max-width: 1100px) and (min-width: 901px) {
+    .top-nav .nav-menu { gap: 0; }
+    .top-nav .nav-menu a { padding: 7px 6px; letter-spacing: .2px; font-size: 10.5px; }
+}
+@media (max-width: 900px) and (min-width: 701px) {
+    .top-nav {
+        top: 14px;
+        width: calc(100% - 24px);
+        max-width: none;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "brand account" "menu menu";
+        justify-content: normal;
+        align-items: center;
+        row-gap: 4px;
+        padding: 10px 16px 12px;
+        border-radius: 28px;
+    }
+    .top-nav .nav-brand { grid-area: brand; justify-self: start; top: 0; font-size: 26px; }
+    .top-nav .nav-right { grid-area: account; justify-self: end; }
+    .top-nav .nav-menu { grid-area: menu; width: 100%; justify-content: space-between; gap: 0; }
+    .top-nav .nav-menu a { padding: 6px 8px; font-size: 11px; letter-spacing: .3px; }
+}
+@media (max-width: 700px) {
+    .top-nav .nav-right { grid-area: account; justify-self: end; gap: 6px; }
+    .nav-lang__opt { min-width: 24px; padding: 3px 7px; font-size: 9.5px; }
+    .top-nav .nav-menu a { padding: 6px 3px; font-size: 8.5px; letter-spacing: 0; }
+}
+@media (max-width: 380px) {
+    .top-nav .nav-right { gap: 4px; }
+    .nav-lang__opt { min-width: 22px; padding: 3px 6px; font-size: 9px; }
+    .top-nav .nav-menu a { padding: 6px 2px; font-size: 8px; }
+}
+
+/* ============================================================
+   8. Section Skills / Tech Stack: marquee (kanan ke kiri, tanpa berhenti)
+   Tiap grup = satu baris. Isinya digandakan di template, lalu .marquee__track
+   digeser -50% terus-menerus (linear, infinite) sehingga gerakannya tidak pernah
+   berhenti dan ujungnya selalu tersambung. Kecepatan per baris: --dur di inline style.
+   ============================================================ */
+.skills {
+    scroll-margin-top: 100px;
+    padding: 4rem 0 5rem;
+    background: transparent;
+    overflow-x: clip;               /* marquee yang lebar tidak memunculkan scroll horizontal */
+}
+.skills-inner { width: 88%; max-width: 1320px; margin: 0 auto; }   /* sama dengan Home & About */
+.skills-head { margin-bottom: 2.4rem; }
+
+/* minmax(0,1fr) + min-width:0: lebar baris = lebar layar, bukan lebar track marquee yang sangat panjang */
+.skill-rows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+.skill-row { min-width: 0; }
+
+.skill-row__title {
+    width: 88%;
+    max-width: 1320px;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: #3F72AF;
+}
+/* garis aksen setelah judul baris: sama dengan garis footer & bingkai foto */
+.skill-row__title::after {
+    content: "";
+    flex: 1;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #FFBB00 0%, #3F72AF 55%, rgba(63, 114, 175, 0) 100%);
+    opacity: .75;
+}
+
+/* jendela marquee: selebar judul + garis di atasnya (88%, maks 1320px, sama dengan Home & About, di tengah),
+   jadi chip tidak melewati ujung garis. Tepi kiri & kanan memudar. */
+.marquee {
+    width: 88%;
+    max-width: 1320px;
+    margin: 0 auto;
+    overflow: hidden;
+    padding: 18px 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
+}
+.marquee__track {
+    display: flex;
+    width: max-content;
+    animation: skillScroll var(--dur, 40s) linear infinite;   /* tanpa jeda, tanpa berhenti saat disorot */
+    will-change: transform;
+}
+/* padding-right = gap, supaya lebar satu grup persis setengah track (loop mulus) */
+.marquee__group {
+    flex: none;
+    display: flex;
+    gap: 14px;
+    margin: 0;
+    padding: 0 14px 0 0;
+    list-style: none;
+}
+@keyframes skillScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+.skill-chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 22px 10px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .85);
+    border: 1px solid rgba(17, 45, 78, .10);
+    box-shadow: 0 10px 22px -16px rgba(17, 45, 78, .55);
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: #112D4E;
+    cursor: default;
+    transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s ease, border-color .3s ease, background .3s ease;
+}
+.skill-chip__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(63, 114, 175, .13);
+    color: #3F72AF;
+    font-size: 17px;
+    transition: background .3s ease, color .3s ease, transform .35s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* Hover / sorot kursor: chip terangkat & membesar, bingkai kuning, ikon berubah jadi kuning
+   dan berputar sedikit. Marquee tetap berjalan (tidak berhenti). Hanya untuk perangkat dengan mouse. */
+@media (hover: hover) {
+    .skill-chip:hover {
+        transform: translateY(-5px) scale(1.09);
+        border-color: #FFBB00;
+        background: #FFFFFF;
+        box-shadow:
+            0 10px 18px -10px rgba(17, 45, 78, .5),
+            0 0 0 3px rgba(255, 187, 0, .28);
+    }
+    .skill-chip:hover .skill-chip__icon {
+        background: #FFBB00;
+        color: #112D4E;
+        transform: rotate(-12deg) scale(1.12);
+    }
+}
+
+.skills-note {
+    margin: 26px 0 0;
+    text-align: center;
+    font-size: 14px;
+    color: #3B5274;
+}
+.skills-note i { margin-right: 6px; color: #3F72AF; }
+
+html[data-theme="dark"] .skills { background: transparent; }
+html[data-theme="dark"] .skill-row__title { color: #7FA8E0; }
+html[data-theme="dark"] .skill-chip { background: rgba(20, 38, 63, .9); border-color: rgba(255, 255, 255, .12); box-shadow: 0 10px 22px -16px rgba(0, 0, 0, .9); color: #E6EDF7; }
+html[data-theme="dark"] .skill-chip__icon { background: rgba(127, 168, 224, .16); color: #9CC0F0; }
+@media (hover: hover) {
+    html[data-theme="dark"] .skill-chip:hover {
+        background: #1B3558;
+        border-color: #FFBB00;
+        box-shadow: 0 10px 18px -10px rgba(0, 0, 0, .9), 0 0 0 3px rgba(255, 187, 0, .3);
+    }
+    html[data-theme="dark"] .skill-chip:hover .skill-chip__icon { background: #FFBB00; color: #112D4E; }
+}
+html[data-theme="dark"] .skills-note { color: #9FB0C8; }
+html[data-theme="dark"] .skills-note i { color: #7FA8E0; }
+
+@media (max-width: 600px) {
+    .skills { padding: 2.5rem 0 3.5rem; }
+    .skill-rows { gap: 20px; }
+    .skill-chip { gap: 10px; padding: 8px 18px 8px 10px; font-size: 13.5px; }
+    .skill-chip__icon { width: 30px; height: 30px; font-size: 14px; }
+    .marquee__group { gap: 10px; padding-right: 10px; }
+}
+
+/* Pengguna yang mematikan animasi di sistemnya: tidak bergerak, daftar tampil rapi satu set saja */
+@media (prefers-reduced-motion: reduce) {
+    .marquee { -webkit-mask-image: none; mask-image: none; }
+    .marquee__track { animation: none; width: auto; justify-content: center; }
+    .marquee__group:nth-child(n+2),
+    .skill-chip.is-copy { display: none; }
+    .marquee__group { flex-wrap: wrap; justify-content: center; padding-right: 0; width: 88%; max-width: 1320px; }
+    .skill-chip, .skill-chip__icon { transition: none; }
+    .skill-chip:hover, .skill-chip:hover .skill-chip__icon { transform: none; }
+}
+
+/* ============================================================
+   9. Halaman Contact
+   ============================================================ */
+.contact-layout {
+    width: 90%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.25fr);
+    gap: 26px;
+    align-items: start;
+}
+
+/* kartu info (kiri): navy brand + aksen kuning */
+.contact-info {
+    position: relative;
+    overflow: hidden;
+    padding: 32px 28px 28px;
+    border-radius: 22px;
+    color: #DBE2EF;
+    background: linear-gradient(160deg, #112D4E 0%, #1B4375 100%);
+    box-shadow: 0 22px 44px -26px rgba(17, 45, 78, .7);
+}
+.contact-info::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, #FFBB00 0%, #3F72AF 55%, rgba(63, 114, 175, 0) 100%);
+}
+.contact-info__title { margin: 0 0 8px; font-size: 22px; font-weight: 600; color: #FFFFFF; }
+.contact-info__text { margin: 0 0 22px; font-size: 14px; line-height: 1.7; color: #B9C8E0; }
+
+.contact-channels { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.contact-channels a,
+.contact-channels__static {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    transition: background .25s ease, transform .25s ease;
+}
+.contact-channels a:hover,
+.contact-channels a:focus-visible { background: rgba(255, 255, 255, .10); transform: translateX(3px); outline: none; }
+.contact-channels i {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .10);
+    color: #FFBB00;
+    font-size: 16px;
+}
+.contact-channels small {
+    display: block;
+    margin-bottom: 1px;
+    font-size: 10.5px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #8FA6C6;
+}
+
+/* kartu form (kanan) */
+.contact-form {
+    position: relative;
+    overflow: hidden;
+    padding: 30px 28px 28px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .66);
+    border: 1px solid rgba(17, 45, 78, .10);
+    box-shadow: 0 22px 44px -28px rgba(17, 45, 78, .5);
+}
+.contact-form::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, #FFBB00 0%, #3F72AF 55%, rgba(63, 114, 175, .28) 100%);
+}
+.contact-form .form-group textarea { resize: vertical; min-height: 140px; }
+.contact-form .form-group input,
+.contact-form .form-group textarea { background: #FFFFFF; transition: border-color .2s ease, box-shadow .2s ease; }
+.contact-form .form-group input:focus,
+.contact-form .form-group textarea:focus { outline: none; border-color: #3F72AF; box-shadow: 0 0 0 3px rgba(63, 114, 175, .22); }
+
+.contact-form__meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: .35rem; }
+.contact-form__meta .form-error { display: block; margin-top: 0; }
+.contact-counter { flex: none; margin-left: auto; font-size: 12px; color: #6B7C93; font-variant-numeric: tabular-nums; }
+
+.contact-form__alert { margin: 0 0 1.1rem; padding: .7rem .9rem; border-radius: 10px; background: #FBE4E1; }
+
+/* kolom jebakan bot: tidak terlihat oleh manusia */
+.contact-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.contact-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: .85rem 1.2rem;
+    transition: background .25s ease, color .25s ease, transform .2s ease, box-shadow .25s ease;
+}
+.contact-submit:hover { transform: translateY(-1px); box-shadow: 0 10px 20px -12px rgba(17, 45, 78, .7); }
+.contact-submit:disabled { opacity: .65; cursor: progress; transform: none; box-shadow: none; }
+
+html[data-theme="dark"] .contact-form { background: rgba(15, 30, 51, .66); border-color: rgba(255, 255, 255, .10); box-shadow: 0 22px 44px -28px rgba(0, 0, 0, .85); }
+html[data-theme="dark"] .contact-form .form-group input,
+html[data-theme="dark"] .contact-form .form-group textarea { background: #0F1E33; }
+html[data-theme="dark"] .contact-form .form-group input:focus,
+html[data-theme="dark"] .contact-form .form-group textarea:focus { border-color: #7FA8E0; box-shadow: 0 0 0 3px rgba(127, 168, 224, .25); }
+html[data-theme="dark"] .contact-counter { color: #8FA6C6; }
+html[data-theme="dark"] .contact-form__alert { background: #3A1F22; }
+html[data-theme="dark"] .contact-info { background: linear-gradient(160deg, #0F2340 0%, #163258 100%); box-shadow: 0 22px 44px -26px rgba(0, 0, 0, .9); }
+
+@media (max-width: 480px) {
+    .contact-channels a, .contact-channels__static { gap: 10px; padding: 8px 6px; font-size: 13px; }
+    .contact-channels i { width: 34px; height: 34px; font-size: 15px; }
+}
+@media (max-width: 860px) {
+    .contact-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .contact-info { padding: 26px 22px 22px; }
+    .contact-form { padding: 26px 20px 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .contact-submit, .contact-channels a { transition: none; }
+    .contact-submit:hover, .contact-channels a:hover { transform: none; }
 }

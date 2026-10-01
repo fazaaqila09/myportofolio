@@ -7,28 +7,29 @@
 <section id="projects" class="projects" style="padding: 130px 0 80px; min-height: 100vh; box-sizing: border-box;">
 
     <div class="section-head">
-        <h2 class="section-title proj-title">Projects</h2>
-        <p class="section-sub proj-sub">Things I've built, filmed, and created</p>
+        <h2 class="section-title proj-title" data-i18n="proj.title">Projects</h2>
+        <p class="section-sub proj-sub" data-i18n="proj.sub">Things I've built, filmed, and created</p>
     </div>
 
     <div class="proj-toolbar">
         {% if user.is_superuser %}
         <button type="button" class="button proj-add-button" popovertarget="add-project-modal">
-            <span aria-hidden="true">+</span> Add Project
+            <span aria-hidden="true">+</span> <span data-i18n="proj.add">Add Project</span>
         </button>
         {% endif %}
         <form id="project-search-form" class="proj-search">
             <input type="search" id="search-input" name="q" value="{{ search_query }}"
                 placeholder="Search by title or description"
+                data-i18n-attr="placeholder:proj.search.ph;aria-label:proj.search.label"
                 class="proj-search__input" aria-label="Search projects">
-            <button type="submit" class="button">Search</button>
+            <button type="submit" class="button" data-i18n="common.search">Search</button>
         </form>
     </div>
 
     <!-- Filter kategori (dibuat otomatis dari data) + keterangan jumlah -->
-    <div id="category-chips" class="chip-row hide" role="group" aria-label="Filter kategori"></div>
+    <div id="category-chips" class="chip-row hide" role="group" aria-label="Filter kategori" data-i18n-attr="aria-label:proj.filter"></div>
     <p id="result-info" class="result-info hide" aria-live="polite">
-        Menampilkan <strong id="shown-count">0</strong> dari <strong id="total-count">0</strong> proyek
+        <span data-i18n="proj.showing.a">Menampilkan</span> <strong id="shown-count">0</strong> <span data-i18n="proj.showing.b">dari</span> <strong id="total-count">0</strong> <span data-i18n="proj.showing.c">proyek</span>
     </p>
 
     <!-- Loading State: kartu kerangka (skeleton) -->
@@ -67,7 +68,7 @@
 
     <!-- Error State -->
     <div id="error" class="empty-state hide">
-        <p>Failed to load projects. Please try again.</p>
+        <p data-i18n="proj.error">Failed to load projects. Please try again.</p>
     </div>
 
     <!-- Empty State -->
@@ -80,7 +81,7 @@
 
     <!-- Load more (juga otomatis terpicu saat tombol ini terlihat = infinite scroll) -->
     <div id="load-more-wrap" class="load-more-wrap hide">
-        <button type="button" id="load-more" class="button load-more">Load more</button>
+        <button type="button" id="load-more" class="button load-more" data-i18n="proj.more">Load more</button>
     </div>
 </section>
 
@@ -104,6 +105,7 @@
     let allProjects = [];                // hasil fetch terakhir (sudah terfilter pencarian)
     let activeCategory = 'all';
     let visibleCount = PAGE_SIZE;
+    let projectsLoaded = false;          // true setelah data pertama berhasil diambil
 
     // Elemen DOM
     const loadingState = document.getElementById('loading');
@@ -167,7 +169,7 @@
                     {% csrf_token %}
                     <button type="submit" class="proj-icon-btn proj-icon-btn--danger"
                         aria-label="Delete ${escapeHtml(project.title)}" title="Delete"
-                        onclick="return confirm('Yakin ingin menghapus project ini?');">
+                        onclick="return confirm(t('proj.confirm.delete'));">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                </form>`
@@ -183,7 +185,7 @@
             : '';
 
         const isStarredClass = project.is_starred ? ' is-starred' : '';
-        const starText = project.is_starred ? 'Unstar' : 'Star';
+        const starText = t(project.is_starred ? 'star.unstar' : 'star.star');
         const starTitle = project.star_count > 0
             ? `Dibintangi oleh ${project.starred_by_names}`
             : 'Jadilah yang pertama memberi star';
@@ -192,13 +194,13 @@
             <div class="proj-photo">${photoHtml}</div>
             <div class="proj-body">
                 <div class="proj-head">
-                    <span class="proj-category">${escapeHtml(project.category_display)}</span>
+                    <span class="proj-category">${escapeHtml(I18N.auto(project.category_display))}</span>
                     ${actionsHtml}
                 </div>
                 <h3 class="proj-name">${escapeHtml(project.title)}</h3>
                 <p class="proj-desc">${escapeHtml(project.description)}</p>
                 <div class="proj-links">
-                    <a href="${escapeHtml(project.project_url)}" target="_blank" rel="noopener" class="button proj-view-button">View Project</a>
+                    <a href="${escapeHtml(project.project_url)}" target="_blank" rel="noopener" class="button proj-view-button">${t('proj.view')}</a>
                     <form method="post" action="${starUrl}" class="star-form">
                         {% csrf_token %}
                         <button type="submit" class="button button-star${isStarredClass}" title="${escapeHtml(starTitle)}">
@@ -230,13 +232,13 @@
             chipRow.classList.add('hide');
             return;
         }
-        const entries = [['all', 'All'], ...categories.entries()];
+        const entries = [['all', t('proj.all')], ...categories.entries()];
         entries.forEach(([value, label]) => {
             const chip = document.createElement('button');
             chip.type = 'button';
             chip.className = 'chip';
             chip.dataset.category = value;
-            chip.textContent = label;          // textContent: aman dari XSS
+            chip.textContent = value === 'all' ? label : I18N.auto(label);          // textContent: aman dari XSS
             chip.setAttribute('aria-pressed', String(value === activeCategory));
             chipRow.appendChild(chip);
         });
@@ -249,10 +251,10 @@
 
         if (filtered.length === 0) {
             emptyMessage.textContent = searchInput.value.trim()
-                ? 'No projects match your search.'
+                ? t('proj.empty.search', 'No projects match your search.')
                 : (allProjects.length === 0
-                    ? 'No projects added yet — click "Add Project" to add your first one.'
-                    : 'No projects in this category.');
+                    ? t('proj.empty.none', 'No projects added yet — click "Add Project" to add your first one.')
+                    : t('proj.empty.category', 'No projects in this category.'));
             displayPageSection({ showEmpty: true });
             return;
         }
@@ -302,6 +304,7 @@
             if (!response.ok) throw new Error('Failed to fetch data');
 
             allProjects = await response.json();
+            projectsLoaded = true;
             clearTimeout(loadingTimer);
 
             // Reset tampilan: kategori lama yang sudah tidak ada dikembalikan ke "All"
@@ -400,17 +403,17 @@
             if (response.ok) {
                 projectForm.reset();
                 closeProjectModal();
-                showToast('Berhasil', 'Proyek baru berhasil ditambahkan!', 'success');
+                showToast(t('toast.ok'), t('toast.proj.added'), 'success');
                 fetchProjects(searchInput.value.trim());
             } else {
                 const errorMessages = result.errors
                     ? Object.values(result.errors).flat().map(error => error.message)
                     : [result.message || `Terjadi kesalahan (status ${response.status}).`];
-                showToast('Gagal menambahkan proyek', errorMessages.join(' '), 'error');
+                showToast(t('toast.proj.fail'), errorMessages.join(' '), 'error');
             }
         } catch (error) {
             console.error('Error adding project:', error);
-            showToast('Gagal menambahkan proyek', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+            showToast(t('toast.proj.fail'), t('toast.network'), 'error');
         } finally {
             submitButton.disabled = false;
         }
@@ -419,6 +422,13 @@
     if (projectForm) {
         projectForm.addEventListener('submit', addProject);
     }
+
+    // Ganti bahasa (ID/EN): gambar ulang kartu & chip yang dibuat lewat JavaScript
+    document.addEventListener('langchange', function () {
+        if (!projectsLoaded) return;
+        renderCategoryChips();
+        renderProjects();
+    });
 
     // Start application
     fetchProjects(searchInput.value.trim());

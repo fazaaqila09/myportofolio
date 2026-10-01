@@ -4,8 +4,8 @@
     <div class="education-inner">
         <div class="edu-layout">
             <div class="edu-intro">
-                <h2 class="section-title">Education</h2>
-                <p class="section-sub">Where I've studied, learned, and grown</p>
+                <h2 class="section-title" data-i18n="edu.title">Education</h2>
+                <p class="section-sub" data-i18n="edu.sub">Where I've studied, learned, and grown</p>
             </div>
 
             <ol class="edu-list">
@@ -13,7 +13,7 @@
                     <li class="edu-item">
                         <span class="edu-year">
                             {% if education.is_ongoing %}<i class="edu-now" aria-hidden="true"></i>{% endif %}
-                            {{ education.started_at|date:"Y" }} &ndash; {% if education.is_ongoing %}Present{% else %}{{ education.ended_at|date:"Y" }}{% endif %}
+                            {{ education.started_at|date:"Y" }} &ndash; {% if education.is_ongoing %}<span data-i18n="common.present">Present</span>{% else %}{{ education.ended_at|date:"Y" }}{% endif %}
                         </span>
                         <div class="edu-main">
                             <h3 class="edu-school">{{ education.school }}</h3>
@@ -28,7 +28,7 @@
                         </div>
                     </li>
                 {% empty %}
-                    <li class="edu-empty">Belum ada riwayat pendidikan yang ditambahkan.</li>
+                    <li class="edu-empty" data-i18n="edu.empty">Belum ada riwayat pendidikan yang ditambahkan.</li>
                 {% endfor %}
             </ol>
         </div>

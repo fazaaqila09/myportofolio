@@ -12,8 +12,9 @@ from django.utils.dateparse import parse_datetime
 from datetime import date, datetime
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+import time
 from main.models import Experience, Education, Project
-from main.forms import ExperienceForm, ProjectForm
+from main.forms import ContactForm, ExperienceForm, ProjectForm
 
 
 EDITOR_GROUP = "Editor"
@@ -66,6 +67,80 @@ def toggle_star_for(request, obj, fallback_url_name):
     return redirect(fallback_url_name)
 
 
+# Tech stack yang tampil di section Skills (halaman utama).
+# Ubah bebas: tiap grup punya "title_key" (kunci terjemahan di i18n.js) dan
+# daftar skill berupa (nama, kelas ikon Font Awesome), dan "speed" = lama satu putaran marquee.
+SKILL_GROUPS = [
+    {
+        "title_key": "skills.languages",
+        "speed": 58,   # detik untuk satu putaran marquee (makin kecil makin cepat)
+        "title": "Languages",
+        "items": [
+            ("Python", "fa-brands fa-python"),
+            ("JavaScript", "fa-brands fa-js"),
+            ("HTML", "fa-brands fa-html5"),
+            ("CSS", "fa-brands fa-css3-alt"),
+            ("SQL", "fa-solid fa-database"),
+            ("Java", "fa-brands fa-java"),
+        ],
+    },
+    {
+        "title_key": "skills.frameworks",
+        "speed": 52,   # detik untuk satu putaran marquee (makin kecil makin cepat)
+        "title": "Frameworks & Libraries",
+        "items": [
+            ("Django", "fa-solid fa-leaf"),
+            ("Pandas", "fa-solid fa-table"),
+            ("NumPy", "fa-solid fa-square-root-variable"),
+            ("scikit-learn", "fa-solid fa-diagram-project"),
+            ("Bootstrap", "fa-brands fa-bootstrap"),
+        ],
+    },
+    {
+        "title_key": "skills.tools",
+        "speed": 46,   # detik untuk satu putaran marquee (makin kecil makin cepat)
+        "title": "Tools & Platforms",
+        "items": [
+            ("Git", "fa-brands fa-git-alt"),
+            ("GitHub", "fa-brands fa-github"),
+            ("VS Code", "fa-solid fa-code"),
+            ("Figma", "fa-brands fa-figma"),
+            ("Linux", "fa-brands fa-linux"),
+        ],
+    },
+]
+
+CONTACT_COOLDOWN_SECONDS = 20   # jeda minimal antar pesan dari satu pengunjung
+
+
+def show_contact(request):
+    """Halaman Contact: form pesan yang disimpan ke database (dibaca lewat Django Admin)."""
+    form = ContactForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        if form.cleaned_data.get("website"):
+            # Kolom jebakan terisi = bot. Pura-pura sukses, tapi tidak disimpan.
+            messages.success(request, "Thank you! Your message has been sent.")
+            return redirect("main:show_contact")
+
+        now = time.time()
+        last_sent = request.session.get("contact_last_sent", 0)
+        if now - last_sent < CONTACT_COOLDOWN_SECONDS:
+            form.add_error(None, "Please wait a moment before sending another message.")
+        else:
+            form.save()
+            request.session["contact_last_sent"] = now
+            messages.success(request, "Thank you! Your message has been sent.")
+            return redirect("main:show_contact")
+
+    context = {
+        "name": "Muhammad Faza Aqila",
+        "form": form,
+        "email": "muhammadfazaaqila09@gmail.com",
+    }
+    return render(request, "contact.html", context)
+
+
 def show_main(request):
     last_login = request.COOKIES.get("last_login", "Belum ada sesi login / Cookie tidak ditemukan")
     context = {
@@ -80,6 +155,7 @@ def show_main(request):
         ),
         "last_login": last_login,
         "education_list": get_education_list(),
+        "skill_groups": SKILL_GROUPS,
     }
     return render(request, "index.html", context)
 

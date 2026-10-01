@@ -1,0 +1,44 @@
+<!-- Skills / Tech Stack: di antara About dan Education.
+     Tiap grup = satu baris marquee yang berjalan terus dari kanan ke kiri tanpa berhenti.
+     Datanya dari SKILL_GROUPS di views.py. Daftar diulang beberapa kali dan digandakan jadi dua grup,
+     supaya saat animasi menggeser -50% ujungnya tersambung mulus (tidak ada celah). Salinan
+     bertanda aria-hidden agar pembaca layar hanya membaca satu daftar. -->
+<section id="skills" class="skills">
+    <div class="skills-inner">
+        <div class="section-head skills-head">
+            <h2 class="section-title" data-i18n="skills.title">Skills &amp; Tech Stack</h2>
+            <p class="section-sub" data-i18n="skills.sub">Tools and technologies I use to build things</p>
+        </div>
+    </div>
+
+    <div class="skill-rows">
+        {% for group in skill_groups %}
+            <div class="skill-row" style="--dur: {{ group.speed }}s">
+                <h3 class="skill-row__title" data-i18n="{{ group.title_key }}">{{ group.title }}</h3>
+                <div class="marquee">
+                    <div class="marquee__track">
+                        {% for copy in "12" %}
+                            <ul class="marquee__group">
+                                {% for rep in "1234" %}
+                                    {% for skill_name, skill_icon in group.items %}
+                                        <li class="skill-chip{% if forloop.parentloop.first and forloop.parentloop.parentloop.first %}{% else %} is-copy{% endif %}"{% if forloop.parentloop.first and forloop.parentloop.parentloop.first %}{% else %} aria-hidden="true"{% endif %}>
+                                            <span class="skill-chip__icon"><i class="{{ skill_icon }}" aria-hidden="true"></i></span>
+                                            <span class="skill-chip__name">{{ skill_name }}</span>
+                                        </li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="skills-inner">
+        <p class="skills-note">
+            <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+            <span data-i18n="skills.note">Always curious, always picking up new tools along the way.</span>
+        </p>
+    </div>
+</section>

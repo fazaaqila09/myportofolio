@@ -92,3 +92,24 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ContactMessage(models.Model):
+    """Pesan yang dikirim pengunjung lewat halaman Contact.
+
+    Disimpan di database dan dibaca pemilik lewat Django Admin
+    (tidak ada pengiriman email, jadi tidak perlu konfigurasi SMTP)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=150)
+    message = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name}: {self.subject}"

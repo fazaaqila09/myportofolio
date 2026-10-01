@@ -52,9 +52,10 @@ document.addEventListener('submit', async function (event) {
         button.title = data.star_count > 0
             ? 'Dibintangi oleh ' + data.starred_by_names
             : 'Jadilah yang pertama memberi star';
+        const starKey = data.is_starred ? 'star.unstar' : 'star.star';
         button.innerHTML =
             '<span aria-hidden="true">&#9733;</span> ' +
-            (data.is_starred ? 'Unstar' : 'Star') +
+            '<span data-i18n="' + starKey + '">' + t(starKey) + '</span>' +
             ' <span class="star-count">' + Number(data.star_count) + '</span>';
 
         // Animasi: bintang membesar (hanya saat memberi star) dan angka "memantul"
@@ -67,7 +68,7 @@ document.addEventListener('submit', async function (event) {
     } catch (error) {
         console.error('Error toggling star:', error);
         if (typeof showToast === 'function') {
-            showToast('Gagal mengubah star', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+            showToast(t('toast.star.fail'), t('toast.network'), 'error');
         }
     } finally {
         button.disabled = false;

@@ -8,13 +8,13 @@
 <header id="home" class="hero">
     <div class="hero-content">
         <div class="text-content">
-            <p class="greeting">Hello I am</p>
+            <p class="greeting" data-i18n="hero.greeting">Hello I am</p>
             <!-- Menarik nama dinamis dari views.py -->
             <h1 class="name">{{ name }}</h1>
-            <p class="subtitle">{{ study_program }} student at Universitas Indonesia, interested in Data Science and Web Development</p>
+            <p class="subtitle" data-i18n="hero.subtitle">{{ study_program }} student at Universitas Indonesia, interested in Data Science and Web Development</p>
 
             <div class="connect-area">
-                <span class="connect-text">LET'S CONNECT <i class="fa-solid fa-chevron-right arrow"></i></span>
+                <span class="connect-text"><span data-i18n="hero.connect">LET'S CONNECT</span> <i class="fa-solid fa-chevron-right arrow"></i></span>
                 <!-- Link sosial media, dibuka di tab baru kecuali email (mailto) -->
                 <div class="social-links">
                     <a href="https://github.com/fazaaqila09" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
@@ -40,39 +40,42 @@
         </div>
 
         <div class="about-text">
-            <h2 class="about-title">About Me</h2>
+            <h2 class="about-title" data-i18n="about.title">About Me</h2>
             <!-- Menarik data bio dinamis -->
-            <p class="about-bio">{{ bio }}</p>
+            <p class="about-bio" data-i18n="about.bio">{{ bio }}</p>
 
             <!-- Daftar info diri: hanya "From" yang teks tetap (hardcode) -->
             <dl class="about-info">
                 <div class="info-item">
-                    <dt>Name</dt>
+                    <dt data-i18n="about.name">Name</dt>
                     <dd>{{ name }}</dd>
                 </div>
                 <div class="info-item">
-                    <dt>From</dt>
+                    <dt data-i18n="about.from">From</dt>
                     <dd>Depok, Indonesia</dd>
                 </div>
                 <div class="info-item">
-                    <dt>ID Student</dt>
+                    <dt data-i18n="about.npm">ID Student</dt>
                     <!-- Menarik data NPM dinamis -->
                     <dd>{{ npm }}</dd>
                 </div>
                 <div class="info-item">
-                    <dt>Sesi Terakhir Login</dt>
-                    <dd>{{ last_login }}</dd>
+                    <dt data-i18n="about.lastlogin">Sesi Terakhir Login</dt>
+                    <dd data-i18n-auto>{{ last_login }}</dd>
                 </div>
             </dl>
 
             <!-- Tombol CV: dibuka di tab baru (viewer PDF browser), file diambil dari folder static -->
             <a class="cv-button" href="{% static 'files/CV - Muhammad Faza Aqila.pdf' %}" target="_blank" rel="noopener">
                 <i class="fa-solid fa-download"></i>
-                Download CV
+                <span data-i18n="about.cv">Download CV</span>
             </a>
         </div>
     </div>
 </section>
+
+<!-- Skills / Tech Stack: di antara About dan Education -->
+{% include "components/skills_section.html" %}
 
 <!-- Education: ikut di-scroll di halaman utama, sama seperti About -->
 {% include "components/education_section.html" %}

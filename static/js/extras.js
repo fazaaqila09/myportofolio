@@ -22,6 +22,7 @@
         };
         new MutationObserver(measureUnderline).observe(menu, { subtree: true, attributes: true, attributeFilter: ['class'] });
         window.addEventListener('resize', measureUnderline);
+        document.addEventListener('langchange', function () { requestAnimationFrame(measureUnderline); });   // teks menu berubah lebar
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureUnderline);
         measureUnderline();
     }

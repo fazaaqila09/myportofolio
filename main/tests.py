@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.template.loader import render_to_string
 from datetime import date
 
-from main.models import Experience, Education, Project
+from main.models import ContactMessage, Experience, Education, Project
 
 PASSWORD = "Namorstrange33"
 
@@ -450,7 +450,6 @@ class StarTest(TestCase):
             self.assertNotIn("password", body)
             self.assertNotIn("email", body)
 
-    
     # --- Star lewat AJAX (tanpa reload) ---
     def test_ajax_toggle_returns_json(self):
         self.client.login(username="biasa", password=PASSWORD)
@@ -471,6 +470,7 @@ class StarTest(TestCase):
             self.assertEqual(response.status_code, 401)
             self.assertEqual(response.json()["login_url"], "/login/")
             self.assertEqual(obj.starred_by.count(), 0)
+
 
 class NavbarTest(TestCase):
     """Navbar: ikon orang + "Login" (pengunjung) atau + username dan menu Logout (sudah login)."""
@@ -497,3 +497,146 @@ class NavbarTest(TestCase):
         about = html[html.index('id="about"'):]
         self.assertNotIn("Email", about)
         self.assertNotIn("mailto:", about)
+
+
+class ContactTest(TestCase):
+    """Halaman Contact: form pesan yang disimpan ke database."""
+
+    VALID = {
+        "name": "Budi Santoso",
+        "email": "budi@example.com",
+        "subject": "Halo Faza",
+        "message": "Saya tertarik dengan proyek portofolio Anda, bisa ngobrol?",
+    }
+
+    def test_contact_page_is_accessible(self):
+        response = self.client.get(reverse("main:show_contact"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "contact.html")
+        for field in ("name", "email", "subject", "message"):
+            self.assertContains(response, f'name="{field}"')
+
+    def test_valid_message_is_saved(self):
+        response = self.client.post(reverse("main:show_contact"), self.VALID)
+        # fetch_redirect_response=False: pesan sukses baru dibaca saat halaman tujuan dibuka di bawah
+        self.assertRedirects(response, reverse("main:show_contact"), fetch_redirect_response=False)
+        saved = ContactMessage.objects.get()
+        self.assertEqual(saved.name, "Budi Santoso")
+        self.assertEqual(saved.email, "budi@example.com")
+        self.assertFalse(saved.is_read)
+        self.assertEqual(str(saved), "Budi Santoso: Halo Faza")
+        follow = self.client.get(reverse("main:show_contact"))
+        self.assertContains(follow, "Thank you! Your message has been sent.")
+
+    def test_invalid_message_shows_errors_and_is_not_saved(self):
+        response = self.client.post(reverse("main:show_contact"), {"name": "", "email": "bukan-email", "subject": "", "message": "pendek"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Please enter your name.")
+        self.assertContains(response, "Please enter a valid email address.")
+        self.assertContains(response, "Please enter a subject.")
+        self.assertContains(response, "Your message is too short.")
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_html_tags_are_stripped(self):
+        self.client.post(reverse("main:show_contact"), {**self.VALID, "name": "<b>Budi</b>", "message": "<script>alert(1)</script>Halo, ini pesan uji yang cukup panjang."})
+        saved = ContactMessage.objects.get()
+        self.assertEqual(saved.name, "Budi")
+        self.assertNotIn("<script>", saved.message)
+
+    def test_name_of_only_tags_is_rejected(self):
+        response = self.client.post(reverse("main:show_contact"), {**self.VALID, "name": "<b></b>"})
+        self.assertContains(response, "Please enter your name.")
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_honeypot_blocks_bots_silently(self):
+        response = self.client.post(reverse("main:show_contact"), {**self.VALID, "website": "http://spam.example"})
+        self.assertRedirects(response, reverse("main:show_contact"))
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_second_message_too_fast_is_rejected(self):
+        self.client.post(reverse("main:show_contact"), self.VALID)
+        response = self.client.post(reverse("main:show_contact"), self.VALID)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Please wait a moment before sending another message.")
+        self.assertEqual(ContactMessage.objects.count(), 1)
+
+    def test_admin_can_read_messages(self):
+        from django.contrib import admin
+        self.assertIn(ContactMessage, admin.site._registry)
+        make_users()
+        ContactMessage.objects.create(**self.VALID)
+        self.client.login(username="pemilik", password=PASSWORD)
+        response = self.client.get("/admin/main/contactmessage/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Halo Faza")
+
+
+class SkillsSectionTest(TestCase):
+    """Section Skills ada di antara About dan Education, lengkap dengan menu navbarnya."""
+
+    def setUp(self):
+        self.html = self.client.get(reverse("main:show_main")).content.decode()
+
+    def test_skills_section_sits_between_about_and_education(self):
+        about = self.html.index('id="about"')
+        skills = self.html.index('id="skills"')
+        education = self.html.index('id="education"')
+        self.assertLess(about, skills)
+        self.assertLess(skills, education)
+
+    def test_skills_section_lists_tech_stack(self):
+        for skill in ("Python", "Django", "Git"):
+            self.assertContains(self.client.get(reverse("main:show_main")), skill)
+
+    def test_skills_are_a_marquee_with_hidden_copies(self):
+        # satu daftar asli untuk pembaca layar, sisanya salinan aria-hidden untuk animasi
+        section = self.html[self.html.index('id="skills"'):self.html.index('id="education"')]
+        self.assertIn("marquee__track", section)
+        self.assertEqual(section.count('class="skill-row"'), 3)
+        self.assertEqual(section.count("<li class=\"skill-chip\">"), 16)
+        self.assertGreater(section.count('skill-chip is-copy" aria-hidden="true"'), 16)
+
+    def test_navbar_has_skills_and_contact_in_order(self):
+        nav = self.html[self.html.index('class="nav-menu"'):self.html.index('class="nav-right"')]
+        order = ["#home", "#about", "#skills", "#education", reverse("main:show_experience"), reverse("main:show_projects"), reverse("main:show_contact")]
+        positions = [nav.index(item) for item in order]
+        self.assertEqual(positions, sorted(positions))
+
+    def test_navbar_links_exist_on_other_pages(self):
+        html = self.client.get(reverse("main:show_contact")).content.decode()
+        self.assertIn(f'href="{reverse("main:show_main")}#skills"', html)
+        self.assertIn(f'href="{reverse("main:show_contact")}"', html)
+
+
+class LanguageToggleTest(TestCase):
+    """Toggle bahasa ID/EN: tombol di navbar + berkas kamus dimuat di semua halaman."""
+
+    def test_toggle_and_dictionary_on_every_page(self):
+        for name in ("main:show_main", "main:show_experience", "main:show_projects", "main:show_contact", "main:show_education", "main:login"):
+            html = self.client.get(reverse(name)).content.decode()
+            self.assertIn("data-lang-toggle", html, name)
+            self.assertIn("js/i18n.js", html, name)
+            self.assertIn('data-l="id"', html, name)
+            self.assertIn('data-l="en"', html, name)
+
+    def test_english_is_the_default_text(self):
+        html = self.client.get(reverse("main:show_main")).content.decode()
+        self.assertIn('data-i18n="nav.education">Education<', html)
+        self.assertIn('<html lang="en">', html)
+
+    def test_dictionary_has_every_key_used_in_templates(self):
+        import re
+        from pathlib import Path
+        base = Path(__file__).resolve().parent.parent
+        source = (base / "static" / "js" / "i18n.js").read_text(encoding="utf-8")
+        english = source[source.index("en: {"):source.index("id: {")]
+        indonesian = source[source.index("id: {"):source.index("AUTO_PAIRS")]
+        used = set()
+        for template in (base / "templates").rglob("*.html"):
+            used |= set(re.findall(r'data-i18n(?:-html)?="([\w.]+)"', template.read_text(encoding="utf-8")))
+        # kunci yang sengaja hanya ada di ID: teks Inggrisnya diambil dari view (bio & subtitle)
+        server_text_only = {"about.bio", "hero.subtitle"}
+        for key in used:
+            self.assertIn(f"'{key}'", indonesian, f"Kunci '{key}' belum ada di kamus ID")
+            if key not in server_text_only:
+                self.assertIn(f"'{key}'", english, f"Kunci '{key}' belum ada di kamus EN")

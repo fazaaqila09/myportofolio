@@ -38,8 +38,8 @@
     var fabs = document.createElement('div');
     fabs.className = 'fab-stack';
     fabs.innerHTML =
-        '<button type="button" class="fab fab--theme" aria-label="Ganti tema terang/gelap"><i class="fa-solid fa-moon" aria-hidden="true"></i></button>' +
-        '<button type="button" class="fab fab--top" aria-label="Kembali ke atas" title="Kembali ke atas">' +
+        '<button type="button" class="fab fab--theme" data-i18n-attr="aria-label:fab.theme" aria-label="' + I18N.t('fab.theme') + '"><i class="fa-solid fa-moon" aria-hidden="true"></i></button>' +
+        '<button type="button" class="fab fab--top" data-i18n-attr="aria-label:fab.top;title:fab.top" aria-label="' + I18N.t('fab.top') + '" title="' + I18N.t('fab.top') + '">' +
             '<svg class="fab__ring" viewBox="0 0 48 48" aria-hidden="true">' +
                 '<circle class="fab__ring-bg" cx="24" cy="24" r="21"/>' +
                 '<circle class="fab__ring-bar" cx="24" cy="24" r="21"/>' +
@@ -55,7 +55,7 @@
     function paintThemeButton() {
         var dark = currentTheme() === 'dark';
         themeBtn.querySelector('i').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        themeBtn.title = dark ? 'Beralih ke tema terang' : 'Beralih ke tema gelap';
+        themeBtn.title = I18N.t(dark ? 'fab.toLight' : 'fab.toDark');
     }
     function applyTheme(theme, remember) {
         root.classList.add('theme-fade');
@@ -65,6 +65,7 @@
         setTimeout(function () { root.classList.remove('theme-fade'); }, 450);
     }
     paintThemeButton();
+    document.addEventListener('langchange', paintThemeButton);   // judul tombol ikut bahasa
     themeBtn.addEventListener('click', function () {
         applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true);
     });
@@ -138,26 +139,29 @@
     /* ---------- 4. Efek mengetik di hero ---------- */
     var heroName = document.querySelector('h1.name');
     if (heroName) {
-        var WORDS = ['Data Science', 'Web Development', 'Django Projects', 'Clean UI Design'];
+        // Kata-kata yang diketik mengikuti bahasa aktif (kamus di i18n.js: 'hero.words')
+        var words = function () { return I18N.get('hero.words') || ['Data Science']; };
         var line = document.createElement('p');
         line.className = 'role-line';
-        line.innerHTML = 'Currently exploring <span class="role-typed"></span><span class="role-cursor" aria-hidden="true"></span>';
+        line.innerHTML = '<span data-i18n="hero.exploring">' + I18N.t('hero.exploring') + '</span> <span class="role-typed"></span><span class="role-cursor" aria-hidden="true"></span>';
         heroName.insertAdjacentElement('afterend', line);
         var typed = line.querySelector('.role-typed');
 
         if (reduceMotion) {
-            typed.textContent = WORDS[0];
+            typed.textContent = words()[0];
+            document.addEventListener('langchange', function () { typed.textContent = words()[0]; });
         } else {
             var wordIndex = 0, charIndex = 0, deleting = false;
             (function tick() {
-                var word = WORDS[wordIndex];
+                var list = words();
+                var word = list[wordIndex % list.length];
                 if (!document.hidden) {
                     charIndex += deleting ? -1 : 1;
                     typed.textContent = word.slice(0, charIndex);
                 }
                 var delay = deleting ? 35 : 75;
                 if (!deleting && charIndex === word.length) { deleting = true; delay = 1500; }
-                else if (deleting && charIndex === 0) { deleting = false; wordIndex = (wordIndex + 1) % WORDS.length; delay = 350; }
+                else if (deleting && charIndex === 0) { deleting = false; wordIndex = (wordIndex + 1) % words().length; delay = 350; }
                 setTimeout(tick, delay);
             })();
         }
@@ -168,6 +172,7 @@
         var groups = [
             ['.about-photo'],
             ['.about-title', '.about-bio', '.info-item', '.cv-button'],
+            ['.skills-head', '.skill-row', '.skills-note'],
             ['.edu-intro'],
             ['.edu-item']
         ];

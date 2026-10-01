@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Contact - {{ name }}{% endblock %}
+{% block nav_class %}nav-solid{% endblock %}
+{% block content %}
+
+<section id="contact" class="contact" style="padding-top: 130px; min-height: 100vh;">
+    <div class="section-head">
+        <h2 class="section-title" data-i18n="contact.title">Contact</h2>
+        <p class="section-sub" data-i18n="contact.sub">Got a question, a project idea, or just want to say hi? Send me a message.</p>
+    </div>
+
+    <div class="contact-layout">
+        <!-- Kiri: info kontak -->
+        <aside class="contact-info" aria-label="Contact information">
+            <h3 class="contact-info__title" data-i18n="contact.info.title">Let's talk</h3>
+            <p class="contact-info__text" data-i18n="contact.info.text">I usually reply within a few days. You can also reach me through the channels below.</p>
+
+            <ul class="contact-channels">
+                <li>
+                    <a href="mailto:{{ email }}">
+                        <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                        <span><small data-i18n="contact.email">Email</small>{{ email }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://github.com/fazaaqila09" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-github" aria-hidden="true"></i>
+                        <span><small>GitHub</small>fazaaqila09</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-linkedin" aria-hidden="true"></i>
+                        <span><small>LinkedIn</small>muhammadfazaaqila</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://instagram.com/fazaaqilaaaa" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                        <span><small>Instagram</small>@fazaaqilaaaa</span>
+                    </a>
+                </li>
+                <li class="contact-channels__static">
+                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                    <span><small data-i18n="contact.location">Location</small>Depok, Indonesia</span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Kanan: form -->
+        <form method="post" action="{% url 'main:show_contact' %}" class="contact-form" id="contact-form" novalidate>
+            {% csrf_token %}
+
+            {% for error in form.non_field_errors %}
+                <p class="form-error contact-form__alert" role="alert" data-i18n-auto>{{ error }}</p>
+            {% endfor %}
+
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}" data-i18n="contact.f.name">Name</label>
+                {{ form.name }}
+                {% for error in form.name.errors %}<p class="form-error" data-i18n-auto>{{ error }}</p>{% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}" data-i18n="contact.f.email">Email</label>
+                {{ form.email }}
+                {% for error in form.email.errors %}<p class="form-error" data-i18n-auto>{{ error }}</p>{% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.subject.id_for_label }}" data-i18n="contact.f.subject">Subject</label>
+                {{ form.subject }}
+                {% for error in form.subject.errors %}<p class="form-error" data-i18n-auto>{{ error }}</p>{% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.message.id_for_label }}" data-i18n="contact.f.message">Message</label>
+                {{ form.message }}
+                <div class="contact-form__meta">
+                    <span>{% for error in form.message.errors %}<span class="form-error" data-i18n-auto>{{ error }}</span>{% endfor %}</span>
+                    <span class="contact-counter" id="contact-counter" aria-live="off">0 / 2000</span>
+                </div>
+            </div>
+
+            <!-- Kolom jebakan bot: disembunyikan, manusia tidak mengisinya -->
+            <div class="contact-hp" aria-hidden="true">
+                <label for="{{ form.website.id_for_label }}">Website</label>
+                {{ form.website }}
+            </div>
+
+            <button type="submit" class="button contact-submit" id="contact-submit">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                <span data-i18n="contact.send">Send Message</span>
+            </button>
+        </form>
+    </div>
+</section>
+
+<script>
+    // Penghitung karakter + tombol "Sending..." saat form dikirim
+    (function () {
+        var form = document.getElementById('contact-form');
+        var area = form.querySelector('textarea');
+        var counter = document.getElementById('contact-counter');
+        function count() { counter.textContent = area.value.length + ' / ' + (area.maxLength > 0 ? area.maxLength : 2000); }
+        area.addEventListener('input', count);
+        count();
+        form.addEventListener('submit', function () {
+            var button = document.getElementById('contact-submit');
+            button.disabled = true;
+            var label = button.querySelector('span');
+            label.setAttribute('data-i18n', 'contact.sending');
+            label.textContent = window.I18N ? I18N.t('contact.sending') : 'Sending...';
+        });
+    })();
+</script>
+
+{% endblock content %}

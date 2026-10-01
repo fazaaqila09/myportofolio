@@ -23,6 +23,8 @@
             } catch (e) { /* abaikan */ }
         })();
     </script>
+    <!-- Kamus & logika bahasa ID/EN (mengatur <html lang> lebih dulu agar tidak berkedip) -->
+    <script src="{% static 'js/i18n.js' %}"></script>
     {% block meta %}{% endblock meta %}
 </head>
 <body>
@@ -34,26 +36,38 @@
         <a href="{% url 'main:show_main' %}" class="nav-brand">Faza</a>
 
         <div class="nav-menu">
-            <a href="{% url 'main:show_main' %}#home">Home</a>
-            <a href="{% url 'main:show_main' %}#about">About</a>
-            <a href="{% url 'main:show_main' %}#education">Education</a>
-            <a href="{% url 'main:show_experience' %}">Experience</a>
-            <a href="{% url 'main:show_projects' %}">Projects</a>
+            <a href="{% url 'main:show_main' %}#home" data-i18n="nav.home">Home</a>
+            <a href="{% url 'main:show_main' %}#about" data-i18n="nav.about">About</a>
+            <a href="{% url 'main:show_main' %}#skills" data-i18n="nav.skills">Skills</a>
+            <a href="{% url 'main:show_main' %}#education" data-i18n="nav.education">Education</a>
+            <a href="{% url 'main:show_experience' %}" data-i18n="nav.experience">Experience</a>
+            <a href="{% url 'main:show_projects' %}" data-i18n="nav.projects">Projects</a>
+            <a href="{% url 'main:show_contact' %}" data-i18n="nav.contact">Contact</a>
         </div>
 
-        <!-- Akun: ikon orang + "Login" (pengunjung) atau + username (sudah login) -->
-        {% if user.is_authenticated %}
-            <a href="#" class="nav-account" id="account-trigger" role="button"
-                aria-haspopup="menu" aria-expanded="false">
-                <svg class="nav-account__icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></svg>
-                <span class="nav-account__name">{{ user.username }}</span>
-            </a>
-        {% else %}
-            <a href="{% url 'main:login' %}" class="nav-account">
-                <svg class="nav-account__icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></svg>
-                <span class="nav-account__name">Login</span>
-            </a>
-        {% endif %}
+        <div class="nav-right">
+            <!-- Toggle bahasa: ID | EN (pilihan tersimpan di localStorage) -->
+            <button type="button" class="nav-lang" data-lang-toggle
+                data-i18n-attr="aria-label:lang.switch;title:lang.switch"
+                aria-label="Switch language" title="Switch language">
+                <span class="nav-lang__opt" data-l="id">ID</span>
+                <span class="nav-lang__opt" data-l="en">EN</span>
+            </button>
+
+            <!-- Akun: ikon orang + "Login" (pengunjung) atau + username (sudah login) -->
+            {% if user.is_authenticated %}
+                <a href="#" class="nav-account" id="account-trigger" role="button"
+                    aria-haspopup="menu" aria-expanded="false">
+                    <svg class="nav-account__icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></svg>
+                    <span class="nav-account__name">{{ user.username }}</span>
+                </a>
+            {% else %}
+                <a href="{% url 'main:login' %}" class="nav-account">
+                    <svg class="nav-account__icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c0-4.7 3.8-8 8.5-8s8.5 3.3 8.5 8z"/></svg>
+                    <span data-i18n="nav.login" class="nav-account__name">Login</span>
+                </a>
+            {% endif %}
+        </div>
     </nav>
 
     <!-- Menu akun (hanya saat sudah login): di luar <nav> supaya tidak terpotong overflow navbar -->
@@ -61,7 +75,7 @@
     <div id="profile-menu" class="profile-menu" popover="auto">
         <a href="{% url 'main:logout' %}" class="profile-menu__item profile-menu__item--logout">
             <i class="fa-solid fa-door-open" aria-hidden="true"></i>
-            <span>Logout</span>
+            <span data-i18n="nav.logout">Logout</span>
         </a>
     </div>
     {% endif %}
@@ -69,7 +83,7 @@
     {% if messages %}
     <div class="site-messages">
         {% for message in messages %}
-            <div class="site-message site-message--{{ message.tags }}">{{ message }}</div>
+            <div class="site-message site-message--{{ message.tags }}" data-i18n-auto>{{ message }}</div>
         {% endfor %}
     </div>
     {% endif %}
@@ -80,33 +94,35 @@
         <div class="footer-inner">
             <div class="footer-brand">
                 <a href="{% url 'main:show_main' %}" class="footer-logo">Faza</a>
-                <p class="footer-tagline">Computer Science student at Universitas Indonesia, interested in Data Science and Web Development.</p>
+                <p class="footer-tagline" data-i18n="footer.tagline">Computer Science student at Universitas Indonesia, interested in Data Science and Web Development.</p>
             </div>
 
             <nav class="footer-col" aria-label="Footer">
-                <h3>Explore</h3>
+                <h3 data-i18n="footer.explore">Explore</h3>
                 <ul class="footer-links">
-                    <li><a href="{% url 'main:show_main' %}#home">Home</a></li>
-                    <li><a href="{% url 'main:show_main' %}#about">About</a></li>
-                    <li><a href="{% url 'main:show_main' %}#education">Education</a></li>
-                    <li><a href="{% url 'main:show_experience' %}">Experience</a></li>
-                    <li><a href="{% url 'main:show_projects' %}">Projects</a></li>
+                    <li><a href="{% url 'main:show_main' %}#home" data-i18n="nav.home">Home</a></li>
+                    <li><a href="{% url 'main:show_main' %}#about" data-i18n="nav.about">About</a></li>
+                    <li><a href="{% url 'main:show_main' %}#skills" data-i18n="nav.skills">Skills</a></li>
+                    <li><a href="{% url 'main:show_main' %}#education" data-i18n="nav.education">Education</a></li>
+                    <li><a href="{% url 'main:show_experience' %}" data-i18n="nav.experience">Experience</a></li>
+                    <li><a href="{% url 'main:show_projects' %}" data-i18n="nav.projects">Projects</a></li>
+                    <li><a href="{% url 'main:show_contact' %}" data-i18n="nav.contact">Contact</a></li>
                 </ul>
             </nav>
 
             <div class="footer-col">
-                <h3>Connect</h3>
+                <h3 data-i18n="footer.connect">Connect</h3>
                 <div class="footer-social">
                     <a href="https://github.com/fazaaqila09" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
                     <a href="https://linkedin.com/in/muhammadfazaaqila" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
                     <a href="https://instagram.com/fazaaqilaaaa" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
                 </div>
-                <a href="{% url 'main:show_projects' %}" class="footer-cta">See my projects <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                <a href="{% url 'main:show_contact' %}" class="footer-cta"><span data-i18n="footer.cta">Get in touch</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
         </div>
 
         <div class="footer-bottom">
-            <p>&copy; 2026 Muhammad Faza Aqila. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+            <p data-i18n="footer.copy">&copy; 2026 Muhammad Faza Aqila. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
         </div>
     </footer>
 

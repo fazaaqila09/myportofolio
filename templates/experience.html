@@ -7,21 +7,22 @@
 <section id="experience" class="experience" style="padding-top: 130px; min-height: 100vh;">
 
     <div class="section-head">
-        <h2 class="section-title exp-title">Experience</h2>
-        <p class="section-sub exp-sub">Where I've led, served, and contributed</p>
+        <h2 class="section-title exp-title" data-i18n="exp.title">Experience</h2>
+        <p class="section-sub exp-sub" data-i18n="exp.sub">Where I've led, served, and contributed</p>
     </div>
 
     <div class="exp-toolbar">
         {% if user.is_superuser %}
         <a href="{% url 'main:create_experience' %}" class="button exp-add-button">
-            <span aria-hidden="true">+</span> Add Experience
+            <span aria-hidden="true">+</span> <span data-i18n="exp.add">Add Experience</span>
         </a>
         {% endif %}
         <form method="get" action="{% url 'main:show_experience' %}" class="exp-search">
             <input type="search" name="title" value="{{ title_query }}"
                 placeholder="Search by organization/activity name"
+                data-i18n-attr="placeholder:exp.search.ph;aria-label:exp.search.label"
                 class="exp-search__input" aria-label="Search experience">
-            <button type="submit" class="button">Search</button>
+            <button type="submit" class="button" data-i18n="common.search">Search</button>
         </form>
     </div>
 
@@ -30,11 +31,11 @@
             <article class="exp-card">
 
                 <div class="exp-meta">
-                    <span class="exp-category">{{ experience.get_category_display }}</span>
+                    <span class="exp-category" data-i18n-auto>{{ experience.get_category_display }}</span>
                     {% if experience.is_ongoing %}
-                        <span class="exp-status is-ongoing">Ongoing</span>
+                        <span class="exp-status is-ongoing" data-i18n="exp.ongoing">Ongoing</span>
                     {% else %}
-                        <span class="exp-status">Completed</span>
+                        <span class="exp-status" data-i18n="exp.completed">Completed</span>
                     {% endif %}
                 </div>
 
@@ -83,7 +84,7 @@
                     <span class="exp-period">
                         {{ experience.started_at|date:"M Y" }} &ndash;
                         {% if experience.is_ongoing %}
-                            Present
+                            <span data-i18n="common.present">Present</span>
                         {% else %}
                             {{ experience.ended_at|date:"M Y" }}
                         {% endif %}
@@ -103,11 +104,11 @@
         {% empty %}
             {% if title_query %}
                 <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    No experience found with that name.
+                    <span data-i18n="exp.none.found">No experience found with that name.</span>
                 </p>
             {% else %}
                 <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    No experience added yet.
+                    <span data-i18n="exp.none.yet">No experience added yet.</span>
                 </p>
             {% endif %}
         {% endfor %}

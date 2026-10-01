@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
 from django.forms import ModelForm, TextInput, Textarea, URLInput, Select, DateInput
-from main.models import Experience, Project
+from main.models import ContactMessage, Experience, Project
 
 
 class ExperienceForm(ModelForm):
@@ -62,3 +62,47 @@ class ProjectForm(ModelForm):
 
     def clean_description(self):
         return strip_tags(self.cleaned_data["description"]).strip()
+
+
+class ContactForm(ModelForm):
+    """Form Contact. Pesan error sengaja tanpa angka/parameter supaya bisa
+    diterjemahkan ID/EN oleh i18n.js (lihat kamus AUTO di sana)."""
+
+    # Kolom jebakan untuk bot: disembunyikan dengan CSS, manusia tidak mengisinya.
+    website = forms.CharField(required=False, widget=TextInput(attrs={
+        "tabindex": "-1", "autocomplete": "off", "aria-hidden": "true",
+    }))
+
+    class Meta:
+        model = ContactMessage
+        fields = ["name", "email", "subject", "message"]
+        widgets = {
+            "name": TextInput(attrs={"placeholder": "Your name", "autocomplete": "name", "maxlength": 100, "data-i18n-attr": "placeholder:contact.ph.name"}),
+            "email": forms.EmailInput(attrs={"placeholder": "you@example.com", "autocomplete": "email", "maxlength": 254}),
+            "subject": TextInput(attrs={"placeholder": "What is this about?", "maxlength": 150, "data-i18n-attr": "placeholder:contact.ph.subject"}),
+            "message": Textarea(attrs={"rows": 6, "placeholder": "Write your message here...", "maxlength": 2000, "data-i18n-attr": "placeholder:contact.ph.message"}),
+        }
+        error_messages = {
+            "name": {"required": "Please enter your name.", "max_length": "This is too long."},
+            "email": {"required": "Please enter your email address.", "invalid": "Please enter a valid email address."},
+            "subject": {"required": "Please enter a subject.", "max_length": "This is too long."},
+            "message": {"required": "Please write a message.", "max_length": "This is too long."},
+        }
+
+    def _clean_text(self, field, message):
+        value = strip_tags(self.cleaned_data[field]).strip()
+        if not value:
+            raise ValidationError(message)
+        return value
+
+    def clean_name(self):
+        return self._clean_text("name", "Please enter your name.")
+
+    def clean_subject(self):
+        return self._clean_text("subject", "Please enter a subject.")
+
+    def clean_message(self):
+        value = self._clean_text("message", "Please write a message.")
+        if len(value) < 10:
+            raise ValidationError("Your message is too short.")
+        return value
