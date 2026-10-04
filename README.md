@@ -110,3 +110,65 @@ Pada Tugas 4 tidak ada pertanyaan reflektif (dihilangkan untuk pekan ini), jadi 
     2. Access Code Bertabrakan dengan Login: Sistem Access Code dari Tugas 3 masih dipakai di form Experience, Projects, dan modal hapus, sehingga akan bertabrakan dengan pembatasan berbasis login dan peran. Perbaikan manual: menghapus input Access Code dari template, menghapus fungsi `is_authorized` dari `views.py`, dan menulis ulang `ExperienceEditTest` yang sebelumnya bergantung pada `secret_key` agar memakai login.
 
     3. Potongan Kode yang Terlewat: Karena panduan berupa potongan kode yang harus disisipkan ke beberapa file, ada bagian yang terlewat saat saya menyalin. `toggle_star` dan `toggle_star_experience` belum di-import di `main/urls.py` sehingga `runserver` gagal dengan `NameError`, dan konstanta `PASSWORD` tidak ikut tertempel di `tests.py` sehingga 14 test error. Keduanya ketahuan saat menjalankan `runserver` dan `python manage.py test`, lalu saya perbaiki manual.
+
+### Tugas 5
+
+1. Debouncing adalah teknik menunda pemanggilan sebuah fungsi sampai pengguna berhenti melakukan aksi selama jeda tertentu. Pada pencarian Experience, setiap ketikan me-reset timer 300 ms, dan permintaan `fetch()` ke `/api/experience/?title=...` baru dikirim setelah 300 ms tanpa ketikan. Tanpa debouncing, mengetik kata "compfest" akan mengirim delapan permintaan berturut-turut (satu per huruf), padahal hanya hasil terakhir yang dibutuhkan. Hal ini membebani server dan database, memboroskan kuota pengguna, dan bisa membuat hasil yang tampil salah karena respons permintaan lama bisa datang lebih lambat dari respons terbaru (*race condition*). Untuk mengatasi kemungkinan terakhir itu, saya juga membatalkan permintaan lama dengan `AbortController` setiap kali pencarian baru dikirim.
+
+2. `fetch()` bersifat asinkron: ia langsung mengembalikan sebuah *Promise*, bukan data. `await` membuat fungsi `async` menunggu sampai Promise itu selesai lalu mengambil hasilnya (objek `Response`), dan `await response.json()` menunggu isi respons selesai dibaca dan diubah menjadi objek JavaScript. Selama menunggu, browser tetap responsif karena yang berhenti hanya fungsi tersebut, bukan seluruh halaman. Jika `await` tidak dipakai, variabel akan berisi Promise yang masih tertunda, sehingga kode berikutnya berjalan sebelum data datang. Akibatnya, misalnya `response.ok` bernilai `undefined` atau kode mencoba melakukan `forEach` pada Promise sehingga terjadi error, dan error dari jaringan tidak tertangkap oleh blok `try...catch` karena terjadinya belakangan.
+
+3. XSS (*Cross-Site Scripting*) adalah serangan ketika penyerang berhasil menyisipkan kode (biasanya JavaScript) ke halaman web, lalu kode itu dijalankan di browser pengunjung lain. Contohnya data berisi `<img src="x" onerror="alert('XSS!')">`: jika ditampilkan sebagai HTML, `onerror` akan berjalan dan bisa dipakai untuk mencuri cookie sesi atau melakukan aksi atas nama korban. Template Django melakukan *auto-escaping*: setiap `{{ variabel }}` otomatis diubah menjadi `&lt;img ...&gt;` sehingga tampil sebagai teks. Saat data ditampilkan lewat JavaScript, perlindungan otomatis itu tidak ada. Jika data dari JSON dimasukkan ke `innerHTML` dengan *template literal*, browser akan menafsirkannya sebagai HTML sungguhan. Karena itu, pada Experience saya melindunginya di dua sisi: setiap teks dari server dilewatkan `escapeHtml()` (atau `textContent`) sebelum disisipkan ke HTML, dan input teks dibersihkan di server dengan `strip_tags` pada `clean_<field>` di `ExperienceForm`.
+
+**Bagian yang dikerjakan:** Pola Tutorial 05 diterapkan pada halaman **Experience** (bagian yang saya kerjakan di Tugas 3 dan Tugas 4: CRUD Experience, peran, dan star), bukan halaman Projects yang dipakai di tutorial.
+
+**Ringkasan implementasi**
+- **Data lewat AJAX:** `show_experience` sekarang hanya merender kerangka halaman. `static/js/experience.js` mengambil data dari `/api/experience/` dengan `fetch()`. Endpoint `get_experience_json` menyusun JSON secara manual dengan `JsonResponse`, termasuk info star dari Tugas 4 (`star_count`, `is_starred` untuk pengguna yang sedang login, dan `starred_by` yang hanya berisi username).
+- **State halaman:** *skeleton loading* saat data dimuat, pesan kosong (berbeda untuk "belum ada data" dan "pencarian tidak ditemukan"), dan pesan error dengan tombol "Coba lagi".
+- **Pencarian dengan debouncing:** berdasarkan nama kegiatan dan peran (Inggris/Indonesia), 300 ms setelah berhenti mengetik, tanpa reload. Parameter `?title=` di URL ikut diperbarui.
+- **Tambah data lewat modal:** form `ExperienceForm` ditampilkan di modal pada halaman daftar. View `create_experience_ajax` (POST) memvalidasi dengan ModelForm dan membalas JSON dengan status **201** (berhasil), **400** (input tidak valid, beserta pesan dan label tiap field), atau **403** (bukan pemilik). Hak akses diperiksa di dalam view, bukan hanya dengan menyembunyikan tombol. Token CSRF dikirim lewat header `X-CSRFToken` (juga ikut di `FormData` sebagai `csrfmiddlewaretoken`). Setelah berhasil, daftar dimuat ulang tanpa reload dan kartu baru diberi sorotan.
+- **Toast:** muncul saat berhasil, saat validasi gagal (berisi pesan dari server), saat ditolak (403), dan saat jaringan bermasalah. Pesan validasi juga ditampilkan di bawah field yang salah.
+- **Perlindungan XSS:** `escapeHtml()` dipakai untuk setiap teks yang disisipkan lewat JavaScript, dan `clean_title`, `clean_role`, `clean_role_indo`, `clean_description`, `clean_description_indo` memakai `strip_tags`. Nama kegiatan yang isinya hanya tag HTML ditolak dengan status 400. Diuji dengan `<img src="x" onerror="alert('XSS!')">`: input lewat form dibersihkan, dan data mentah yang sengaja dimasukkan langsung ke database tetap tampil sebagai teks tanpa memunculkan alert.
+- **Struktur kode:** `getCookie`, `getCsrfToken`, `escapeHtml`, `debounce`, dan `formatMonthYear` dipindah ke `static/js/ajax-utils.js`. Konfigurasi (endpoint, URL, hak akses) dikirim dari template lewat atribut `data-*`, sehingga tidak ada logika Django di dalam berkas JavaScript. Lightbox foto memakai *event delegation* agar tetap berfungsi pada kartu yang dibuat oleh JavaScript.
+- **Test:** `ExperienceAjaxTest` menguji kerangka halaman, isi JSON dan info star, pencarian, status 201/400/403/405, kewajiban token CSRF, dan pembersihan XSS. Test lama yang memeriksa HTML hasil render server disesuaikan agar memeriksa JSON. Total 103 test lulus.
+
+
+### Disclosure AI
+
+**Alat:** Claude.
+
+# Log Prompting AI: Tugas 5 dan Fitur Tambahan Pekan Ini
+
+**Alat:** Claude (mode Cowork di aplikasi desktop, model Opus).
+**Alasan memakai log:** sesi Cowork tidak menyediakan tombol share link, sehingga percakapan dicatat di sini sebagai log prompting.
+
+**Cara kerja:** folder proyek dihubungkan ke Claude dengan akses baca saja. AI mengerjakan perubahan di salinan proyek terpisah, menjalankan `python manage.py test` dan uji browser otomatis (Playwright), lalu mengirim berkas lengkap dalam file Markdown. Saya menyalin berkas tersebut ke proyek, mencobanya di laptop dan PWS, lalu melakukan commit sendiri.
+
+Prompt ditulis apa adanya (bahasa santai). Kolom "Hasil / koreksi" mencatat apa yang dikerjakan AI dan bagian yang harus saya luruskan.
+
+---
+
+
+| # | Prompt saya | Hasil / koreksi |
+|---|---|---|
+| 11 | "sekarang tugas 5" + PDF soal Tugas 5 | AI membaca PDF dan folder proyek, lalu memilih halaman **Experience** (bagian Tugas 3 dan 4, bukan Projects dari tutorial). Hasilnya: endpoint JSON manual dengan info star, `show_experience` yang hanya merender kerangka, `create_experience_ajax` (201/400/403), modal tambah, pencarian dengan debounce dan `AbortController`, state loading/kosong/error, toast, `escapeHtml` dan `strip_tags`, serta `ajax-utils.js`. Lightbox diubah memakai *event delegation*, ditambah 13 test baru (total 103), dan draf README. Saat uji browser, AI menemukan toast error menutupi tombol Submit di modal, lalu memindahkan toast ke atas saat modal terbuka. Perubahan dibagi menjadi 6 langkah dengan conventional commit. |
+| 12 | "yang 4b saya salah commit lagi saya udah commit di langkah 4 sebelum ubah css yang di 4b" | CSS dijadikan commit terpisah (`style(experience): ...`), tanpa membatalkan commit sebelumnya. |
+| 13 | "gimana cara share chat ini, kok ga ada opsi sharenya" | Sesi Cowork tidak menampilkan tombol share, jadi dibuat log prompting ini sebagai gantinya. |
+
+## C. Yang saya periksa sendiri
+
+- Menjalankan `python manage.py test` di laptop setelah menyalin berkas.
+- Mencoba halaman Experience sebagai pengunjung, user biasa, dan pemilik (pencarian, tambah lewat modal, star).
+- Menguji XSS dengan `<img src="x" onerror="alert('XSS!')">`. Input dibersihkan oleh server dan alert tidak muncul.
+- Mengecek ulang isi README dan bagian disclosure ini sebelum commit.
+
+**Strategi Prompting:** Saya mengunggah PDF Tugas 5 dan menghubungkan folder proyek supaya AI bisa membaca kode saya (hanya membaca, tanpa mengubah folder). AI diminta mengerjakan di salinan terpisah, menguji dengan `python manage.py test` dan browser otomatis untuk setiap peran, lalu mengirim berkas lengkap yang siap saya salin. Setiap hasil saya cek di browser saya sendiri, dan jika tidak sesuai saya kirim screenshot sebagai umpan balik.
+
+**Bagian yang dibantu:** Endpoint JSON manual `get_experience_json`, view `create_experience_ajax`, `static/js/experience.js` dan `static/js/ajax-utils.js`, modal tambah Experience, pembersihan `strip_tags` di `ExperienceForm`, penyesuaian lightbox agar memakai *event delegation*, test `ExperienceAjaxTest`, serta draf README ini.
+
+**Keterbatasan AI dan Perbaikan Manual:**
+
+    1. Salah Paham Fitur Lightbox: Saya meminta foto Experience bisa diklik dan dipindah dengan tombol panah. AI membuat panah yang berpindah ke foto Experience lain, padahal maksud saya adalah berpindah antar beberapa foto di dalam satu Experience yang sama. Perbaikan: saya jelaskan ulang maksudnya, lalu ditambahkan kolom foto tambahan (satu URL per baris) dan lightbox dibatasi hanya pada foto milik kartu yang diklik.
+
+    2. Kesimpulan yang Keliru soal PWS: Login dengan akun superuser berhasil di lokal tetapi gagal di PWS karena database lokal (SQLite) dan database PWS (PostgreSQL) terpisah. AI awalnya menyuruh `createsuperuser` dari laptop memakai `.env.prod`, yang gagal dengan *connection timed out* karena database PWS memakai IP internal kampus. AI lalu menyimpulkan PWS tidak punya terminal dan membuat jalan memutar lewat environment variable. Perbaikan manual: saya menunjukkan screenshot dashboard PWS yang ternyata punya tab Terminal, lalu menjalankan `python manage.py createsuperuser` langsung di sana.
+
+    3. Migrasi Data yang Harus Ditulis Manual: Untuk terjemahan isi database, AI awalnya menyertakan file migrasi data yang harus saya buat sendiri. Saya tidak mau menulis file migrasi secara manual, sehingga pendekatannya diganti: kolom baru cukup dibuat dengan `makemigrations`, dan terjemahan data lama diisi otomatis oleh aplikasi ketika halaman dibuka.
