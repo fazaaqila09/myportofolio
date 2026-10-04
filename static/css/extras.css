@@ -1638,6 +1638,63 @@ html.no-vt.is-leaving body { opacity: 0; transition: opacity .22s ease; }
 .lb__count[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .lb__dot { transition: none; } }
 
+/* ============================================================
+   13. Experience lewat AJAX (Tugas 5): skeleton, state, kartu baru, modal
+   ============================================================ */
+.exp-result { width: 90%; max-width: 1100px; margin: 0 auto 4px; }
+
+/* Skeleton memakai tata letak kartu yang sama (foto kiri, teks kanan) */
+.exp-skeleton .exp-card { pointer-events: none; }
+.exp-skeleton .exp-photo { border: 0; aspect-ratio: 4 / 3; box-shadow: none; }
+.exp-skeleton .exp-body { grid-area: body; }
+.exp-skeleton .exp-photo::after { display: none; }
+
+/* State kosong & error */
+.exp-state { width: 90%; max-width: 1100px; margin: 0 auto; padding: 56px 20px; border-top: 1px solid #D6E0EE; }
+.exp-state p { margin: 0 0 14px; }
+.exp-state .button { margin: 0; }
+html[data-theme="dark"] .exp-state { border-top-color: #22385A; }
+
+/* Kartu muncul berurutan (stagger) setelah data datang */
+.exp-card--enter { animation: cardEnter .55s cubic-bezier(.22, 1, .36, 1) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
+
+/* Kartu yang baru saja ditambahkan: sorotan kuning yang memudar */
+.exp-card.is-new { position: relative; isolation: isolate; }
+.exp-card.is-new::before {
+    content: '';
+    position: absolute;
+    inset: 10px -18px;
+    border-radius: 18px;
+    background: rgba(255, 187, 0, .14);
+    box-shadow: 0 0 0 2px rgba(255, 187, 0, .55);
+    animation: expNewGlow 3.2s ease forwards;
+    pointer-events: none;
+    z-index: -1;
+}
+@keyframes expNewGlow { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Modal tambah Experience: form panjang -> isi modal bisa di-scroll */
+.exp-form-modal .project-form-modal__content { max-height: 88vh; overflow-y: auto; overscroll-behavior: contain; }
+.exp-modal-form .req { color: #b42318; }
+.exp-modal-form [aria-invalid="true"] { border-color: #b42318 !important; box-shadow: 0 0 0 3px rgba(180, 35, 24, .15); }
+.exp-modal-form .field-error[hidden] { display: none; }
+.exp-modal-submit.is-loading { opacity: .7; cursor: progress; }
+html[data-theme="dark"] .exp-modal-form .req,
+html[data-theme="dark"] .exp-modal-form .field-error { color: #ff8b80; }
+
+/* Saat modal form terbuka, toast pindah ke ATAS-tengah supaya tidak menutupi
+   tombol Submit di pojok kanan bawah modal (berlaku juga untuk modal Add Project). */
+html:has(.project-form-modal:popover-open) .toast-component {
+    inset: 1.25rem auto auto 50%;
+    translate: -50% 0;
+    max-width: min(620px, calc(100vw - 2rem));
+}
+html:has(.project-form-modal:popover-open) .toast-hidden { transform: translateY(-150%); }
+
+@media (prefers-reduced-motion: reduce) {
+    .exp-card--enter, .exp-card.is-new::before { animation: none; }
+}
+
 /* Navbar desktop selebar Home/About/Skills dll: 88% layar, maks 1320px.
    (HP dan tablet kecil tetap memakai layout bertumpuk di bawah.) */
 @media (min-width: 901px) {
