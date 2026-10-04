@@ -1,16 +1,7 @@
-/* ============================================================
-   LIGHTBOX FOTO EXPERIENCE
-   Klik foto kegiatan -> terbuka besar. Tombol panah, keyboard (← →)
-   dan geser jari memindahkan foto DI DALAM kegiatan yang sama
-   (foto utama + foto tambahan dari kolom "More photos").
-   Esc / klik latar / tombol X untuk menutup. Teks mengikuti bahasa (ID/EN).
-
-   Kartu Experience dibuat oleh JavaScript (AJAX), jadi lightbox tidak
-   mencari kartu sekali saat halaman dimuat. Ia memakai event delegation
-   (satu listener di document) dan kartu dicari saat foto diklik.
-   Setelah kartu digambar ulang, panggil ExpLightbox.decorate(container)
-   untuk memasang atribut aksesibilitas + petunjuk "Perbesar".
-   ============================================================ */
+// Lightbox foto Experience. Klik foto -> tampil besar; panah, tombol keyboard (← →), titik, dan
+// geser jari memindah foto di dalam kegiatan yang sama. Esc / klik latar / X untuk menutup.
+// Kartu dibuat JavaScript, jadi pemicunya memakai event delegation. Setelah kartu digambar ulang,
+// panggil ExpLightbox.decorate(container) untuk memasang atribut tombol dan petunjuk "Perbesar".
 (function () {
     'use strict';
 
@@ -21,7 +12,7 @@
         return el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
     }
 
-    /* ---------- Bangun lightbox ---------- */
+    // Bangun lightbox
     var box = document.createElement('div');
     box.className = 'lb';
     box.setAttribute('role', 'dialog');
@@ -172,7 +163,7 @@
         if (opener) opener.focus({ preventScroll: true });
     }
 
-    /* ---------- Pemicu: klik / Enter / Spasi pada foto (event delegation) ---------- */
+    // Pemicu: klik / Enter / Spasi pada foto (event delegation)
     function photoFrom(target) {
         var photo = target && target.closest ? target.closest('.exp-card .exp-photo') : null;
         return photo && photo.querySelector('img') ? photo : null;
@@ -189,7 +180,7 @@
     decorate(document);
     labels();
 
-    /* ---------- Kontrol ---------- */
+    // Kontrol
     prevBtn.addEventListener('click', function () { go(-1); });
     nextBtn.addEventListener('click', function () { go(1); });
     closeBtn.addEventListener('click', close);
@@ -212,7 +203,7 @@
         }
     });
 
-    /* ---------- Geser jari (HP) ---------- */
+    // Geser jari (HP)
     var startX = null, startY = null;
     box.addEventListener('touchstart', function (e) {
         if (e.touches.length !== 1) return;

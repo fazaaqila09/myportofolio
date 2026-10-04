@@ -1,5 +1,4 @@
-// Star tanpa reload: mencegat submit form.star-form (Projects dan Experience),
-// mengirimnya lewat fetch, lalu memperbarui tombol di tempat dengan animasi.
+// Tombol star (Projects & Experience) tanpa reload: submit form.star-form dicegat lalu dikirim lewat fetch().
 
 // Ledakan bintang kecil dari tombol saat memberi star
 function burstStars(button) {
@@ -38,7 +37,7 @@ document.addEventListener('submit', async function (event) {
             credentials: 'same-origin',
         });
 
-        // Belum login: arahkan ke halaman login seperti sebelumnya
+        // Belum login: arahkan ke halaman login
         if (response.status === 401) {
             const data = await response.json().catch(() => ({}));
             const next = encodeURIComponent(window.location.pathname + window.location.search);
@@ -58,9 +57,8 @@ document.addEventListener('submit', async function (event) {
             '<span data-i18n="' + starKey + '">' + t(starKey) + '</span>' +
             ' <span class="star-count">' + Number(data.star_count) + '</span>';
 
-        // Animasi: bintang membesar (hanya saat memberi star) dan angka "memantul"
-        const countElement = button.querySelector('.star-count');
-        countElement.classList.add('star-count--bump');
+        // Angka memantul; bintang membesar dan meledak hanya saat memberi star
+        button.querySelector('.star-count').classList.add('star-count--bump');
         if (data.is_starred) {
             button.querySelector('span[aria-hidden="true"]').classList.add('star-pop');
             burstStars(button);

@@ -1,0 +1,305 @@
+/* Halaman Inbox (khusus pemilik): filter, daftar pesan, dan paginasi. */
+
+/* Inbox */
+.inbox-wrap {
+    width: 88%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+}
+.inbox-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    margin-bottom: 18px;
+}
+.inbox-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.inbox-filters .chip {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.inbox-count {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(17, 45, 78, .09);
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 20px;
+    text-align: center;
+}
+.inbox-search {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+.inbox-markall { margin-left: auto; }
+.inbox-markall__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.inbox-markall__btn:hover {
+    background: #3F72AF;
+    color: #fff;
+}
+.inbox-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.inbox-item {
+    position: relative;
+    border: 1px solid #DBE2EF;
+    border-radius: 18px;
+    background: #fff;
+    overflow: hidden;
+    transition: box-shadow .25s ease, border-color .25s ease, transform .25s ease;
+}
+.inbox-item:hover {
+    box-shadow: 0 14px 30px -22px rgba(17, 45, 78, .6);
+    border-color: #b8c8e2;
+}
+.inbox-item.is-unread {
+    border-color: #FFD25A;
+    background: linear-gradient(90deg, rgba(255, 187, 0, .10), #fff 38%);
+}
+.inbox-item.is-unread::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: #FFBB00;
+}
+.inbox-item__head {
+    display: grid;
+    grid-template-columns: 12px minmax(130px, 220px) minmax(0, 1fr) auto 16px;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 16px 20px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.inbox-item__head:focus-visible {
+    outline: 2px solid #3F72AF;
+    outline-offset: -3px;
+    border-radius: 18px;
+}
+.inbox-item__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1.5px solid #c7d3e6;
+}
+.inbox-item.is-unread .inbox-item__dot {
+    background: #FFBB00;
+    border-color: #FFBB00;
+    box-shadow: 0 0 0 4px rgba(255, 187, 0, .22);
+}
+.inbox-item__who {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.inbox-item__who strong,
+.inbox-item__who small,
+.inbox-item__subject-text,
+.inbox-item__preview {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.inbox-item__who strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: #112D4E;
+}
+.inbox-item__who small {
+    font-size: 12px;
+    color: #6a7c95;
+}
+.inbox-item__subject {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.inbox-item__subject-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #112D4E;
+}
+.inbox-item.is-unread .inbox-item__subject-text,
+.inbox-item.is-unread .inbox-item__who strong {
+    font-weight: 700;
+}
+.inbox-item__preview {
+    font-size: 12.5px;
+    color: #6a7c95;
+}
+.inbox-item__time {
+    font-size: 12px;
+    color: #6a7c95;
+    white-space: nowrap;
+}
+.inbox-item__chev {
+    font-size: 12px;
+    color: #6a7c95;
+    transition: transform .3s ease;
+}
+.inbox-item.is-open .inbox-item__chev { transform: rotate(180deg); }
+.inbox-item.is-open .inbox-item__preview { display: none; }
+.inbox-item__body {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition: grid-template-rows .35s ease, visibility 0s linear .35s;
+}
+.inbox-item.is-open .inbox-item__body {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition-delay: 0s;
+}
+.inbox-item__inner {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 20px 0 46px;
+}
+.inbox-item.is-open .inbox-item__inner { padding-bottom: 18px; }
+.inbox-item__text {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #F4F7FC;
+    color: #1c3552;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+.inbox-item__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.inbox-item__actions .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+.inbox-item__actions form { margin: 0; }
+.inbox-item__actions .button-secondary:hover {
+    background: #3F72AF;
+    color: #fff;
+}
+.inbox-empty {
+    padding: 56px 20px;
+    text-align: center;
+    color: #6a7c95;
+    border: 1.5px dashed #c7d3e6;
+    border-radius: 18px;
+}
+.inbox-empty i {
+    font-size: 34px;
+    margin-bottom: 12px;
+    color: #9fb2cf;
+}
+.inbox-empty p { margin: 0; }
+.inbox-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 24px;
+}
+.inbox-pager .button { margin: 0; }
+.inbox-pager__info {
+    font-size: 13px;
+    color: #6a7c95;
+}
+
+/* Mode gelap */
+html[data-theme="dark"] .inbox-count { background: rgba(255, 255, 255, .10); }
+html[data-theme="dark"] .inbox-item {
+    background: #0F1E33;
+    border-color: #22385A;
+}
+html[data-theme="dark"] .inbox-item:hover {
+    border-color: #35537f;
+    box-shadow: 0 14px 30px -22px rgba(0, 0, 0, .9);
+}
+html[data-theme="dark"] .inbox-item.is-unread {
+    border-color: rgba(255, 187, 0, .55);
+    background: linear-gradient(90deg, rgba(255, 187, 0, .12), #0F1E33 40%);
+}
+html[data-theme="dark"] .inbox-item__dot { border-color: #3a5278; }
+html[data-theme="dark"] .inbox-item__who strong,
+html[data-theme="dark"] .inbox-item__subject-text {
+    color: #E6EDF7;
+}
+html[data-theme="dark"] .inbox-item__who small,
+html[data-theme="dark"] .inbox-item__preview,
+html[data-theme="dark"] .inbox-item__time,
+html[data-theme="dark"] .inbox-item__chev,
+html[data-theme="dark"] .inbox-pager__info,
+html[data-theme="dark"] .inbox-empty {
+    color: #8FA6C6;
+}
+html[data-theme="dark"] .inbox-item__text {
+    background: #12233B;
+    color: #DBE2EF;
+}
+html[data-theme="dark"] .inbox-empty { border-color: #2a4166; }
+
+/* Responsif */
+@media (max-width: 760px) {
+    .inbox-wrap { width: 92%; }
+    .inbox-markall {
+        margin-left: 0;
+        width: 100%;
+    }
+    .inbox-markall__btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .inbox-item__head {
+        grid-template-columns: 12px minmax(0, 1fr) 16px;
+        grid-template-areas: "dot who chev" ". subject subject" ". time time";
+        gap: 4px 12px;
+        padding: 14px 16px;
+    }
+    .inbox-item__dot { grid-area: dot; }
+    .inbox-item__who { grid-area: who; }
+    .inbox-item__subject { grid-area: subject; }
+    .inbox-item__time { grid-area: time; }
+    .inbox-item__chev { grid-area: chev; }
+    .inbox-item__inner {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .inbox-item__actions .button {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+    .inbox-item__actions form { flex: 1 1 100%; }
+    .inbox-item__actions form .button { width: 100%; }
+}
+
+/* Pengguna yang mematikan animasi di sistemnya */
+@media (prefers-reduced-motion: reduce) {
+    .inbox-item, .inbox-item__chev, .inbox-item__body { transition: none; }
+}

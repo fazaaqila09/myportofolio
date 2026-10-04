@@ -1,4 +1,7 @@
-/** Membaca nilai cookie berdasarkan namanya (dipakai untuk cookie csrftoken). */
+// Fungsi bantu untuk halaman yang memuat data lewat fetch(): token CSRF, escapeHtml (cegah XSS),
+// debounce (tunda pencarian), dan format tanggal bulan-tahun sesuai bahasa.
+
+// Nilai cookie berdasarkan namanya (dipakai untuk cookie csrftoken)
 function getCookie(name) {
     if (!document.cookie) return null;
     const prefix = name + '=';
@@ -9,20 +12,16 @@ function getCookie(name) {
     return null;
 }
 
-/**
- * Token CSRF: diambil dari input tersembunyi {% csrf_token %} di halaman,
- * cadangannya dari cookie csrftoken. Dikirim lewat header X-CSRFToken.
- */
+// Token CSRF: diambil dari input tersembunyi {% csrf_token %} di halaman,
+// cadangannya dari cookie csrftoken. Dikirim lewat header X-CSRFToken.
 function getCsrfToken() {
     const input = document.querySelector('input[name="csrfmiddlewaretoken"]');
     return (input && input.value) || getCookie('csrftoken') || '';
 }
 
-/**
- * Mengubah karakter khusus HTML menjadi entity sehingga teks dari server
- * selalu tampil sebagai teks biasa, tidak pernah dijalankan sebagai HTML/JS.
- * Contoh: <img src=x onerror=alert(1)>  ->  &lt;img src=x onerror=alert(1)&gt;
- */
+// Mengubah karakter khusus HTML menjadi entity sehingga teks dari server
+// selalu tampil sebagai teks biasa, tidak pernah dijalankan sebagai HTML/JS.
+// Contoh: <img src=x onerror=alert(1)>  ->  &lt;img src=x onerror=alert(1)&gt;
 function escapeHtml(value) {
     return String(value ?? '')
         .replaceAll('&', '&amp;')
@@ -32,11 +31,9 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
-/**
- * Debouncing: fungsi baru benar-benar dipanggil setelah tidak ada panggilan
- * lagi selama `delay` milidetik. Dipakai pada pencarian supaya permintaan
- * ke server hanya dikirim saat pengguna berhenti mengetik.
- */
+// Debouncing: fungsi baru benar-benar dipanggil setelah tidak ada panggilan
+// lagi selama `delay` milidetik. Dipakai pada pencarian supaya permintaan
+// ke server hanya dikirim saat pengguna berhenti mengetik.
 function debounce(fn, delay) {
     let timer;
     const debounced = function (...args) {
@@ -47,7 +44,7 @@ function debounce(fn, delay) {
     return debounced;
 }
 
-/** Tanggal ISO (YYYY-MM-DD) menjadi "bulan tahun" sesuai bahasa aktif. */
+// Tanggal ISO (YYYY-MM-DD) menjadi "bulan tahun" sesuai bahasa aktif.
 function formatMonthYear(isoDate) {
     if (!isoDate) return '';
     const lang = window.I18N ? window.I18N.lang : 'en';

@@ -50,7 +50,7 @@ class MainTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "experience.html")
         self.assertContains(response, f'data-endpoint="{reverse("main:get_experience_json")}"')
-        self.assertContains(response, "js/experience.js")
+        self.assertContains(response, "js/pages/experience.js")
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
 
         fields = self.client.get(reverse("main:get_experience_json")).json()[0]["fields"]
@@ -319,7 +319,7 @@ class RoleAccessTest(TestCase):
             and Project.objects.filter(pk=self.project.pk).exists()
         )
 
-    # --- Pengunjung: diarahkan ke login ---
+    # Pengunjung: diarahkan ke login
     def test_visitor_is_redirected_to_login(self):
         for url in self.add_urls + self.edit_urls:
             response = self.client.get(url)
@@ -331,7 +331,7 @@ class RoleAccessTest(TestCase):
             self.assertTrue(response.url.startswith("/login/"))
         self.assertTrue(self.data_still_exists())
 
-    # --- User biasa: 403 untuk semua aksi ubah data ---
+    # User biasa: 403 untuk semua aksi ubah data
     def test_regular_user_gets_403(self):
         self.login("biasa")
         for url in self.add_urls + self.edit_urls:
@@ -340,7 +340,7 @@ class RoleAccessTest(TestCase):
             self.assertEqual(self.client.post(url).status_code, 403)
         self.assertTrue(self.data_still_exists())
 
-    # --- Editor: boleh edit, tidak boleh tambah/hapus ---
+    # Editor: boleh edit, tidak boleh tambah/hapus
     def test_editor_can_edit_but_not_create_or_delete(self):
         self.login("editor1")
         for url in self.edit_urls:
@@ -367,7 +367,7 @@ class RoleAccessTest(TestCase):
         self.assertEqual(self.experience.title, "COMPFEST 18")
         self.assertEqual(self.project.title, "Solilokui 2")
 
-    # --- Pemilik: semua boleh ---
+    # Pemilik: semua boleh
     def test_owner_has_full_access(self):
         self.login("pemilik")
         for url in self.add_urls + self.edit_urls:
@@ -377,7 +377,7 @@ class RoleAccessTest(TestCase):
         self.assertFalse(Experience.objects.exists())
         self.assertFalse(Project.objects.exists())
 
-    # --- Tombol di template mengikuti peran ---
+    # Tombol di template mengikuti peran
     def assert_buttons(self, username, add, edit, delete):
         if username:
             self.login(username)
@@ -459,7 +459,7 @@ class StarTest(TestCase):
             self.assertNotIn("password", body)
             self.assertNotIn("email", body)
 
-    # --- Star lewat AJAX (tanpa reload) ---
+    # Star lewat AJAX (tanpa reload)
     def test_ajax_toggle_returns_json(self):
         self.client.login(username="biasa", password=PASSWORD)
         for obj, url in self.targets:
@@ -625,7 +625,8 @@ class LanguageToggleTest(TestCase):
         for name in ("main:show_main", "main:show_experience", "main:show_projects", "main:show_contact", "main:show_education", "main:login"):
             html = self.client.get(reverse(name)).content.decode()
             self.assertIn("data-lang-toggle", html, name)
-            self.assertIn("js/i18n.js", html, name)
+            self.assertIn("js/core/language.js", html, name)
+            self.assertIn("js/core/translations.js", html, name)
             self.assertIn('data-l="id"', html, name)
             self.assertIn('data-l="en"', html, name)
 
@@ -638,9 +639,9 @@ class LanguageToggleTest(TestCase):
         import re
         from pathlib import Path
         base = Path(__file__).resolve().parent.parent
-        source = (base / "static" / "js" / "i18n.js").read_text(encoding="utf-8")
+        source = (base / "static" / "js" / "core" / "translations.js").read_text(encoding="utf-8")
         english = source[source.index("en: {"):source.index("id: {")]
-        indonesian = source[source.index("id: {"):source.index("AUTO_PAIRS")]
+        indonesian = source[source.index("id: {"):source.index("serverText: [")]
         used = set()
         for template in (base / "templates").rglob("*.html"):
             used |= set(re.findall(r'data-i18n(?:-html)?="([\w.]+)"', template.read_text(encoding="utf-8")))
@@ -826,29 +827,29 @@ class MotionAndLightboxTest(TestCase):
 
     def test_experience_photo_is_lightbox_ready(self):
         html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertIn("js/lightbox.js", html)
-        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "experience.js").read_text(encoding="utf-8")
+        self.assertIn("js/components/lightbox.js", html)
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "pages" / "experience.js").read_text(encoding="utf-8")
         self.assertIn('class="exp-photo"', js)
 
     def test_motion_script_and_fallback_flag_on_every_page(self):
         for name in ("main:show_main", "main:show_experience", "main:show_projects", "main:show_contact", "main:login"):
             html = self.client.get(reverse(name)).content.decode()
-            self.assertIn("js/motion.js", html, name)
+            self.assertIn("js/effects/page-transition.js", html, name)
             self.assertIn("CSSViewTransitionRule", html, name)   # penanda cadangan 'no-vt'
 
     def test_page_transition_css_is_present(self):
         from pathlib import Path
         base = Path(__file__).resolve().parent.parent / "static" / "css"
-        self.assertIn("@view-transition", (base / "effects.css").read_text(encoding="utf-8"))
-        extras = (base / "extras.css").read_text(encoding="utf-8")
-        self.assertIn("view-transition-name: site-nav", extras)
-        self.assertIn("prefers-reduced-motion", extras)
+        self.assertIn("@view-transition", (base / "animations.css").read_text(encoding="utf-8"))
+        navbar = (base / "navbar.css").read_text(encoding="utf-8")
+        self.assertIn("view-transition-name: site-nav", navbar)
+        self.assertIn("prefers-reduced-motion", (base / "animations.css").read_text(encoding="utf-8"))
 
     def test_dictionary_has_lightbox_and_inbox_keys_in_both_languages(self):
         from pathlib import Path
-        source = (Path(__file__).resolve().parent.parent / "static" / "js" / "i18n.js").read_text(encoding="utf-8")
+        source = (Path(__file__).resolve().parent.parent / "static" / "js" / "core" / "translations.js").read_text(encoding="utf-8")
         english = source[source.index("en: {"):source.index("id: {")]
-        indonesian = source[source.index("id: {"):source.index("AUTO_PAIRS")]
+        indonesian = source[source.index("id: {"):source.index("serverText: [")]
         keys = ["lb.label", "lb.close", "lb.prev", "lb.next", "lb.enlarge", "lb.enlarge.short",
                 "lb.hint.switch", "lb.hint.close", "nav.inbox", "inbox.title", "inbox.empty", "inbox.delete.confirm"]
         for key in keys:
@@ -891,7 +892,7 @@ class ExperienceGalleryTest(TestCase):
         self.make(photos="https://example.com/b.jpg")
         fields = self.client.get(reverse("main:get_experience_json")).json()[0]["fields"]
         self.assertEqual(fields["photos"], ["https://example.com/a.jpg", "https://example.com/b.jpg"])
-        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "experience.js").read_text(encoding="utf-8")
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "pages" / "experience.js").read_text(encoding="utf-8")
         self.assertIn("data-photos=", js)
         self.assertIn("exp-photo__count", js)
 
@@ -921,7 +922,7 @@ class ExperienceGalleryTest(TestCase):
 
     def test_lightbox_script_stays_inside_one_experience(self):
         from pathlib import Path
-        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "lightbox.js").read_text(encoding="utf-8")
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "components" / "lightbox.js").read_text(encoding="utf-8")
         self.assertIn("data-photos", js)
         self.assertNotIn("cards.length", js.split("function open(")[1])   # tidak memutar antar kartu
 
@@ -945,7 +946,7 @@ class ExperienceAjaxTest(TestCase):
     def login(self, username):
         self.client.login(username=username, password=PASSWORD)
 
-    # --- Halaman hanya kerangka, data dari JSON ---
+    # Halaman hanya kerangka, data dari JSON
     def test_page_renders_skeleton_only(self):
         Experience.objects.create(title="Rahasia Kartu", description="x")
         html = self.client.get(reverse("main:show_experience")).content.decode()
@@ -979,7 +980,7 @@ class ExperienceAjaxTest(TestCase):
         self.assertEqual(titles("pembimbing"), ["BETIS"])
         self.assertEqual(titles("tidak-ada"), [])
 
-    # --- Tambah data lewat AJAX ---
+    # Tambah data lewat AJAX
     def test_owner_gets_201_and_data_is_saved(self):
         self.login("pemilik")
         response = self.client.post(self.url, self.VALID)
@@ -1030,7 +1031,7 @@ class ExperienceAjaxTest(TestCase):
         response = client.post(self.url, self.VALID, HTTP_X_CSRFTOKEN=token)
         self.assertEqual(response.status_code, 201)
 
-    # --- XSS ---
+    # XSS
     def test_html_is_stripped_on_the_server(self):
         self.login("pemilik")
         payload = {**self.VALID,
@@ -1049,11 +1050,11 @@ class ExperienceAjaxTest(TestCase):
         self.assertIn("title", response.json()["errors"])
 
     def test_page_script_escapes_every_inserted_text(self):
-        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "experience.js").read_text(encoding="utf-8")
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "pages" / "experience.js").read_text(encoding="utf-8")
         self.assertIn("escapeHtml(title)", js)
         self.assertIn("escapeHtml(description)", js)
         self.assertIn("'X-CSRFToken': getCsrfToken()", js)
-        utils = (Path(__file__).resolve().parent.parent / "static" / "js" / "ajax-utils.js").read_text(encoding="utf-8")
+        utils = (Path(__file__).resolve().parent.parent / "static" / "js" / "core" / "ajax-helpers.js").read_text(encoding="utf-8")
         self.assertIn("function escapeHtml", utils)
         self.assertIn("function debounce", utils)
 

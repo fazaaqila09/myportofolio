@@ -10,9 +10,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/effects.css' %}">
-    <link rel="stylesheet" href="{% static 'css/extras.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hero.css' %}">
+    <link rel="stylesheet" href="{% static 'css/about.css' %}">
+    <link rel="stylesheet" href="{% static 'css/skills.css' %}">
+    <link rel="stylesheet" href="{% static 'css/education.css' %}">
+    <link rel="stylesheet" href="{% static 'css/experience.css' %}">
+    <link rel="stylesheet" href="{% static 'css/lightbox.css' %}">
+    <link rel="stylesheet" href="{% static 'css/projects.css' %}">
+    <link rel="stylesheet" href="{% static 'css/contact.css' %}">
+    <link rel="stylesheet" href="{% static 'css/inbox.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     <!-- Terapkan tema (terang/gelap) sebelum halaman tampil supaya tidak berkedip -->
     <script>
         (function () {
@@ -23,16 +34,17 @@
             } catch (e) { /* abaikan */ }
         })();
     </script>
-    <!-- Browser tanpa View Transitions memakai transisi cadangan di motion.js -->
+    <!-- Browser tanpa View Transitions memakai transisi cadangan (effects/page-transition.js) -->
     <script>
         if (!('CSSViewTransitionRule' in window)) document.documentElement.classList.add('no-vt');
     </script>
-    <!-- Kamus & logika bahasa ID/EN (mengatur <html lang> lebih dulu agar tidak berkedip) -->
-    <script src="{% static 'js/i18n.js' %}"></script>
+    <!-- Kamus dan logika bahasa ID/EN (mengatur <html lang> lebih dulu agar tidak berkedip) -->
+    <script src="{% static 'js/core/translations.js' %}"></script>
+    <script src="{% static 'js/core/language.js' %}"></script>
     {% block meta %}{% endblock meta %}
 </head>
 <body>
-    <!-- Lapisan background dekoratif (lihat extras.css) -->
+    <!-- Lapisan latar dekoratif (lihat base.css) -->
     <div class="bg-mesh" aria-hidden="true"></div>
     <div class="bg-dots" aria-hidden="true"></div>
 
@@ -141,39 +153,15 @@
     </footer>
 
     {% include 'components/toast.html' %}
-    <script src="{% static 'js/star.js' %}"></script>
-    <script src="{% static 'js/effects.js' %}"></script>
-    <script src="{% static 'js/extras.js' %}"></script>
-    <script src="{% static 'js/motion.js' %}"></script>
-    <script>
-        // Klik username -> buka menu Logout tepat di bawahnya
-        (function () {
-            var menu = document.getElementById('profile-menu');
-            var trigger = document.getElementById('account-trigger');
-            if (!menu || !trigger) return;
-
-            var wasOpen = false;
-            function place() {
-                var rect = trigger.getBoundingClientRect();
-                menu.style.top = (rect.bottom + 10) + 'px';
-                menu.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
-            }
-            function toggle() {
-                // Klik di luar menu menutupnya lebih dulu; jangan dibuka lagi jika tadi sudah terbuka
-                if (wasOpen) { wasOpen = false; return; }
-                place();
-                menu.showPopover();
-            }
-            menu.addEventListener('beforetoggle', function (e) {
-                trigger.setAttribute('aria-expanded', e.newState === 'open' ? 'true' : 'false');
-            });
-            trigger.addEventListener('pointerdown', function () { wasOpen = menu.matches(':popover-open'); });
-            trigger.addEventListener('click', function (e) { e.preventDefault(); toggle(); });
-            trigger.addEventListener('keydown', function (e) {
-                if (e.key === ' ') { e.preventDefault(); wasOpen = menu.matches(':popover-open'); toggle(); }
-            });
-            window.addEventListener('resize', function () { if (menu.matches(':popover-open')) place(); });
-        })();
-    </script>
+    <script src="{% static 'js/components/star-button.js' %}"></script>
+    <script src="{% static 'js/components/floating-buttons.js' %}"></script>
+    <script src="{% static 'js/components/navbar.js' %}"></script>
+    <script src="{% static 'js/effects/count-up.js' %}"></script>
+    <script src="{% static 'js/effects/hero-typing.js' %}"></script>
+    <script src="{% static 'js/effects/scroll-reveal.js' %}"></script>
+    <script src="{% static 'js/effects/card-tilt.js' %}"></script>
+    <script src="{% static 'js/effects/magnetic-buttons.js' %}"></script>
+    <script src="{% static 'js/effects/page-transition.js' %}"></script>
+    <script src="{% static 'js/effects/touch-feedback.js' %}"></script>
 </body>
 </html>

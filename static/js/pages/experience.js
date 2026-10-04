@@ -1,29 +1,17 @@
-/* ============================================================
-   EXPERIENCE.JS: halaman Experience dengan AJAX (Tugas 5)
-
-   Alur:
-   1. Template hanya merender kerangka. Saat halaman dibuka, fetchExperiences()
-      mengambil data dari endpoint JSON (get_experience_json) dengan fetch().
-   2. Selama menunggu tampil skeleton (loading), lalu salah satu dari:
-      daftar kartu, pesan kosong, atau pesan error + tombol coba lagi.
-   3. Pencarian memakai debouncing: permintaan baru dikirim 300 ms setelah
-      pengguna berhenti mengetik. Permintaan lama dibatalkan (AbortController).
-   4. Pemilik menambah data lewat modal. Form dikirim dengan fetch() + token
-      CSRF; server membalas 201 / 400 / 403, hasilnya ditampilkan lewat toast,
-      lalu daftar dimuat ulang tanpa me-reload halaman.
-   5. Semua teks dari server disisipkan lewat escapeHtml() (lihat ajax-utils.js)
-      sehingga data seperti <img src=x onerror=alert(1)> tampil sebagai teks.
-
-   Butuh: ajax-utils.js (getCsrfToken, escapeHtml, debounce, formatMonthYear),
-   toast.js (showToast), i18n.js (t, I18N), lightbox.js (ExpLightbox), star.js.
-   ============================================================ */
+// Halaman Experience dengan AJAX (Tugas 5).
+// 1. Template hanya kerangka; data diambil dari /api/experience/ lewat fetch().
+// 2. State: skeleton saat memuat, lalu daftar kartu, pesan kosong, atau error + tombol coba lagi.
+// 3. Pencarian dengan debounce 300 ms; permintaan lama dibatalkan dengan AbortController.
+// 4. Pemilik menambah data lewat modal: fetch() + token CSRF, balasan 201 / 400 / 403 -> toast.
+// 5. Semua teks dari server melewati escapeHtml(), jadi data berisi HTML tampil sebagai teks.
+// Butuh: ajax-helpers.js, toast.js, language.js, lightbox.js, star-button.js.
 (function () {
     'use strict';
 
     const section = document.getElementById('experience');
     if (!section) return;
 
-    /* ---------- Konfigurasi dari atribut data-* di template ---------- */
+    // Konfigurasi dari atribut data-* di template
     const config = {
         endpoint: section.dataset.endpoint,
         createEndpoint: section.dataset.createEndpoint,
@@ -39,7 +27,7 @@
     const SEARCH_DEBOUNCE_DELAY = 300;   // ms setelah berhenti mengetik
     const LOADING_DELAY = 120;           // skeleton baru muncul bila server lebih lambat dari ini
 
-    /* ---------- Elemen ---------- */
+    // Elemen
     const el = {
         loading: document.getElementById('exp-loading'),
         error: document.getElementById('exp-error'),
@@ -55,7 +43,7 @@
         form: document.getElementById('experience-form'),            // null bila bukan pemilik
     };
 
-    /* ---------- State ---------- */
+    // State
     let experiences = [];        // hasil fetch terakhir
     let loaded = false;          // sudah pernah berhasil memuat?
     let abortController = null;  // untuk membatalkan fetch lama saat pencarian berubah
@@ -67,9 +55,7 @@
     const urlFor = (template, id) => template.replace(DUMMY_ID, encodeURIComponent(id));
     const autoText = (text) => (window.I18N ? window.I18N.auto(text) : text);   // pesan server -> ID/EN
 
-    /* ======================================================
-       TAMPILAN STATE: loading / error / kosong / daftar
-       ====================================================== */
+    // Tampilan state: loading / error / kosong / daftar
     function showState(state) {
         el.loading.classList.toggle('hide', state !== 'loading');
         el.error.classList.toggle('hide', state !== 'error');
@@ -79,9 +65,7 @@
         section.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
     }
 
-    /* ======================================================
-       MEMBANGUN KARTU (semua teks dari server lewat escapeHtml)
-       ====================================================== */
+    // Membangun kartu (semua teks dari server lewat escapeHtml)
     function periodText(f) {
         const start = formatMonthYear(f.started_at);
         const end = f.is_ongoing ? tr('common.present', 'Present') : formatMonthYear(f.ended_at);
@@ -226,9 +210,7 @@
         }
     }
 
-    /* ======================================================
-       MENGAMBIL DATA (fetch + await)
-       ====================================================== */
+    // Mengambil data (fetch + await)
     async function fetchExperiences() {
         if (abortController) abortController.abort();     // batalkan pencarian sebelumnya
         abortController = new AbortController();
@@ -261,9 +243,7 @@
         }
     }
 
-    /* ======================================================
-       PENCARIAN DENGAN DEBOUNCING
-       ====================================================== */
+    // Pencarian dengan debouncing
     function syncSearchToUrl() {
         // ?title= ikut diperbarui supaya hasil pencarian bisa dibagikan/di-refresh
         const params = new URLSearchParams(window.location.search);
@@ -287,9 +267,7 @@
     });
     el.retry.addEventListener('click', fetchExperiences);
 
-    /* ======================================================
-       TAMBAH DATA LEWAT MODAL (hanya ada untuk pemilik)
-       ====================================================== */
+    // Tambah data lewat modal (hanya ada untuk pemilik)
     function clearFieldErrors() {
         if (!el.form) return;
         el.form.querySelectorAll('.field-error').forEach((p) => { p.hidden = true; p.textContent = ''; });
@@ -378,9 +356,9 @@
         });
     }
 
-    /* ---------- Ganti bahasa: gambar ulang kartu (teks & tanggal ikut bahasa) ---------- */
+    // Ganti bahasa: gambar ulang kartu (teks & tanggal ikut bahasa)
     document.addEventListener('langchange', render);
 
-    /* ---------- Mulai ---------- */
+    // Mulai
     fetchExperiences();
 })();

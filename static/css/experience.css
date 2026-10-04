@@ -1,0 +1,591 @@
+/* Halaman Experience: toolbar, kartu, foto, tombol edit/hapus, state loading, modal tambah. */
+
+/* Kartu */
+.experience {
+    scroll-margin-top: 100px;
+    padding: 0.5rem 0 5rem;
+}
+.experience .section-head {
+    margin-bottom: 4rem;
+    animation: expHeadIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.exp-title { color: #FFBB00; }
+.exp-sub { color: #112D4E; }
+.exp-grid {
+    margin: 0 auto;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+.exp-card {
+    width: 100%;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: expCardIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    position: relative;
+}
+.exp-meta {
+    display: flex;
+    align-items: center;
+}
+.exp-category, .exp-status {
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.exp-head {
+    display: flex;
+    align-items: center;
+}
+.exp-logo {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+.exp-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;   /* logo utuh, tidak terpotong */
+}
+.exp-heading { min-width: 0; }
+.exp-org {
+    font-weight: 700;
+    color: #112D4E;
+}
+.exp-role {
+    font-weight: 500;
+    color: #3F72AF;
+}
+.exp-period {
+    display: inline-block;
+    font-weight: 700;
+}
+.exp-desc { font-weight: 400; }
+.exp-card:nth-child(1) { animation-delay: 0.30s; }
+.exp-card:nth-child(2) { animation-delay: 0.40s; }
+.exp-card:nth-child(3) { animation-delay: 0.50s; }
+.exp-card:nth-child(4) { animation-delay: 0.60s; }
+.exp-card:nth-child(5) { animation-delay: 0.70s; }
+.exp-card:nth-child(6) { animation-delay: 0.80s; }
+.exp-card:nth-child(7) { animation-delay: 0.90s; }
+.exp-card:nth-child(8) { animation-delay: 1.00s; }
+.exp-card:nth-child(9) { animation-delay: 1.10s; }
+.exp-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .3s ease;
+    background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 187, 0, .16), transparent 62%);
+}
+.exp-card.is-tilting {
+    transform: perspective(900px) translateY(-6px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform .12s ease-out, box-shadow .3s ease;
+}
+.exp-card.is-tilting::after { opacity: 1; }
+.experience { background: transparent; }
+.exp-grid, .exp-toolbar {
+    width: 90%;
+    max-width: 1100px;
+}
+.exp-grid {
+    display: block;
+    counter-reset: exp;
+    padding-bottom: 0;
+    border-bottom: 1px solid #D6E0EE;
+}
+.exp-card {
+    counter-increment: exp;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    grid-template-areas: "photo meta" "photo body";
+    grid-template-rows: auto 1fr;
+    column-gap: 48px;
+    align-items: start;
+    padding: 44px 0;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid #D6E0EE;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+}
+.exp-card:hover { transform: none; }
+.exp-card::after { display: none; }
+.exp-meta {
+    grid-area: meta;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 0;
+    margin-bottom: 14px;
+    background: none;
+    border: 0;
+}
+.exp-meta::before {
+    content: counter(exp, decimal-leading-zero);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #3F72AF;
+    padding-right: 14px;
+    border-right: 1px solid #C2D0E4;
+}
+.exp-category, .exp-status {
+    color: #6B7A8F;
+    font-size: 11.5px;
+}
+.exp-status {
+    display: inline-flex;
+    align-items: center;
+}
+.exp-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin-right: 7px;
+    border-radius: 50%;
+    background: #B9C7E0;
+}
+.exp-status.is-ongoing { color: #112D4E; }
+.exp-status.is-ongoing::before {
+    background: #FFBB00;
+    animation: expPulse 2s ease-out infinite;
+}
+.exp-body {
+    grid-area: body;
+    padding: 0;
+    border-top: 0;
+}
+.exp-head {
+    gap: 14px;
+    margin-bottom: 4px;
+}
+.exp-logo {
+    width: 52px;
+    height: 52px;
+    padding: 7px;
+    box-sizing: border-box;
+    background: #FFFFFF;
+    border: 1px solid #D6E0EE;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px -6px rgba(17, 45, 78, .25);
+}
+.exp-org {
+    font-size: clamp(22px, 2.4vw, 30px);
+    line-height: 1.2;
+    letter-spacing: -.3px;
+    background: linear-gradient(#FFBB00, #FFBB00) no-repeat 0 100% / 0 3px;
+    display: inline;
+    padding-bottom: 2px;
+    transition: background-size .45s cubic-bezier(.22, 1, .36, 1);
+}
+.exp-card:hover .exp-org { background-size: 100% 3px; }
+.exp-heading { display: block; }
+.exp-role {
+    margin-top: 6px;
+    font-size: 15px;
+}
+.exp-period {
+    margin: 14px 0;
+    padding: 0 0 0 12px;
+    border-left: 3px solid #FFBB00;
+    border-radius: 0;
+    background: none;
+    color: #112D4E;
+    font-size: 13px;
+    letter-spacing: .6px;
+}
+.exp-desc {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #4A5568;
+    text-align: justify;
+    hyphens: auto;   /* rata kanan-kiri */
+}
+.exp-star { margin-top: 18px; }
+.exp-skeleton .exp-card { pointer-events: none; }
+.exp-skeleton .exp-body { grid-area: body; }
+.exp-card--enter {
+    animation: cardEnter .55s cubic-bezier(.22, 1, .36, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+}
+.exp-card.is-new {
+    position: relative;
+    isolation: isolate;
+}
+.exp-card.is-new::before {
+    content: "";
+    position: absolute;
+    inset: 10px -18px;
+    border-radius: 18px;
+    background: rgba(255, 187, 0, .14);
+    box-shadow: 0 0 0 2px rgba(255, 187, 0, .55);
+    animation: expNewGlow 3.2s ease forwards;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Foto kartu */
+.exp-photo {
+    width: 100%;
+    overflow: hidden;   /* terlihat kalau foto belum ada */
+    --exp-fill: #DBE2EF;
+    grid-area: photo;   /* warna isi bila foto belum ada */
+    aspect-ratio: 4 / 3;
+    box-sizing: border-box;
+    border: 10px solid transparent;
+    /* bingkai tebal, warnanya gradasi seperti garis footer */
+    border-radius: 6px;
+    background: linear-gradient(var(--exp-fill), var(--exp-fill)) padding-box,
+        linear-gradient(90deg, #FFBB00 0%, #3F72AF 55%, rgba(63, 114, 175, .28) 100%) border-box;
+    box-shadow: 0 14px 30px -14px rgba(17, 45, 78, .45);
+    position: relative;
+    cursor: zoom-in;
+}
+.exp-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;   /* foto rasio apa pun tidak gepeng */
+    filter: saturate(.9);
+    transition: transform .6s cubic-bezier(.22, 1, .36, 1), filter .4s ease;
+}
+.exp-card:hover .exp-photo img {
+    transform: scale(1.05);
+    filter: saturate(1.05);
+}
+.exp-photo:focus-visible {
+    outline: 3px solid #3F72AF;
+    outline-offset: 3px;
+}
+.exp-photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(13, 34, 55, 0) 45%, rgba(13, 34, 55, .55));
+    opacity: 0;
+    transition: opacity .35s ease;
+    pointer-events: none;
+}
+.exp-photo__zoom {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .94);
+    color: #112D4E;
+    font: 600 12.5px "Poppins", sans-serif;
+    letter-spacing: .3px;
+    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .6);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .3s ease, transform .3s ease;
+    pointer-events: none;
+}
+.exp-photo:hover::after, .exp-photo:focus-visible::after { opacity: 1; }
+.exp-photo:hover .exp-photo__zoom, .exp-photo:focus-visible .exp-photo__zoom {
+    opacity: 1;
+    transform: none;
+}
+.exp-photo__count {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgba(13, 34, 55, .72);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font: 600 12px "Poppins", sans-serif;
+    pointer-events: none;
+}
+.exp-photo__count i { color: #FFBB00; }
+.exp-skeleton .exp-photo {
+    border: 0;
+    aspect-ratio: 4 / 3;
+    box-shadow: none;
+}
+.exp-skeleton .exp-photo::after { display: none; }
+
+/* Toolbar & pencarian */
+.exp-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 0 auto 1.5rem;
+    flex-wrap: wrap;
+}
+.exp-add-button {
+    align-items: center;
+    gap: .4rem;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+.exp-search {
+    display: flex;
+    gap: .75rem;
+    flex: 1;
+    min-width: 240px;
+}
+.exp-search__input {
+    flex: 1;
+    min-width: 0;
+    padding: .7rem 1rem;
+    border: 1px solid #DBE2EF;
+    border-radius: 8px;
+    font: inherit;
+}
+.exp-search__input:focus {
+    outline: 2px solid #3F72AF;
+    border-color: #3F72AF;
+}
+.exp-result {
+    width: 90%;
+    max-width: 1100px;
+    margin: 0 auto 4px;
+}
+
+/* Tombol edit & hapus */
+.exp-delete-btn {
+    margin-left: auto;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: #F4F7FC;
+    color: #b42318;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+}
+.exp-delete-btn:hover {
+    background: #b42318;
+    color: #fff;
+}
+.exp-actions {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.exp-actions .exp-delete-btn { margin-left: 0; }
+.exp-edit-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: #F4F7FC;
+    color: #112D4E;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s ease, color .2s ease;
+}
+.exp-edit-btn:hover {
+    background: #3F72AF;
+    color: #fff;
+}
+
+/* Form & modal tambah */
+.exp-form {
+    width: 90%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+.exp-form-modal .project-form-modal__content {
+    max-height: 88vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.exp-modal-form .req { color: #b42318; }
+.exp-modal-form [aria-invalid="true"] {
+    border-color: #b42318 !important;
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, .15);
+}
+.exp-modal-form .field-error[hidden] { display: none; }
+.exp-modal-submit.is-loading {
+    opacity: .7;
+    cursor: progress;
+}
+
+/* Loading, kosong, error */
+.exp-state {
+    width: 90%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 20px;
+    border-top: 1px solid #D6E0EE;
+}
+.exp-state p { margin: 0 0 14px; }
+.exp-state .button { margin: 0; }
+
+/* Animasi */
+@keyframes expCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+@keyframes expPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 187, 0, .55); }
+    70%, 100% { box-shadow: 0 0 0 8px rgba(255, 187, 0, 0); }
+}
+@keyframes expNewGlow { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Mode gelap */
+html[data-theme="dark"] .exp-org { color: #E6EDF7; }
+html[data-theme="dark"] .exp-role { color: #7FA8E0; }
+html[data-theme="dark"] .exp-card {
+    background: #12233B;
+    border-color: #22385A;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+}
+html[data-theme="dark"] .exp-logo, html[data-theme="dark"] .exp-photo {
+    background-color: #0F1E33;
+    border-color: #22385A;
+}
+html[data-theme="dark"] .exp-edit-btn, html[data-theme="dark"] .exp-delete-btn {
+    background: #1A2E4A;
+    color: #DBE2EF;
+}
+html[data-theme="dark"] .exp-delete-btn { color: #ff8b80; }
+html[data-theme="dark"] .exp-edit-btn:hover {
+    background: #3F72AF;
+    color: #fff;
+}
+html[data-theme="dark"] .exp-delete-btn:hover {
+    background: #b42318;
+    color: #fff;
+}
+html[data-theme="dark"] .exp-search__input {
+    background-color: #0F1E33;
+    border-color: #22385A;
+    color: #E6EDF7;
+}
+html[data-theme="dark"] .exp-card::after {
+    background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), rgba(127, 168, 224, .16), transparent 62%);
+}
+html[data-theme="dark"] .experience { background-color: transparent; }
+html[data-theme="dark"] .exp-grid, html[data-theme="dark"] .exp-card { border-color: #22385A; }
+html[data-theme="dark"] .exp-card {
+    background: transparent;
+    box-shadow: none;
+}
+html[data-theme="dark"] .exp-meta {
+    background: none;
+    border: 0;
+}
+html[data-theme="dark"] .exp-meta::before {
+    color: #7FA8E0;
+    border-right-color: #2C4670;
+}
+html[data-theme="dark"] .exp-category, html[data-theme="dark"] .exp-status { color: #9FB0C8; }
+html[data-theme="dark"] .exp-status.is-ongoing { color: #E6EDF7; }
+html[data-theme="dark"] .exp-status::before { background: #2C4670; }
+html[data-theme="dark"] .exp-status.is-ongoing::before { background: #FFBB00; }
+html[data-theme="dark"] .exp-photo {
+    --exp-fill: #0F1E33;
+    border-color: transparent;
+    box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .7);
+}
+html[data-theme="dark"] .exp-logo {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+}
+html[data-theme="dark"] .exp-period { color: #E6EDF7; }
+html[data-theme="dark"] .exp-desc { color: #B8C6DB; }
+html[data-theme="dark"] .exp-state { border-top-color: #22385A; }
+html[data-theme="dark"] .exp-modal-form .req,
+html[data-theme="dark"] .exp-modal-form .field-error {
+    color: #ff8b80;
+}
+html[data-theme="dark"] .exp-skeleton .exp-photo { background-color: transparent; }
+
+/* Layar sentuh */
+@media (hover: none) {
+    .exp-photo__zoom {
+        opacity: 1;
+        transform: none;
+        padding: 7px 12px;
+        font-size: 11.5px;
+    }
+}
+
+/* Responsif */
+@media (max-width: 820px) {
+    .experience {
+        padding: 2rem 0 3.5rem;
+        /* navbar dua baris di layar kecil, jadi lebih tinggi */
+        scroll-margin-top: 108px;
+    }
+    .experience .section-head { margin-bottom: 1.6rem; }
+    .exp-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+}
+
+@media (max-width: 800px) {
+    .exp-card {
+        grid-template-columns: 1fr;
+        grid-template-areas: "meta" "photo" "body";
+        grid-template-rows: auto;
+        padding: 32px 0;
+    }
+    .exp-photo { margin-bottom: 22px; }
+}
+
+@media (max-width: 600px) {
+    .exp-grid {
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+    .exp-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .exp-add-button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+    .exp-search {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* Pengguna yang mematikan animasi di sistemnya */
+@media (prefers-reduced-motion: reduce) {
+    .experience .section-head, .exp-card { animation: none; }
+    .exp-card.is-tilting { transform: none; }
+    .exp-status.is-ongoing::before { animation: none; }
+    .exp-photo img, .exp-org { transition: none; }
+    .exp-photo__zoom, .exp-photo::after { transition: none; }
+    .exp-card--enter, .exp-card.is-new::before { animation: none; }
+}

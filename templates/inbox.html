@@ -141,45 +141,6 @@
     </div>
 </section>
 
-<script>
-    // Buka/tutup pesan. Saat pertama kali dibuka, pesan otomatis ditandai sudah dibaca.
-    (function () {
-        function csrf() {
-            var el = document.querySelector('[name=csrfmiddlewaretoken]');
-            return el ? el.value : '';
-        }
-        function setBadges(n) {
-            document.querySelectorAll('[data-inbox-badge]').forEach(function (b) {
-                b.textContent = n;
-                b.hidden = !n;
-            });
-        }
-        document.querySelectorAll('.inbox-item').forEach(function (item) {
-            var head = item.querySelector('.inbox-item__head');
-            head.addEventListener('click', function () {
-                var open = head.getAttribute('aria-expanded') !== 'true';
-                head.setAttribute('aria-expanded', open ? 'true' : 'false');
-                item.classList.toggle('is-open', open);
-                if (open && item.classList.contains('is-unread')) {
-                    var body = new URLSearchParams({ set: 'read', csrfmiddlewaretoken: csrf() });
-                    fetch(item.dataset.readUrl, {
-                        method: 'POST',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        body: body
-                    }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
-                        if (!data) return;
-                        item.classList.remove('is-unread');
-                        var btn = item.querySelector('.inbox-toggle-btn');
-                        if (btn) {
-                            btn.dataset.i18n = 'inbox.mark.unread';
-                            btn.textContent = window.t('inbox.mark.unread', 'Mark as unread');
-                        }
-                        setBadges(data.unread);
-                    }).catch(function () { /* gagal diam-diam: status tetap bisa diubah manual */ });
-                }
-            });
-        });
-    })();
-</script>
+<script src="{% static 'js/pages/inbox.js' %}"></script>
 
 {% endblock content %}
