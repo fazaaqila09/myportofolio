@@ -4,13 +4,15 @@
    dan geser jari memindahkan foto DI DALAM kegiatan yang sama
    (foto utama + foto tambahan dari kolom "More photos").
    Esc / klik latar / tombol X untuk menutup. Teks mengikuti bahasa (ID/EN).
+
+   Kartu Experience dibuat oleh JavaScript (AJAX), jadi lightbox tidak
+   mencari kartu sekali saat halaman dimuat. Ia memakai event delegation
+   (satu listener di document) dan kartu dicari saat foto diklik.
+   Setelah kartu digambar ulang, panggil ExpLightbox.decorate(container)
+   untuk memasang atribut aksesibilitas + petunjuk "Perbesar".
    ============================================================ */
 (function () {
     'use strict';
-
-    var cards = Array.prototype.slice.call(document.querySelectorAll('.exp-card'))
-        .filter(function (card) { return card.querySelector('.exp-photo img'); });
-    if (!cards.length) return;
 
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     function tr(key, fallback) { return window.t ? window.t(key, fallback) : fallback; }
@@ -73,9 +75,23 @@
         nextBtn.setAttribute('aria-label', tr('lb.next', 'Next photo'));
         box.querySelector('.lb__hint-switch').textContent = tr('lb.hint.switch', 'switch photo');
         box.querySelector('.lb__hint-close').textContent = tr('lb.hint.close', 'close');
-        cards.forEach(function (card) {
-            var photo = card.querySelector('.exp-photo');
-            photo.setAttribute('aria-label', tr('lb.enlarge', 'Enlarge photo') + ': ' + text(card, '.exp-org'));
+    }
+
+    // Pasang atribut tombol + petunjuk "Perbesar" pada setiap foto kartu di dalam root
+    function decorate(root) {
+        (root || document).querySelectorAll('.exp-card .exp-photo').forEach(function (photo) {
+            var owner = photo.closest('.exp-card');
+            photo.setAttribute('role', 'button');
+            photo.setAttribute('tabindex', '0');
+            photo.setAttribute('aria-label', tr('lb.enlarge', 'Enlarge photo') + ': ' + text(owner, '.exp-org'));
+            if (!photo.querySelector('.exp-photo__zoom')) {
+                var zoom = document.createElement('span');
+                zoom.className = 'exp-photo__zoom';
+                zoom.setAttribute('aria-hidden', 'true');
+                zoom.innerHTML = '<i class="fa-solid fa-magnifying-glass-plus"></i> <span></span>';
+                photo.appendChild(zoom);
+            }
+            photo.querySelector('.exp-photo__zoom span').textContent = tr('lb.enlarge.short', 'Enlarge');
         });
     }
 
@@ -131,8 +147,8 @@
         }, 140);
     }
 
-    function open(index, trigger) {
-        card = cards[index];
+    function open(cardElement, trigger) {
+        card = cardElement;
         photos = photosOf(card);
         single = photos.length < 2;
         prevBtn.hidden = single;
@@ -156,24 +172,21 @@
         if (opener) opener.focus({ preventScroll: true });
     }
 
-    /* ---------- Pemicu: klik / Enter / Spasi pada foto ---------- */
-    cards.forEach(function (card, i) {
-        var photo = card.querySelector('.exp-photo');
-        photo.setAttribute('role', 'button');
-        photo.setAttribute('tabindex', '0');
-        if (!photo.querySelector('.exp-photo__zoom')) {
-            var zoom = document.createElement('span');
-            zoom.className = 'exp-photo__zoom';
-            zoom.setAttribute('aria-hidden', 'true');
-            zoom.innerHTML = '<i class="fa-solid fa-magnifying-glass-plus"></i> <span data-i18n="lb.enlarge.short">Enlarge</span>';
-            photo.appendChild(zoom);
-        }
-        photo.addEventListener('click', function () { open(i, photo); });
-        photo.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(i, photo); }
-        });
+    /* ---------- Pemicu: klik / Enter / Spasi pada foto (event delegation) ---------- */
+    function photoFrom(target) {
+        var photo = target && target.closest ? target.closest('.exp-card .exp-photo') : null;
+        return photo && photo.querySelector('img') ? photo : null;
+    }
+    document.addEventListener('click', function (e) {
+        var photo = photoFrom(e.target);
+        if (photo) open(photo.closest('.exp-card'), photo);
     });
-    if (window.I18N) window.I18N.apply(document);
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var photo = photoFrom(e.target);
+        if (photo && e.target === photo) { e.preventDefault(); open(photo.closest('.exp-card'), photo); }
+    });
+    decorate(document);
     labels();
 
     /* ---------- Kontrol ---------- */
@@ -216,6 +229,9 @@
     // ganti bahasa: perbarui label & keterangan foto yang sedang terbuka
     document.addEventListener('langchange', function () {
         labels();
+        decorate(document);
         if (!box.hidden && card) fill(current);
     });
+
+    window.ExpLightbox = { decorate: decorate };
 })();

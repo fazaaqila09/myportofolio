@@ -4,7 +4,25 @@
 {% block nav_class %}nav-solid{% endblock %}
 {% block content %}
 
-<section id="experience" class="experience" style="padding-top: 130px; min-height: 100vh;">
+{% comment %}
+    Halaman ini hanya merender KERANGKA. Kartu Experience digambar oleh
+    static/js/experience.js setelah mengambil data dari get_experience_json.
+    Konfigurasi untuk JavaScript (endpoint, URL, hak akses) dititipkan lewat
+    atribut data-* pada <section> supaya tidak ada logika Django di dalam JS.
+{% endcomment %}
+<section id="experience" class="experience" style="padding-top: 130px; min-height: 100vh;"
+    data-endpoint="{% url 'main:get_experience_json' %}"
+    data-create-endpoint="{% url 'main:create_experience_ajax' %}"
+    data-edit-url="{% url 'main:update_experience' '00000000-0000-0000-0000-000000000000' %}"
+    data-delete-url="{% url 'main:delete_experience' '00000000-0000-0000-0000-000000000000' %}"
+    data-star-url="{% url 'main:toggle_star_experience' '00000000-0000-0000-0000-000000000000' %}"
+    data-can-edit="{{ can_edit|yesno:'true,false' }}"
+    data-is-owner="{{ user.is_superuser|yesno:'true,false' }}"
+    data-default-photo="{% static 'img/exp-cf.jpg' %}"
+    data-default-logo="{% static 'img/logo-cf.png' %}">
+
+    <!-- Token CSRF untuk semua permintaan POST dari JavaScript (star, hapus, tambah) -->
+    <div hidden>{% csrf_token %}</div>
 
     <div class="section-head">
         <h2 class="section-title exp-title" data-i18n="exp.title">Experience</h2>
@@ -13,111 +31,59 @@
 
     <div class="exp-toolbar">
         {% if user.is_superuser %}
-        <a href="{% url 'main:create_experience' %}" class="button exp-add-button">
+        <button type="button" class="button exp-add-button" popovertarget="add-experience-modal">
             <span aria-hidden="true">+</span> <span data-i18n="exp.add">Add Experience</span>
-        </a>
+        </button>
         {% endif %}
-        <form method="get" action="{% url 'main:show_experience' %}" class="exp-search">
-            <input type="search" name="title" value="{{ title_query }}"
+        <form method="get" action="{% url 'main:show_experience' %}" id="exp-search-form" class="exp-search" role="search">
+            <input type="search" id="exp-search-input" name="title" value="{{ title_query }}"
                 placeholder="Search by organization/activity name"
                 data-i18n-attr="placeholder:exp.search.ph;aria-label:exp.search.label"
-                class="exp-search__input" aria-label="Search experience">
+                class="exp-search__input" aria-label="Search experience" autocomplete="off">
             <button type="submit" class="button" data-i18n="common.search">Search</button>
         </form>
     </div>
 
-    <div class="exp-grid">
-        {% for experience in experience_list %}
-            <article class="exp-card">
+    <p id="exp-result" class="result-info exp-result hide" aria-live="polite">
+        <span data-i18n="exp.showing.a">Showing</span> <strong id="exp-count">0</strong> <span data-i18n="exp.showing.b">experiences</span>
+    </p>
 
-                <div class="exp-meta">
-                    <span class="exp-category" data-i18n-auto>{{ experience.get_category_display }}</span>
-                    {% if experience.is_ongoing %}
-                        <span class="exp-status is-ongoing" data-i18n="exp.ongoing">Ongoing</span>
-                    {% else %}
-                        <span class="exp-status" data-i18n="exp.completed">Completed</span>
-                    {% endif %}
-                </div>
-
-                <div class="exp-photo" data-photos="{{ experience.photos_json }}">
-                    {% if experience.thumbnail %}
-                        <img src="{{ experience.thumbnail }}" alt="Documentation {{ experience.title }}">
-                    {% else %}
-                        <img src="{% static 'img/exp-cf.jpg' %}" alt="Default Documentation">
-                    {% endif %}
-                    {% with total=experience.all_photos|length %}{% if total > 1 %}
-                        <span class="exp-photo__count" aria-hidden="true"><i class="fa-regular fa-images"></i> {{ total }}</span>
-                    {% endif %}{% endwith %}
-                </div>
-
-                <div class="exp-body">
-                    <div class="exp-head">
-                        <div class="exp-logo">
-                            {% if experience.logo %}
-                                <img src="{{ experience.logo }}" alt="Logo {{ experience.title }}">
-                            {% else %}
-                                <img src="{% static 'img/logo-cf.png' %}" alt="Default Logo">
-                            {% endif %}
-                        </div>
-                        <div class="exp-heading">
-                            <h3 class="exp-org">{{ experience.title }}</h3>
-                            <p class="exp-role" data-id-text="{{ experience.role_indo }}">{{ experience.role }}</p>
-                        </div>
-                        {% if can_edit %}
-                        <div class="exp-actions">
-                            <a href="{% url 'main:update_experience' experience.id %}"
-                                class="exp-edit-btn"
-                                aria-label="Edit {{ experience.title }}"
-                                title="Edit">
-                                <i class="fa-solid fa-pen"></i>
-                            </a>
-                            {% if user.is_superuser %}
-                            <button type="button"
-                                class="exp-delete-btn"
-                                popovertarget="delete-experience-{{ experience.id }}"
-                                aria-label="Delete {{ experience.title }}"
-                                title="Delete">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <span class="exp-period">
-                        {{ experience.started_at|date:"M Y" }} &ndash;
-                        {% if experience.is_ongoing %}
-                            <span data-i18n="common.present">Present</span>
-                        {% else %}
-                            {{ experience.ended_at|date:"M Y" }}
-                        {% endif %}
-                    </span>
-
-                    <p class="exp-desc" data-id-text="{{ experience.description_indo }}">{{ experience.description }}</p>
-
-                    <div class="exp-star">
-                        {% include "components/experience_star.html" with experience=experience %}
-                    </div>
-                </div>
-
-                {% if user.is_superuser %}
-                {% include "components/experience_delete_modal.html" with experience=experience %}
-                {% endif %}
-            </article>
-        {% empty %}
-            {% if title_query %}
-                <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    <span data-i18n="exp.none.found">No experience found with that name.</span>
-                </p>
-            {% else %}
-                <p class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    <span data-i18n="exp.none.yet">No experience added yet.</span>
-                </p>
-            {% endif %}
+    <!-- Loading state: kerangka kartu (skeleton) -->
+    <div id="exp-loading" class="exp-grid exp-skeleton hide" aria-busy="true" aria-label="Loading experience">
+        {% for i in "12" %}
+        <div class="exp-card skeleton-card" aria-hidden="true">
+            <div class="exp-photo skeleton"></div>
+            <div class="exp-body">
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-line mid"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-btn"></div>
+            </div>
+        </div>
         {% endfor %}
     </div>
+
+    <!-- Error state -->
+    <div id="exp-error" class="empty-state exp-state hide" role="alert">
+        <p data-i18n="exp.error">Failed to load experience. Please try again.</p>
+        <button type="button" id="exp-retry" class="button" data-i18n="exp.retry">Try again</button>
+    </div>
+
+    <!-- Empty state -->
+    <div id="exp-empty" class="empty-state exp-state hide">
+        <p id="exp-empty-message" data-i18n="exp.none.yet">No experience added yet.</p>
+    </div>
+
+    <!-- Daftar kartu (diisi JavaScript) -->
+    <div id="exp-grid" class="exp-grid hide"></div>
 </section>
 
+{% if user.is_superuser %}
+    {% include "components/experience_form_modal.html" %}
+{% endif %}
 
+<script src="{% static 'js/ajax-utils.js' %}"></script>
 <script src="{% static 'js/lightbox.js' %}"></script>
+<script src="{% static 'js/experience.js' %}"></script>
 {% endblock content %}
