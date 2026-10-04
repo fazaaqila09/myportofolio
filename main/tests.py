@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.template.loader import render_to_string
 from datetime import date
+from pathlib import Path
 
 from main.models import ContactMessage, Experience, Education, Project
 
@@ -43,15 +44,20 @@ class MainTest(TestCase):
         self.assertTrue(self.experience.is_ongoing)
 
     def test_experience_page(self):
+        # Halaman hanya kerangka; datanya datang dari endpoint JSON (Tugas 5)
         response = self.client.get(reverse("main:show_experience"))
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "experience.html")
-        self.assertContains(response, self.experience.title)
-        self.assertContains(response, self.experience.description)
-        self.assertContains(response, "Part-Time")
-        self.assertContains(response, "Ongoing")
+        self.assertContains(response, f'data-endpoint="{reverse("main:get_experience_json")}"')
+        self.assertContains(response, "js/experience.js")
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
+
+        fields = self.client.get(reverse("main:get_experience_json")).json()[0]["fields"]
+        self.assertEqual(fields["title"], self.experience.title)
+        self.assertEqual(fields["description"], self.experience.description)
+        self.assertEqual(fields["category_display"], "Part-Time")
+        self.assertTrue(fields["is_ongoing"])
 
     def test_empty_experience_page(self):
         # Merender HTML secara langsung dengan data list kosong
@@ -61,11 +67,11 @@ class MainTest(TestCase):
     def test_completed_experience(self):
         self.experience.ended_at = timezone.now()
         self.experience.save()
-        response = self.client.get(reverse("main:show_experience"))
+        fields = self.client.get(reverse("main:get_experience_json")).json()[0]["fields"]
 
         self.assertFalse(self.experience.is_ongoing)
-        self.assertContains(response, "Completed")
-        self.assertNotContains(response, "Ongoing")
+        self.assertFalse(fields["is_ongoing"])
+        self.assertEqual(fields["ended_at"], self.experience.ended_at.date().isoformat())
 
 
 class ExperienceEditTest(TestCase):
@@ -95,8 +101,13 @@ class ExperienceEditTest(TestCase):
 
     # 1. Tombol edit ada di card dan halaman edit terisi data lama
     def test_edit_page_is_prefilled(self):
-        card = self.client.get(reverse("main:show_experience"))
-        self.assertContains(card, f'href="{self.url}"')
+        # Kartu dibuat JavaScript: URL edit diambil dari template URL + id dari JSON
+        page = self.client.get(reverse("main:show_experience"))
+        dummy = reverse("main:update_experience", args=["00000000-0000-0000-0000-000000000000"])
+        self.assertContains(page, f'data-edit-url="{dummy}"')
+        self.assertContains(page, 'data-can-edit="true"')
+        pk = self.client.get(reverse("main:get_experience_json")).json()[0]["pk"]
+        self.assertEqual(dummy.replace("00000000-0000-0000-0000-000000000000", pk), self.url)
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -370,11 +381,11 @@ class RoleAccessTest(TestCase):
     def assert_buttons(self, username, add, edit, delete):
         if username:
             self.login(username)
-        # Experience masih dirender server
+        # Experience dirender lewat AJAX: yang ada di HTML hanya modal dan flag peran untuk JavaScript
         html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertEqual(reverse("main:create_experience") in html, add, f"{username}: add di experience")
-        self.assertEqual(self.edit_urls[0] in html, edit, f"{username}: edit di experience")
-        self.assertEqual("delete-experience-" in html, delete, f"{username}: delete di experience")
+        self.assertEqual('id="add-experience-modal"' in html, add, f"{username}: modal add di experience")
+        self.assertEqual('data-can-edit="true"' in html, edit, f"{username}: data-can-edit di experience")
+        self.assertEqual('data-is-owner="true"' in html, delete, f"{username}: data-is-owner di experience")
         # Project dirender lewat AJAX: yang ada di HTML hanya modal dan flag peran untuk JavaScript
         html = self.client.get(reverse("main:show_projects")).content.decode()
         self.assertEqual('id="add-project-modal"' in html, add, f"{username}: modal add di projects")
@@ -431,13 +442,11 @@ class StarTest(TestCase):
         self.client.login(username="biasa", password=PASSWORD)
         for obj, url in self.targets:
             self.client.post(url)
-        html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertIn("Unstar", html)
-        self.assertIn("star-count", html)
-        # Project: status star datang dari API, bukan dari HTML halaman
-        fields = self.client.get(reverse("main:get_project_json")).json()[0]["fields"]
-        self.assertTrue(fields["is_starred"])
-        self.assertEqual(fields["star_count"], 1)
+        # Experience dan Project: status star datang dari API, bukan dari HTML halaman
+        for name in ("main:get_experience_json", "main:get_project_json"):
+            fields = self.client.get(reverse(name)).json()[0]["fields"]
+            self.assertTrue(fields["is_starred"], name)
+            self.assertEqual(fields["star_count"], 1, name)
 
     def test_api_shows_usernames_only(self):
         user = User.objects.get(username="biasa")
@@ -767,9 +776,9 @@ class DatabaseTranslationTest(TestCase):
             title="Lomba", role="Mentor", role_indo="Pembimbing",
             description="Guided students.", description_indo="Membimbing mahasiswa.",
         )
-        html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertIn('data-id-text="Pembimbing">Mentor<', html)
-        self.assertIn('data-id-text="Membimbing mahasiswa.">Guided students.<', html)
+        fields = self.client.get(reverse("main:get_experience_json")).json()[0]["fields"]
+        self.assertEqual((fields["role"], fields["role_indo"]), ("Mentor", "Pembimbing"))
+        self.assertEqual(fields["description_indo"], "Membimbing mahasiswa.")
 
     def test_education_page_carries_indonesian_text(self):
         Education.objects.create(school="UI", major="Computer Science", major_indo="Ilmu Komputer", started_at=date(2025, 8, 1))
@@ -818,7 +827,8 @@ class MotionAndLightboxTest(TestCase):
     def test_experience_photo_is_lightbox_ready(self):
         html = self.client.get(reverse("main:show_experience")).content.decode()
         self.assertIn("js/lightbox.js", html)
-        self.assertIn('class="exp-photo"', html)
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "experience.js").read_text(encoding="utf-8")
+        self.assertIn('class="exp-photo"', js)
 
     def test_motion_script_and_fallback_flag_on_every_page(self):
         for name in ("main:show_main", "main:show_experience", "main:show_projects", "main:show_contact", "main:login"):
@@ -879,15 +889,16 @@ class ExperienceGalleryTest(TestCase):
 
     def test_card_carries_photo_list_and_count_badge(self):
         self.make(photos="https://example.com/b.jpg")
-        html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertIn("data-photos=", html)
-        self.assertIn("https://example.com/b.jpg", html)
-        self.assertIn("exp-photo__count", html)
+        fields = self.client.get(reverse("main:get_experience_json")).json()[0]["fields"]
+        self.assertEqual(fields["photos"], ["https://example.com/a.jpg", "https://example.com/b.jpg"])
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "experience.js").read_text(encoding="utf-8")
+        self.assertIn("data-photos=", js)
+        self.assertIn("exp-photo__count", js)
 
-    def test_single_photo_has_no_count_badge(self):
+    def test_single_photo_gives_one_item_list(self):
         self.make()
-        html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertNotIn('class="exp-photo__count"', html)
+        fields = self.client.get(reverse("main:get_experience_json")).json()[0]["fields"]
+        self.assertEqual(fields["photos"], ["https://example.com/a.jpg"])
 
     def test_form_accepts_urls_one_per_line_and_cleans_them(self):
         from main.forms import ExperienceForm
@@ -913,3 +924,142 @@ class ExperienceGalleryTest(TestCase):
         js = (Path(__file__).resolve().parent.parent / "static" / "js" / "lightbox.js").read_text(encoding="utf-8")
         self.assertIn("data-photos", js)
         self.assertNotIn("cards.length", js.split("function open(")[1])   # tidak memutar antar kartu
+
+class ExperienceAjaxTest(TestCase):
+    """Tugas 5: Experience lewat AJAX (endpoint JSON, tambah via modal, CSRF, XSS)."""
+
+    VALID = {
+        "title": "Pesta Rakyat Komputer",
+        "role": "Staff Acara",
+        "description": "Menyusun rundown acara.",
+        "category": "committee",
+        "started_at": "2026-03-01",
+        "ended_at": "",
+    }
+
+    def setUp(self):
+        make_users()
+        self.url = reverse("main:create_experience_ajax")
+        self.api = reverse("main:get_experience_json")
+
+    def login(self, username):
+        self.client.login(username=username, password=PASSWORD)
+
+    # --- Halaman hanya kerangka, data dari JSON ---
+    def test_page_renders_skeleton_only(self):
+        Experience.objects.create(title="Rahasia Kartu", description="x")
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        for element_id in ("exp-loading", "exp-error", "exp-empty", "exp-grid", "exp-search-input"):
+            self.assertIn(f'id="{element_id}"', html)
+        self.assertNotIn("Rahasia Kartu", html)          # kartu tidak dirender server
+        self.assertIn("csrfmiddlewaretoken", html)        # token tersedia untuk POST dari JS
+
+    def test_json_is_built_manually_with_star_info(self):
+        exp = Experience.objects.create(title="COMPFEST", description="x", category="committee")
+        biasa = User.objects.get(username="biasa")
+        exp.starred_by.add(biasa)
+
+        anonymous = self.client.get(self.api)
+        self.assertEqual(anonymous.status_code, 200)
+        self.assertEqual(anonymous["Content-Type"], "application/json")
+        item = anonymous.json()[0]
+        self.assertEqual(item["pk"], str(exp.id))
+        self.assertEqual(item["fields"]["category_display"], "Committee")
+        self.assertEqual(item["fields"]["star_count"], 1)
+        self.assertFalse(item["fields"]["is_starred"])     # pengunjung belum login
+
+        self.login("biasa")
+        self.assertTrue(self.client.get(self.api).json()[0]["fields"]["is_starred"])
+
+    def test_search_by_title_and_role(self):
+        Experience.objects.create(title="COMPFEST 18", role="Staff", description="x")
+        Experience.objects.create(title="BETIS", role="Mentor", role_indo="Pembimbing", description="x")
+        titles = lambda q: [i["fields"]["title"] for i in self.client.get(self.api, {"title": q}).json()]
+        self.assertEqual(titles("compfest"), ["COMPFEST 18"])
+        self.assertEqual(titles("pembimbing"), ["BETIS"])
+        self.assertEqual(titles("tidak-ada"), [])
+
+    # --- Tambah data lewat AJAX ---
+    def test_owner_gets_201_and_data_is_saved(self):
+        self.login("pemilik")
+        response = self.client.post(self.url, self.VALID)
+        self.assertEqual(response.status_code, 201)
+        body = response.json()
+        saved = Experience.objects.get(pk=body["pk"])
+        self.assertEqual(saved.title, "Pesta Rakyat Komputer")
+        self.assertEqual(saved.started_at.date(), date(2026, 3, 1))
+        self.assertEqual(body["experience"]["fields"]["started_at"], "2026-03-01")
+
+    def test_invalid_input_gets_400_with_errors_and_labels(self):
+        self.login("pemilik")
+        response = self.client.post(self.url, {**self.VALID, "title": "", "category": "bukan-kategori"})
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertIn("title", body["errors"])
+        self.assertIn("category", body["errors"])
+        self.assertEqual(body["labels"]["title"], "Organization / Activity Name")
+        self.assertFalse(Experience.objects.filter(title="").exists())
+
+    def test_end_date_before_start_is_rejected(self):
+        self.login("pemilik")
+        response = self.client.post(self.url, {**self.VALID, "ended_at": "2026-01-01"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("ended_at", response.json()["errors"])
+
+    def test_non_owner_gets_403_json(self):
+        for username in (None, "biasa", "editor1"):
+            self.client.logout()
+            if username:
+                self.login(username)
+            response = self.client.post(self.url, self.VALID)
+            self.assertEqual(response.status_code, 403, username)
+            self.assertIn("message", response.json())
+        self.assertFalse(Experience.objects.filter(title=self.VALID["title"]).exists())
+
+    def test_get_is_not_allowed(self):
+        self.login("pemilik")
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_csrf_token_is_required(self):
+        from django.test import Client
+        client = Client(enforce_csrf_checks=True)
+        client.login(username="pemilik", password=PASSWORD)
+        self.assertEqual(client.post(self.url, self.VALID).status_code, 403)    # tanpa token: ditolak
+        client.get(reverse("main:show_experience"))                            # mengisi cookie csrftoken
+        token = client.cookies["csrftoken"].value
+        response = client.post(self.url, self.VALID, HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code, 201)
+
+    # --- XSS ---
+    def test_html_is_stripped_on_the_server(self):
+        self.login("pemilik")
+        payload = {**self.VALID,
+                   "title": '<img src="x" onerror="alert(\'XSS!\')">Lomba Aman',
+                   "role": "<script>alert(1)</script>Ketua",
+                   "description": "<b>Tebal</b> biasa"}
+        pk = self.client.post(self.url, payload).json()["pk"]
+        saved = Experience.objects.get(pk=pk)
+        self.assertEqual(saved.title, "Lomba Aman")
+        self.assertNotIn("<", saved.role + saved.description)
+
+    def test_title_with_only_html_is_rejected(self):
+        self.login("pemilik")
+        response = self.client.post(self.url, {**self.VALID, "title": '<img src="x" onerror="alert(\'XSS!\')">'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("title", response.json()["errors"])
+
+    def test_page_script_escapes_every_inserted_text(self):
+        js = (Path(__file__).resolve().parent.parent / "static" / "js" / "experience.js").read_text(encoding="utf-8")
+        self.assertIn("escapeHtml(title)", js)
+        self.assertIn("escapeHtml(description)", js)
+        self.assertIn("'X-CSRFToken': getCsrfToken()", js)
+        utils = (Path(__file__).resolve().parent.parent / "static" / "js" / "ajax-utils.js").read_text(encoding="utf-8")
+        self.assertIn("function escapeHtml", utils)
+        self.assertIn("function debounce", utils)
+
+    def test_modal_only_for_owner(self):
+        self.login("pemilik")
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertIn('id="add-experience-modal"', html)
+        self.assertIn('id="experience-form"', html)
+        self.assertIn('name="title"', html)
