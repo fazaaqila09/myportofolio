@@ -625,8 +625,7 @@ class LanguageToggleTest(TestCase):
         for name in ("main:show_main", "main:show_experience", "main:show_projects", "main:show_contact", "main:show_education", "main:login"):
             html = self.client.get(reverse(name)).content.decode()
             self.assertIn("data-lang-toggle", html, name)
-            self.assertIn("js/core/language.js", html, name)
-            self.assertIn("js/core/translations.js", html, name)
+            self.assertIn("js/core/i18n.js", html, name)
             self.assertIn('data-l="id"', html, name)
             self.assertIn('data-l="en"', html, name)
 
@@ -639,7 +638,7 @@ class LanguageToggleTest(TestCase):
         import re
         from pathlib import Path
         base = Path(__file__).resolve().parent.parent
-        source = (base / "static" / "js" / "core" / "translations.js").read_text(encoding="utf-8")
+        source = (base / "static" / "js" / "core" / "i18n.js").read_text(encoding="utf-8")
         english = source[source.index("en: {"):source.index("id: {")]
         indonesian = source[source.index("id: {"):source.index("serverText: [")]
         used = set()
@@ -820,7 +819,7 @@ class DatabaseTranslationTest(TestCase):
 
 
 class MotionAndLightboxTest(TestCase):
-    """Lightbox foto Experience, tombol magnetik, bentuk kursor, dan transisi halaman."""
+    """Lightbox foto Experience dan transisi halaman."""
 
     def setUp(self):
         Experience.objects.create(title="Lomba", description="Deskripsi", thumbnail="/static/img/exp-cf.jpg")
@@ -847,7 +846,7 @@ class MotionAndLightboxTest(TestCase):
 
     def test_dictionary_has_lightbox_and_inbox_keys_in_both_languages(self):
         from pathlib import Path
-        source = (Path(__file__).resolve().parent.parent / "static" / "js" / "core" / "translations.js").read_text(encoding="utf-8")
+        source = (Path(__file__).resolve().parent.parent / "static" / "js" / "core" / "i18n.js").read_text(encoding="utf-8")
         english = source[source.index("en: {"):source.index("id: {")]
         indonesian = source[source.index("id: {"):source.index("serverText: [")]
         keys = ["lb.label", "lb.close", "lb.prev", "lb.next", "lb.enlarge", "lb.enlarge.short",

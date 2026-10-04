@@ -4,7 +4,7 @@
 // 3. Pencarian dengan debounce 300 ms; permintaan lama dibatalkan dengan AbortController.
 // 4. Pemilik menambah data lewat modal: fetch() + token CSRF, balasan 201 / 400 / 403 -> toast.
 // 5. Semua teks dari server melewati escapeHtml(), jadi data berisi HTML tampil sebagai teks.
-// Butuh: ajax-helpers.js, toast.js, language.js, lightbox.js, star-button.js.
+// Butuh: ajax-helpers.js, toast.js, i18n.js, lightbox.js, star-button.js.
 (function () {
     'use strict';
 

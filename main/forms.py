@@ -133,7 +133,7 @@ class ProjectForm(ModelForm):
 
 class ContactForm(ModelForm):
     """Form Contact. Pesan error sengaja tanpa angka/parameter supaya bisa
-    diterjemahkan ID/EN oleh language.js (lihat serverText di translations.js)."""
+    diterjemahkan ID/EN oleh i18n.js (lihat serverText di sana)."""
 
     # Kolom jebakan untuk bot: disembunyikan dengan CSS, manusia tidak mengisinya.
     website = forms.CharField(required=False, widget=TextInput(attrs={

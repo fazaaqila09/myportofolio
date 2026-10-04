@@ -1,4 +1,4 @@
-/* Animasi umum: scroll reveal, transisi antarhalaman, dan tombol magnetik. */
+/* Animasi umum: scroll reveal dan transisi antarhalaman. */
 
 /* Transisi halaman */
 @view-transition { navigation: auto; }
@@ -27,9 +27,6 @@ html.no-vt.is-leaving body {
     opacity: 1;
     translate: none;
 }
-
-/* Tombol magnetik */
-[data-magnetic]:not(.reveal) { translate: var(--mag-x, 0px) var(--mag-y, 0px); }
 
 /* Animasi */
 @keyframes expHeadIn {

@@ -116,7 +116,7 @@ def toggle_star_for(request, obj, fallback_url_name):
 
 
 # Tech stack yang tampil di section Skills (halaman utama).
-# Ubah bebas: tiap grup punya "title_key" (kunci terjemahan di translations.js) dan
+# Ubah bebas: tiap grup punya "title_key" (kunci terjemahan di i18n.js) dan
 # daftar skill berupa (nama, kelas ikon Font Awesome), dan "speed" = lama satu putaran marquee.
 SKILL_GROUPS = [
     {

@@ -39,8 +39,7 @@
         if (!('CSSViewTransitionRule' in window)) document.documentElement.classList.add('no-vt');
     </script>
     <!-- Kamus dan logika bahasa ID/EN (mengatur <html lang> lebih dulu agar tidak berkedip) -->
-    <script src="{% static 'js/core/translations.js' %}"></script>
-    <script src="{% static 'js/core/language.js' %}"></script>
+    <script src="{% static 'js/core/i18n.js' %}"></script>
     {% block meta %}{% endblock meta %}
 </head>
 <body>
@@ -160,7 +159,6 @@
     <script src="{% static 'js/effects/hero-typing.js' %}"></script>
     <script src="{% static 'js/effects/scroll-reveal.js' %}"></script>
     <script src="{% static 'js/effects/card-tilt.js' %}"></script>
-    <script src="{% static 'js/effects/magnetic-buttons.js' %}"></script>
     <script src="{% static 'js/effects/page-transition.js' %}"></script>
     <script src="{% static 'js/effects/touch-feedback.js' %}"></script>
 </body>
