@@ -56,12 +56,8 @@ EDUCATION_MAJOR_ID = {
 
 
 def fill_missing_translations():
-    """Isi otomatis terjemahan Indonesia untuk data awal yang sudah ada di database.
-
-    Hanya menyentuh baris yang kolom *_indo-nya MASIH KOSONG dan teks Inggrisnya
-    cocok dengan data awal, jadi terjemahan yang Anda tulis sendiri tidak
-    tertimpa. Pemeriksaan awal murah (satu query) sehingga aman dipanggil
-    di setiap permintaan."""
+    """Isi terjemahan Indonesia data awal yang kolom *_indo-nya masih kosong.
+    Terjemahan yang ditulis sendiri tidak ditimpa; cukup satu query bila semua sudah terisi."""
     if Experience.objects.filter(Q(role_indo="") | Q(description_indo="")).exists():
         for title, (role, description) in EXPERIENCE_ID.items():
             Experience.objects.filter(title=title, role_indo="").update(role_indo=role)
@@ -87,15 +83,13 @@ def can_edit(user):
 
 
 def is_ajax(request):
-    """True jika permintaan dikirim lewat fetch() dari star.js."""
+    """True jika permintaan dikirim lewat fetch() dari star-button.js."""
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
 def toggle_star_for(request, obj, fallback_url_name):
-    """Tambah/batalkan star milik user yang sedang login pada obj (Project/Experience).
-
-    Permintaan AJAX dijawab JSON supaya halaman tidak perlu reload;
-    permintaan biasa tetap di-redirect seperti sebelumnya."""
+    """Tambah/batalkan star user yang login pada obj (Project/Experience).
+    Permintaan AJAX dijawab JSON (tanpa reload); permintaan biasa di-redirect."""
     if not request.user.is_authenticated:
         if is_ajax(request):
             return JsonResponse(
@@ -122,7 +116,7 @@ def toggle_star_for(request, obj, fallback_url_name):
 
 
 # Tech stack yang tampil di section Skills (halaman utama).
-# Ubah bebas: tiap grup punya "title_key" (kunci terjemahan di i18n.js) dan
+# Ubah bebas: tiap grup punya "title_key" (kunci terjemahan di translations.js) dan
 # daftar skill berupa (nama, kelas ikon Font Awesome), dan "speed" = lama satu putaran marquee.
 SKILL_GROUPS = [
     {
@@ -517,10 +511,8 @@ def get_experience_json(request):
 
 @require_POST
 def create_experience_ajax(request):
-    """Tambah Experience lewat fetch() dari modal. Membalas JSON:
-    201 = berhasil, 400 = input tidak valid (beserta pesan per field), 403 = tidak berhak.
-    Tanpa @login_required: dekorator itu me-redirect ke halaman login (HTML),
-    sehingga JavaScript tidak bisa membaca kegagalannya sebagai JSON."""
+    """Tambah Experience dari modal (fetch). JSON: 201 berhasil, 400 tidak valid, 403 tidak berhak.
+    Tanpa @login_required karena redirect ke halaman login (HTML) tidak bisa dibaca sebagai JSON."""
     if not request.user.is_superuser:
         return JsonResponse(
             {"message": "Only the portfolio owner can add experience."},

@@ -56,15 +56,8 @@ class Experience(models.Model):
         return json.dumps(self.all_photos)
 
 class Education(models.Model):
-    """Riwayat pendidikan, ditampilkan sebagai timeline di halaman Education.
-
-    Catatan soal tanggal: di sini dipakai DateField BIASA, bukan
-    DateTimeField(auto_now_add=True) seperti pada Experience.
-    auto_now_add memaksa nilainya diisi waktu saat data dibuat dan
-    TIDAK BISA diubah lewat admin — itu sebabnya di views Experience
-    tanggalnya harus ditimpa manual setelah create(). DateField biasa
-    bisa langsung diisi tahun masuk yang sebenarnya.
-    """
+    """Riwayat pendidikan (timeline di section Education).
+    Tanggal memakai DateField biasa (bukan auto_now_add) supaya bisa diisi tahun yang sebenarnya."""
 
     LEVEL_CHOICES = [
         ('elementary', 'Elementary School'),
@@ -122,10 +115,7 @@ class Project(models.Model):
 
 
 class ContactMessage(models.Model):
-    """Pesan yang dikirim pengunjung lewat halaman Contact.
-
-    Disimpan di database dan dibaca pemilik lewat Django Admin
-    (tidak ada pengiriman email, jadi tidak perlu konfigurasi SMTP)."""
+    """Pesan dari halaman Contact. Dibaca pemilik di halaman Inbox (tanpa kirim email)."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)

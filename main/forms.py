@@ -42,7 +42,7 @@ class ExperienceForm(ModelForm):
             "ended_at": DateInput(attrs={"type": "date"}),
         }
 
-    # --- Pembersihan input teks (perlindungan XSS di sisi server) ---
+    # Pembersihan input teks (perlindungan XSS di sisi server)
     # strip_tags membuang semua tag HTML, jadi input seperti
     # <img src="x" onerror="alert('XSS!')"> tidak pernah tersimpan sebagai HTML.
     def _strip(self, field, required_message=None):
@@ -133,7 +133,7 @@ class ProjectForm(ModelForm):
 
 class ContactForm(ModelForm):
     """Form Contact. Pesan error sengaja tanpa angka/parameter supaya bisa
-    diterjemahkan ID/EN oleh i18n.js (lihat kamus AUTO di sana)."""
+    diterjemahkan ID/EN oleh language.js (lihat serverText di translations.js)."""
 
     # Kolom jebakan untuk bot: disembunyikan dengan CSS, manusia tidak mengisinya.
     website = forms.CharField(required=False, widget=TextInput(attrs={
