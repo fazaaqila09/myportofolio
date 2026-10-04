@@ -3,7 +3,6 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -315,8 +314,8 @@ def show_main(request):
     return render(request, "index.html", context)
 
 
-def show_experience(request):
-    fill_missing_translations()
+def seed_experiences():
+    """Isi data awal Experience (sekali saja, ketika tabel masih kosong)."""
     if not Experience.objects.exists():
         e1 = Experience.objects.create(
             title="COMPFEST 18",
@@ -400,22 +399,27 @@ def show_experience(request):
         e6.ended_at = parse_datetime("2024-07-01T00:00:00Z")
         e6.save()
 
-    json_response = get_experience_json(request)
-    experience_list = serializers.deserialize(
-        "json",
-        json_response.content.decode("utf-8"),
-    )
-    experience_list = [item.object for item in experience_list]
 
-    title_query = request.GET.get("title", "").strip()
+def show_experience(request):
+    """Halaman Experience hanya merender KERANGKA halaman (toolbar, modal, area kartu
+    kosong). Datanya diambil JavaScript lewat fetch() ke get_experience_json."""
+    seed_experiences()
+    fill_missing_translations()
 
     context = {
         "name": "Faza",
-        "experience_list": experience_list,
-        "title_query": title_query,
+        "title_query": request.GET.get("title", "").strip(),
         "can_edit": can_edit(request.user),
+        "form": ExperienceForm(),   # form kosong untuk modal Add Experience
     }
     return render(request, "experience.html", context)
+
+
+def set_start_date(experience, started_date):
+    """started_at memakai auto_now_add, jadi tanggal dari form diisi setelah INSERT pertama."""
+    experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
+    experience.save()
+    return experience
 
 
 @login_required(login_url="/login/")
@@ -427,11 +431,8 @@ def create_experience(request):
     form = ExperienceForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        experience = form.save(commit=False)
-        experience.save()  # INSERT pertama -> auto_now_add mengisi started_at = sekarang
-        started_date = form.cleaned_data["started_at"]
-        experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
-        experience.save()  # UPDATE -> pakai tanggal dari form (jam otomatis 00:00)
+        experience = form.save()  # INSERT pertama -> auto_now_add mengisi started_at = sekarang
+        set_start_date(experience, form.cleaned_data["started_at"])  # UPDATE -> tanggal dari form
         messages.success(request, "New experience added successfully!")
         return redirect("main:show_experience")
 
@@ -455,10 +456,7 @@ def update_experience(request, experience_id):
     form = ExperienceForm(request.POST or None, instance=experience, initial=initial)
 
     if request.method == "POST" and form.is_valid():
-        experience = form.save(commit=False)
-        started_date = form.cleaned_data["started_at"]
-        experience.started_at = timezone.make_aware(datetime.combine(started_date, datetime.min.time()))
-        experience.save()
+        set_start_date(form.save(commit=False), form.cleaned_data["started_at"])
         messages.success(request, "Experience updated successfully!")
         return redirect("main:show_experience")
 
@@ -470,18 +468,82 @@ def update_experience(request, experience_id):
     return render(request, "experience_form.html", context)
 
 
+def experience_to_dict(experience, user):
+    """Satu Experience dalam bentuk dict untuk JSON. Disusun manual (bukan
+    serializers.serialize) supaya bisa memuat status star milik pengguna yang
+    sedang login, label kategori, tanggal siap pakai, dan daftar foto."""
+    starred_users = list(experience.starred_by.all())   # sudah di-prefetch
+    return {
+        "pk": str(experience.id),
+        "fields": {
+            "title": experience.title,
+            "role": experience.role or "",
+            "role_indo": experience.role_indo,
+            "description": experience.description,
+            "description_indo": experience.description_indo,
+            "category": experience.category,
+            "category_display": experience.get_category_display(),
+            "thumbnail": experience.thumbnail or "",
+            "logo": experience.logo or "",
+            "photos": experience.all_photos,
+            "started_at": experience.started_at.date().isoformat() if experience.started_at else "",
+            "ended_at": experience.ended_at.date().isoformat() if experience.ended_at else "",
+            "is_ongoing": experience.is_ongoing,
+            # Info star (Tugas 4): hanya username, tanpa data sensitif
+            "starred_by": [[u.username] for u in starred_users],
+            "star_count": len(starred_users),
+            "is_starred": user.is_authenticated and user in starred_users,
+            "starred_by_names": ", ".join(u.username for u in starred_users),
+        },
+    }
+
+
 def get_experience_json(request):
+    """Endpoint JSON daftar Experience. ?title= mencari di nama kegiatan dan peran (ID/EN)."""
+    seed_experiences()
     title_query = request.GET.get("title", "").strip()
-    experience = Experience.objects.all()
+    experiences = Experience.objects.prefetch_related("starred_by")
 
     if title_query:
-        experience = experience.filter(title__icontains=title_query)
+        experiences = experiences.filter(
+            Q(title__icontains=title_query)
+            | Q(role__icontains=title_query)
+            | Q(role_indo__icontains=title_query)
+        )
 
-    # use_natural_foreign_keys: starred_by berisi username, bukan id database.
-    experience_json = serializers.serialize(
-        "json", experience, use_natural_foreign_keys=True
+    data = [experience_to_dict(experience, request.user) for experience in experiences]
+    return JsonResponse(data, safe=False)
+
+
+@require_POST
+def create_experience_ajax(request):
+    """Tambah Experience lewat fetch() dari modal. Membalas JSON:
+    201 = berhasil, 400 = input tidak valid (beserta pesan per field), 403 = tidak berhak.
+    Tanpa @login_required: dekorator itu me-redirect ke halaman login (HTML),
+    sehingga JavaScript tidak bisa membaca kegagalannya sebagai JSON."""
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Only the portfolio owner can add experience."},
+            status=403,
+        )
+
+    form = ExperienceForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({
+            "errors": form.errors.get_json_data(),
+            # label tiap field supaya pesan di toast jelas ("Category: ...")
+            "labels": {name: str(field.label) for name, field in form.fields.items()},
+        }, status=400)
+
+    experience = set_start_date(form.save(), form.cleaned_data["started_at"])
+    return JsonResponse(
+        {
+            "message": "New experience added successfully!",
+            "pk": str(experience.id),
+            "experience": experience_to_dict(experience, request.user),
+        },
+        status=201,
     )
-    return HttpResponse(experience_json, content_type="application/json")
 
 
 @login_required(login_url="/login/")

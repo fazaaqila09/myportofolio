@@ -42,6 +42,38 @@ class ExperienceForm(ModelForm):
             "ended_at": DateInput(attrs={"type": "date"}),
         }
 
+    # --- Pembersihan input teks (perlindungan XSS di sisi server) ---
+    # strip_tags membuang semua tag HTML, jadi input seperti
+    # <img src="x" onerror="alert('XSS!')"> tidak pernah tersimpan sebagai HTML.
+    def _strip(self, field, required_message=None):
+        value = strip_tags(self.cleaned_data.get(field) or "").strip()
+        if required_message and not value:
+            raise ValidationError(required_message)
+        return value
+
+    def clean_title(self):
+        return self._strip("title", "Organization / activity name cannot contain only HTML tags.")
+
+    def clean_role(self):
+        return self._strip("role")
+
+    def clean_role_indo(self):
+        return self._strip("role_indo")
+
+    def clean_description(self):
+        return self._strip("description", "Description cannot contain only HTML tags.")
+
+    def clean_description_indo(self):
+        return self._strip("description_indo")
+
+    def clean(self):
+        cleaned = super().clean()
+        started = cleaned.get("started_at")
+        ended = cleaned.get("ended_at")
+        if started and ended and ended.date() < started:
+            self.add_error("ended_at", "End date cannot be earlier than the start date.")
+        return cleaned
+
     def clean_photos(self):
         """Satu URL per baris; baris kosong dibuang, tag HTML dibuang, tiap baris harus URL yang valid."""
         validate = URLValidator(schemes=["http", "https"])
