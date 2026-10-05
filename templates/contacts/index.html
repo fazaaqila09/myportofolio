@@ -35,6 +35,16 @@
         <div class="contacts-card">
             <div class="contacts-card__head">
                 <h3 data-i18n="contacts.list.title">Contact List</h3>
+                <div class="contacts-search">
+                    <input type="search" name="q" class="contacts-input" placeholder="Search contacts..."
+                        aria-label="Search contacts"
+                        data-i18n-attr="placeholder:contacts.search.ph;aria-label:contacts.search.label"
+                        hx-get="{% url 'contacts:contact_search' %}"
+                        hx-trigger="keyup changed delay:300ms, search"
+                        hx-target="#contact-rows"
+                        hx-indicator="#search-indicator">
+                    <span id="search-indicator" class="htmx-indicator" data-i18n="contacts.searching">Searching...</span>
+                </div>
             </div>
 
             <div class="contacts-table-wrap">
