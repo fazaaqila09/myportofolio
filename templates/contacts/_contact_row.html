@@ -2,6 +2,11 @@
     <td>{{ contact.name }}</td>
     <td>{{ contact.email }}</td>
     <td class="contacts-actions">
+        <button type="button" class="button button-secondary"
+            hx-get="{% url 'contacts:contact_edit' contact.id %}"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+            data-i18n="contacts.edit">Edit</button>
         <button type="button" class="button button-danger"
             hx-delete="{% url 'contacts:contact_delete' contact.id %}"
             hx-target="closest tr"
