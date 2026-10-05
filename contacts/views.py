@@ -1,7 +1,8 @@
 from functools import wraps
 
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 
 from .forms import ContactForm
@@ -33,3 +34,12 @@ def contact_add(request):
         form.save()
     contacts = Contact.objects.all()
     return render(request, "contacts/_contact_rows.html", {"contacts": contacts})
+
+
+@owner_only
+@require_http_methods(["DELETE"])
+def contact_delete(request, pk):
+    """Balasan kosong (status 200) membuat HTMX menghapus baris tersebut."""
+    contact = get_object_or_404(Contact, pk=pk)
+    contact.delete()
+    return HttpResponse("")
