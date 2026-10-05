@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="{% static 'css/projects.css' %}">
     <link rel="stylesheet" href="{% static 'css/contact.css' %}">
     <link rel="stylesheet" href="{% static 'css/inbox.css' %}">
+    <link rel="stylesheet" href="{% static 'css/contacts.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     <!-- Terapkan tema (terang/gelap) sebelum halaman tampil supaya tidak berkedip -->
@@ -95,6 +96,10 @@
             <i class="fa-solid fa-inbox" aria-hidden="true"></i>
             <span data-i18n="nav.inbox">Inbox</span>
             <span class="nav-badge nav-badge--menu" data-inbox-badge{% if not unread_count %} hidden{% endif %}>{{ unread_count }}</span>
+        </a>
+        <a href="{% url 'contacts:contact_list' %}" class="profile-menu__item">
+            <i class="fa-solid fa-address-book" aria-hidden="true"></i>
+            <span data-i18n="nav.contacts">Contacts</span>
         </a>
         {% endif %}
         <a href="{% url 'main:logout' %}" class="profile-menu__item profile-menu__item--logout">

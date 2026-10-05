@@ -1,0 +1,195 @@
+/* Halaman Kontak (Tutorial 6, HTMX): form tambah, pencarian, dan tabel kontak. */
+
+.contacts {
+    padding: 130px 0 80px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+.contacts-wrap {
+    width: 88%;
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Kartu */
+.contacts-card {
+    padding: 22px 24px;
+    border: 1px solid #DBE2EF;
+    border-radius: 18px;
+    background: #fff;
+}
+.contacts-card h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #112D4E;
+}
+.contacts-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+    margin-bottom: 16px;
+}
+
+/* Input */
+.contacts-input {
+    min-width: 0;
+    padding: .65rem .9rem;
+    border: 1px solid #DBE2EF;
+    border-radius: 8px;
+    background: #fff;
+    color: #112D4E;
+    font: inherit;
+    box-sizing: border-box;
+}
+.contacts-input:focus {
+    outline: 2px solid #3F72AF;
+    border-color: #3F72AF;
+}
+
+/* Form tambah */
+.contacts-add {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+.contacts-add .contacts-input { flex: 1 1 180px; }
+.contacts-add .button { flex: 0 0 auto; }
+
+/* Pesan setelah menambah (diganti lewat hx-swap-oob) */
+.contacts-feedback {
+    margin-top: 12px;
+    padding: .65rem .9rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+.contacts-feedback:empty { display: none; }
+.contacts-feedback.is-success {
+    background: #DFF5E1;
+    color: #1e7d32;
+}
+.contacts-feedback.is-error {
+    background: #FBE4E1;
+    color: #b42318;
+}
+
+/* Pencarian */
+.contacts-search {
+    position: relative;
+    display: flex;
+    flex: 0 1 320px;
+    min-width: 0;
+}
+.contacts-search .contacts-input {
+    flex: 1;
+    width: 100%;
+    padding-right: 6.5rem;
+}
+/* "Searching..." di dalam kolom pencarian; HTMX menampilkannya selama request berjalan */
+.contacts-search .htmx-indicator {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    translate: 0 -50%;
+    font-size: 13px;
+    color: #6a7c95;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Tabel */
+.contacts-table-wrap { overflow-x: auto; }
+.contacts-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+}
+.contacts-table th,
+.contacts-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #EDF1F8;
+    color: #112D4E;
+    vertical-align: middle;
+}
+.contacts-table th {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: #6a7c95;
+}
+.contacts-table tbody tr:last-child td { border-bottom: 0; }
+.contacts-table tbody tr:hover td { background: #F7F9FD; }
+.contacts-table .contacts-input { width: 100%; }
+.contacts-actions {
+    width: 1%;
+    white-space: nowrap;
+}
+.contacts-actions form {
+    display: inline;
+    margin: 0;
+}
+.contacts-actions .button {
+    padding: .45rem .9rem;
+    font-size: 14px;
+}
+.contacts-actions .button-secondary:hover {
+    background: #3F72AF;
+    color: #fff;
+}
+.contacts-actions .button + .button,
+.contacts-actions form + .button { margin-left: 6px; }
+
+/* Baris kosong: hanya tampil bila tabel tidak punya baris kontak lain */
+.contacts-empty td {
+    padding: 28px 12px;
+    text-align: center;
+    color: #6a7c95;
+}
+.contacts-empty:not(:only-child) { display: none; }
+
+/* Mode gelap */
+html[data-theme="dark"] .contacts-card {
+    background: #0F1E33;
+    border-color: #22385A;
+}
+html[data-theme="dark"] .contacts-card h3,
+html[data-theme="dark"] .contacts-table td {
+    color: #E6EDF7;
+}
+html[data-theme="dark"] .contacts-input {
+    background: #0B1728;
+    border-color: #22385A;
+    color: #E6EDF7;
+}
+html[data-theme="dark"] .contacts-table th,
+html[data-theme="dark"] .contacts-table td {
+    border-color: #1B2E4B;
+}
+html[data-theme="dark"] .contacts-table th,
+html[data-theme="dark"] .contacts-empty td,
+html[data-theme="dark"] .contacts-search .htmx-indicator {
+    color: #8FA6C6;
+}
+html[data-theme="dark"] .contacts-table tbody tr:hover td { background: #13243D; }
+html[data-theme="dark"] .contacts-feedback.is-success {
+    background: rgba(34, 197, 94, .15);
+    color: #7EE2A1;
+}
+html[data-theme="dark"] .contacts-feedback.is-error {
+    background: rgba(180, 35, 24, .2);
+    color: #F5A39B;
+}
+
+/* Responsif */
+@media (max-width: 600px) {
+    .contacts-wrap { width: 92%; }
+    .contacts-card { padding: 18px 16px; }
+    .contacts-search { flex-basis: 100%; }
+}

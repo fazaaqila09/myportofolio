@@ -132,6 +132,22 @@
             'inbox.empty': 'Your inbox is empty. Messages from the Contact form will show up here.',
             'inbox.empty.filter': 'No messages match.',
             'inbox.prev': 'Previous', 'inbox.next': 'Next',
+            // Kontak (Tutorial 6, HTMX)
+            'nav.contacts': 'Contacts',
+            'contacts.title': 'Contacts',
+            'contacts.sub': 'Add, search, edit, and delete contacts without reloading the page.',
+            'contacts.add.title': 'Add Contact', 'contacts.list.title': 'Contact List',
+            'contacts.name': 'Name', 'contacts.email': 'Email',
+            'contacts.phone': 'Phone', 'contacts.phone.optional': 'Phone (optional)',
+            'contacts.actions': 'Actions',
+            'contacts.add': 'Add', 'contacts.edit': 'Edit', 'contacts.delete': 'Delete',
+            'contacts.save': 'Save', 'contacts.cancel': 'Cancel',
+            'contacts.delete.confirm': 'Delete this contact?',
+            'contacts.search.ph': 'Search contacts...', 'contacts.search.label': 'Search contacts',
+            'contacts.searching': 'Searching...',
+            'contacts.empty': 'No contacts.',
+            'contacts.added': 'Contact added successfully!',
+            'contacts.invalid': 'Please check the name and email again.',
             // Lightbox foto
             'lb.label': 'Photo viewer', 'lb.photo': 'Photo', 'lb.close': 'Close',
             'lb.prev': 'Previous photo', 'lb.next': 'Next photo',
@@ -257,6 +273,22 @@
             'inbox.empty': 'Kotak masuk masih kosong. Pesan dari formulir Contact akan muncul di sini.',
             'inbox.empty.filter': 'Tidak ada pesan yang cocok.',
             'inbox.prev': 'Sebelumnya', 'inbox.next': 'Berikutnya',
+            // Kontak (Tutorial 6, HTMX)
+            'nav.contacts': 'Kontak',
+            'contacts.title': 'Kontak',
+            'contacts.sub': 'Tambah, cari, ubah, dan hapus kontak tanpa me-reload halaman.',
+            'contacts.add.title': 'Tambah Kontak', 'contacts.list.title': 'Daftar Kontak',
+            'contacts.name': 'Nama', 'contacts.email': 'Email',
+            'contacts.phone': 'Telepon', 'contacts.phone.optional': 'Telepon (opsional)',
+            'contacts.actions': 'Aksi',
+            'contacts.add': 'Tambah', 'contacts.edit': 'Edit', 'contacts.delete': 'Hapus',
+            'contacts.save': 'Simpan', 'contacts.cancel': 'Batal',
+            'contacts.delete.confirm': 'Yakin hapus kontak ini?',
+            'contacts.search.ph': 'Cari kontak...', 'contacts.search.label': 'Cari kontak',
+            'contacts.searching': 'Mencari...',
+            'contacts.empty': 'Tidak ada kontak.',
+            'contacts.added': 'Kontak berhasil ditambahkan!',
+            'contacts.invalid': 'Periksa lagi nama dan email.',
             // Lightbox foto
             'lb.label': 'Penampil foto', 'lb.photo': 'Foto', 'lb.close': 'Tutup',
             'lb.prev': 'Foto sebelumnya', 'lb.next': 'Foto berikutnya',
@@ -409,6 +441,9 @@
         get lang() { return lang; }
     };
     window.t = t;
+
+    // Potongan HTML baru dari HTMX (halaman Kontak) ikut diterjemahkan
+    document.addEventListener('htmx:afterSettle', function () { apply(); });
 
     function init() {
         var toggle = document.querySelector('[data-lang-toggle]');

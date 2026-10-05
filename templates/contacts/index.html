@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Contacts - Faza{% endblock %}
+{% block nav_class %}nav-solid{% endblock %}
+
+{% block meta %}
+<!-- HTMX hanya dimuat di halaman ini -->
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js"></script>
+{% endblock meta %}
+
+{% block content %}
+<!-- hx-headers: token CSRF ikut terkirim di setiap request HTMX dari dalam section ini -->
+<section class="contacts" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div class="section-head">
+        <h2 class="section-title" data-i18n="contacts.title">Contacts</h2>
+        <p class="section-sub" data-i18n="contacts.sub">Add, search, edit, and delete contacts without reloading the page.</p>
+    </div>
+
+    <div class="contacts-wrap">
+        <div class="contacts-card">
+            <div class="contacts-card__head">
+                <h3 data-i18n="contacts.list.title">Contact List</h3>
+            </div>
+
+            <div class="contacts-table-wrap">
+                <table class="contacts-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="contacts.name">Name</th>
+                            <th data-i18n="contacts.email">Email</th>
+                            <th data-i18n="contacts.actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contact-rows">
+                        {% include "contacts/_contact_rows.html" %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
