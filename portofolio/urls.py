@@ -6,3 +6,9 @@ urlpatterns = [
     path("contacts/", include("contacts.urls")),
     path("", include("main.urls")),
 ]
+
+# Django REST Framework (Tutorial 07)
+urlpatterns += [
+    path("api/v1/", include("main.api_urls")),
+    path("api-auth/", include("rest_framework.urls")),
+]
