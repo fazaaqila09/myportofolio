@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
+EDITOR_GROUP = "Editor"
+
 
 class IsPortfolioOwnerOrReadOnly(BasePermission):
     """Semua orang boleh membaca; hanya pemilik portofolio (superuser) yang boleh menulis."""
@@ -14,17 +16,25 @@ class IsPortfolioOwnerOrReadOnly(BasePermission):
 
 
 class IsPortfolioOwnerOrEditorOrReadOnly(BasePermission):
-    """Untuk bagian pilihan tugas: semua boleh membaca, Editor boleh PUT/PATCH,
-    hanya pemilik (superuser) yang boleh POST dan DELETE."""
+    """Hak akses keempat peran dari Tugas 4, dipakai untuk API Experience.
+
+    - Pengunjung & pengguna biasa : hanya GET/HEAD/OPTIONS.
+    - Editor (anggota grup "Editor") : boleh PUT/PATCH, tidak boleh POST/DELETE.
+    - Pemilik portofolio (superuser) : boleh semuanya.
+
+    Star tidak diatur di sini; endpoint star memakai IsAuthenticated.
+    """
 
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-        if not request.user.is_authenticated:
+        user = request.user
+        if not user.is_authenticated:
             return False
-        if request.user.is_superuser:
+        if user.is_superuser:
             return True
-        return (
-            request.method in ("PUT", "PATCH")
-            and request.user.groups.filter(name="Editor").exists()
-        )
+        if request.method in ("PUT", "PATCH"):
+            self.message = "Only the portfolio owner or an Editor can edit experience."
+            return user.groups.filter(name=EDITOR_GROUP).exists()
+        self.message = "Only the portfolio owner can add or delete experience."
+        return False
