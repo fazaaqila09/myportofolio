@@ -1,29 +1,31 @@
-<!-- Modal tambah Experience (hanya dirender untuk pemilik). Dikirim lewat fetch() di pages/experience.js -->
-<div id="add-experience-modal"
+<!-- Modal form Experience (dirender untuk pemilik dan Editor).
+     Dipakai untuk dua mode oleh pages/experience.js:
+     - tambah (pemilik)        -> POST  /api/v1/experience/
+     - ubah (pemilik & Editor) -> PATCH /api/v1/experience/<id>/ (hanya field yang berubah) -->
+<div id="experience-modal"
      class="project-form-modal exp-form-modal"
      popover="auto"
      role="dialog"
      aria-modal="true"
-     aria-labelledby="add-experience-modal-title">
+     aria-labelledby="experience-modal-title">
     <button type="button"
             class="project-form-modal__backdrop"
-            popovertarget="add-experience-modal"
+            popovertarget="experience-modal"
             popovertargetaction="hide"
-            aria-label="Close add experience form"
+            aria-label="Close form"
             data-i18n-attr="aria-label:exp.modal.close"></button>
 
     <div class="project-form-modal__content">
         <button type="button"
                 class="project-form-modal__close"
-                popovertarget="add-experience-modal"
+                popovertarget="experience-modal"
                 popovertargetaction="hide"
-                aria-label="Close add experience form"
+                aria-label="Close form"
                 data-i18n-attr="aria-label:exp.modal.close">&times;</button>
 
-        <h2 id="add-experience-modal-title" data-i18n="exp.modal.title">Add New Experience</h2>
+        <h2 id="experience-modal-title" data-i18n="exp.modal.title">Add New Experience</h2>
         <form id="experience-form"
               method="post"
-              action="{% url 'main:create_experience' %}"
               class="project-form exp-modal-form"
               novalidate>
             {% csrf_token %}
@@ -37,11 +39,11 @@
             <div class="project-form-modal__actions">
                 <button type="button"
                         class="button button-secondary"
-                        popovertarget="add-experience-modal"
+                        popovertarget="experience-modal"
                         popovertargetaction="hide"
                         data-i18n="common.cancel">Cancel</button>
                 <button type="submit" class="button exp-modal-submit">
-                    <span data-i18n="exp.add">Add Experience</span>
+                    <span id="experience-submit-label" data-i18n="exp.add">Add Experience</span>
                 </button>
             </div>
         </form>

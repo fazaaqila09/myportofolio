@@ -44,12 +44,12 @@ class MainTest(TestCase):
         self.assertTrue(self.experience.is_ongoing)
 
     def test_experience_page(self):
-        # Halaman hanya kerangka; datanya datang dari endpoint JSON (Tugas 5)
+        # Halaman hanya kerangka; datanya datang dari API DRF (Tugas 6)
         response = self.client.get(reverse("main:show_experience"))
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "experience.html")
-        self.assertContains(response, f'data-endpoint="{reverse("main:get_experience_json")}"')
+        self.assertContains(response, f'data-endpoint="{reverse("api:experience-list")}"')
         self.assertContains(response, "js/pages/experience.js")
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
 
@@ -101,13 +101,13 @@ class ExperienceEditTest(TestCase):
 
     # 1. Tombol edit ada di card dan halaman edit terisi data lama
     def test_edit_page_is_prefilled(self):
-        # Kartu dibuat JavaScript: URL edit diambil dari template URL + id dari JSON
+        # Kartu dibuat JavaScript: tombol edit membuka modal yang mengirim PATCH ke
+        # URL detail API (template URL + id); halaman edit lama tetap bisa dibuka.
         page = self.client.get(reverse("main:show_experience"))
-        dummy = reverse("main:update_experience", args=["00000000-0000-0000-0000-000000000000"])
-        self.assertContains(page, f'data-edit-url="{dummy}"')
+        dummy = reverse("api:experience-detail", args=["00000000-0000-0000-0000-000000000000"])
+        self.assertContains(page, f'data-detail-url="{dummy}"')
         self.assertContains(page, 'data-can-edit="true"')
-        pk = self.client.get(reverse("main:get_experience_json")).json()[0]["pk"]
-        self.assertEqual(dummy.replace("00000000-0000-0000-0000-000000000000", pk), self.url)
+        self.assertContains(page, 'id="experience-modal"')
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -383,7 +383,8 @@ class RoleAccessTest(TestCase):
             self.login(username)
         # Experience dirender lewat AJAX: yang ada di HTML hanya modal dan flag peran untuk JavaScript
         html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertEqual('id="add-experience-modal"' in html, add, f"{username}: modal add di experience")
+        self.assertEqual('id="exp-add-button"' in html, add, f"{username}: tombol add di experience")
+        self.assertEqual('id="experience-modal"' in html, edit, f"{username}: modal tambah/ubah di experience")
         self.assertEqual('data-can-edit="true"' in html, edit, f"{username}: data-can-edit di experience")
         self.assertEqual('data-is-owner="true"' in html, delete, f"{username}: data-is-owner di experience")
         # Project dirender lewat AJAX: yang ada di HTML hanya modal dan flag peran untuk JavaScript
@@ -1057,9 +1058,16 @@ class ExperienceAjaxTest(TestCase):
         self.assertIn("function escapeHtml", utils)
         self.assertIn("function debounce", utils)
 
-    def test_modal_only_for_owner(self):
+    def test_modal_for_owner_and_editor(self):
+        # Modal dipakai untuk tambah (pemilik) dan ubah (pemilik & Editor)
+        self.login("editor1")
+        html = self.client.get(reverse("main:show_experience")).content.decode()
+        self.assertIn('id="experience-modal"', html)
+        self.assertNotIn('id="exp-add-button"', html)
+        self.client.logout()
         self.login("pemilik")
         html = self.client.get(reverse("main:show_experience")).content.decode()
-        self.assertIn('id="add-experience-modal"', html)
+        self.assertIn('id="experience-modal"', html)
+        self.assertIn('id="exp-add-button"', html)
         self.assertIn('id="experience-form"', html)
         self.assertIn('name="title"', html)
