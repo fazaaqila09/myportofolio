@@ -184,3 +184,72 @@ Prompt ditulis apa adanya (bahasa santai). Kolom "Hasil / koreksi" mencatat apa 
 3. **Migrasi Data yang Harus Ditulis Manual:** Untuk terjemahan isi database, AI awalnya menyertakan file migrasi data yang harus saya buat sendiri. Saya tidak mau menulis file migrasi secara manual, sehingga pendekatannya diganti: kolom baru cukup dibuat dengan `makemigrations`, dan terjemahan data lama diisi otomatis oleh aplikasi ketika halaman dibuka.
 
 ---
+---
+
+## Tugas 6
+
+1. REST (*Representational State Transfer*) adalah gaya arsitektur API yang memperlakukan data sebagai *resource* dengan URL sendiri, memakai metode HTTP sesuai artinya (GET membaca, POST membuat, PUT/PATCH mengubah, DELETE menghapus), membalas dengan status HTTP yang tepat, dan bersifat *stateless*. JSON hanyalah format datanya, jadi belum cukup. Endpoint Tugas 5 saya sudah mengembalikan JSON, tetapi aksinya ditulis di URL (`/experience/add-ajax/`), semua perubahan memakai POST, dan hapus dibalas *redirect*. Sekarang Experience diakses lewat `/api/v1/experience/` dan `/api/v1/experience/<id>/` dengan status 201, 204, 400, 403, dan 404. **PUT** mengganti seluruh data, sehingga semua field wajib harus dikirim. PUT cocok untuk menyimpan formulir lengkap. **PATCH** hanya mengubah field yang dikirim. PATCH cocok untuk perubahan kecil seperti memperbaiki peran, dan karena itu modal edit saya memakai PATCH.
+
+2. Serializer menerjemahkan objek model menjadi JSON dan sebaliknya, sekaligus memvalidasi input sebelum disimpan. Validasi dasar (tipe data, pilihan kategori, format URL dan tanggal) diturunkan dari model, sedangkan aturan tambahan ditulis di `validate_<field>` dan `validate()`. Dibandingkan merakit dictionary dengan `JsonResponse`, aturan input dan output ada di satu tempat, bukan terpisah antara dict manual dan `ExperienceForm`. Field hasil perhitungan seperti `star_count` bisa dibuat *read-only* sehingga tidak bisa diisi klien. Format error juga seragam (`{"field": ["pesan"]}`), dan daftar `fields` yang eksplisit mencegah data sensitif ikut keluar.
+
+3. Autentikasi menjawab "siapa kamu?": `SessionAuthentication` membaca cookie sesi dan mengisi `request.user`. Otorisasi menjawab "apa yang boleh kamu lakukan?": *permission class* seperti `IsPortfolioOwnerOrEditorOrReadOnly` memeriksa peran sebelum view dijalankan dan membalas 403 jika tidak diizinkan. Menyembunyikan tombol hanya mengatur tampilan, karena siapa pun tetap bisa mengirim permintaan langsung lewat console browser, `curl`, atau Browsable API. Saat diuji, Editor yang tidak punya tombol hapus tetap mencoba `DELETE` lewat console, dan server menolaknya dengan 403.
+
+4. Browser otomatis melampirkan cookie sesi ke setiap permintaan ke situs saya, termasuk permintaan yang dipicu situs lain. Tanpa token CSRF, situs jahat bisa membuat pemilik yang sedang login menghapus data tanpa sadar. Karena itu `SessionAuthentication` tetap memeriksa token yang dikirim lewat header `X-CSRFToken`, yang tidak bisa dibaca situs lain. `force_authenticate` langsung menyetel `request.user` dan melewati proses autentikasi, termasuk pemeriksaan CSRF, sehingga test tetap lulus walaupun perlindungan CSRF rusak. Karena itu saya menguji dengan `APIClient(enforce_csrf_checks=True)` dan `.login()`, dan permintaan tanpa token terbukti ditolak dengan 403 tanpa mengubah database.
+
+**Bagian yang dikerjakan:** Pola DRF dari Tutorial 07 (yang dipakai untuk Projects) diterapkan pada **Experience**, bagian yang saya kerjakan sendiri di Tugas 3 sampai Tugas 5.
+
+**Ringkasan implementasi**
+- **Serializer** (`main/serializers.py`): `ExperienceSerializer` dengan `fields` eksplisit. Info star diambil dari `StarInfoMixin`, yang juga dipakai `ProjectSerializer` supaya logika star tidak ditulis dua kali. `validate_title`, `validate_role`, `validate_role_indo`, `validate_description`, dan `validate_description_indo` memakai `strip_tags` seperti `clean_<field>` di Tugas 5. `validate_photos` memakai fungsi `clean_photo_urls` yang sama dengan `ExperienceForm`. `validate()` memastikan tanggal selesai tidak sebelum tanggal mulai, juga pada PATCH yang hanya mengirim salah satu tanggal. `DateOnlyField` membuat API memakai format `YYYY-MM-DD` walaupun model menyimpan `DateTimeField`. `create()` menyimpan `started_at` dari klien walaupun model memakai `auto_now_add`.
+- **Permission** (`main/permissions.py`): `IsPortfolioOwnerOrEditorOrReadOnly` mengikuti tabel peran Tugas 4 dan memberi pesan 403 yang jelas. Endpoint star memakai `IsAuthenticated`, dan akun pemberi star selalu `request.user`.
+- **API view dan URL** (`main/api_views.py`, `main/api_urls.py`): `experience_list` (GET, POST), `experience_detail` (GET, PUT, PATCH, DELETE), dan `experience_star` (POST), semuanya `@api_view` + `SessionAuthentication`, terdaftar di `/api/v1/experience/` dengan nama URL `api:experience-list`, `api:experience-detail`, dan `api:experience-star`. Pencarian Tugas 5 pindah ke `?title=` (nama kegiatan dan peran, Inggris/Indonesia).
+- **Halaman Experience** (`static/js/pages/experience.js`): menampilkan, mencari, menambah (POST), mengubah (PATCH), memberi star (POST), dan menghapus (DELETE) lewat API tanpa reload. Satu modal dipakai untuk tambah (pemilik) dan ubah (pemilik dan Editor). Form ubah sudah terisi data lama dan hanya mengirim field yang berubah. Konfirmasi hapus tetap memakai modal. Error 400 ditampilkan di bawah field dan di toast, sedangkan error 403 dan 404 di toast dengan pesan dari API (ikut diterjemahkan ID/EN). Semua permintaan yang mengubah data lewat satu fungsi `sendJson()` yang selalu memasang header `X-CSRFToken`, dan setiap teks dari server tetap melewati `escapeHtml()`. Pengunjung yang belum login melihat tautan "Star" ke halaman login.
+- **View lama** (`create_experience`, `update_experience`, `delete_experience`) sudah sesuai aturan peran sejak Tugas 4 (tambah dan hapus hanya pemilik, ubah oleh pemilik atau Editor), jadi tidak perlu diubah.
+- **Test** (`main/tests_api.py`, `ExperienceAPITest`, 20 test): setiap peran (pengunjung dan pengguna biasa ditolak, Editor boleh PATCH/PUT tetapi ditolak POST/DELETE, staff tanpa grup Editor ditolak, pemilik boleh membuat, mengubah, dan menghapus), isi database diperiksa pada setiap penolakan, 404, 405, validasi (tag HTML, URL `javascript:`, foto tidak valid, kategori, format tanggal, tanggal terbalik), field read-only, tidak ada data akun sensitif, star (pengunjung ditolak, semua peran yang login bisa toggle, akun selalu dari `request.user`), serta CSRF dengan `enforce_csrf_checks=True` dan `.login()`. Empat test halaman dari Tugas 5 yang memeriksa markup lama diperbarui ke endpoint dan modal baru. `python manage.py test main` menjalankan 136 test dan semuanya lulus, termasuk 13 test Tutorial 07.
+
+**Cara menjalankan (Tugas 6)**
+
+```bash
+pip install -r requirements.txt      # termasuk djangorestframework
+python manage.py migrate
+python manage.py test main           # 136 test
+python manage.py runserver
+```
+
+Halaman: `/experience/`. Browsable API: `/api/v1/experience/` dan `/api/v1/experience/<id>/`. Untuk mencoba peran Editor, buat grup `Editor` di Django Admin lalu masukkan sebuah akun ke grup tersebut.
+
+### Disclosure AI
+
+**Alat:** Claude (aplikasi Claude, model Opus) dengan akses ke folder proyek di laptop.
+
+**Link percakapan AI:** https://claude.ai/share/a0f17bf1-fff7-410a-8147-de5b377d8c90
+
+#### Log Prompting AI: Tugas 6
+
+| # | Prompt saya | Hasil / koreksi |
+|---|---|---|
+| 1 | PDF Tugas 6 + "jelasin tugas ini ngapain" | AI merangkum isi tugas: menerapkan pola DRF dari Tutorial 07 ke bagian portofolio saya sendiri, tabel hak akses empat peran, checklist (serializer, permission, API view dan URL, integrasi halaman, test), petunjuk implementasi, pertanyaan reflektif, cara pengumpulan, dan tenggat. |
+| 2 | "pandu saya berdasarkan urutan buat ngerjain tugas 6 ini" | AI memberi urutan pengerjaan dari persiapan sampai submit (relasi star, serializer, permission, API view, URL, view lama, test, integrasi halaman, README), dengan contoh kode umum yang harus disesuaikan ke model saya. |
+| 3 | "kerjain, inget yang commit tetep saya" + PDF Tugas 6 (sesi Claude terpisah) | Kode Tugas 6 dibuat dengan bantuan AI: AI memilih **Experience**, lalu membuat serializer, permission Editor, API view, URL, modal tambah/ubah, dan 20 test API, serta menyiapkan urutan commit bertahap. Commit dan push saya jalankan sendiri. |
+| 4 | "saya udah mengerjakan, coba cek apakah udah benar" | AI membaca folder proyek, menjalankan `python manage.py test main` dan `runserver` di salinan proyek, lalu mencocokkan hasilnya dengan checklist PDF. Semua poin terpenuhi. AI juga menemukan bahwa commit Tugas 6 belum di-push ke GitHub. |
+| 5 | "ini tugas 6 ga ada ngubah tutorial 7 kan?" | AI menjelaskan bahwa bagian Projects dari Tutorial 07 tidak perlu diubah. Satu-satunya perubahan bersama adalah `StarInfoMixin`, dan 13 test Tutorial 07 tetap lulus. |
+| 6 | "jelasin detail jawaban tugas 6" dan "yang kodenya detail" | AI menjelaskan jawaban reflektif dengan bahasa yang lebih sederhana, lalu menjelaskan alur kode per file (URL, permission, serializer, API view, template, JavaScript, test) supaya saya memahami isinya. |
+
+#### Yang saya periksa sendiri
+
+- Menjalankan `python manage.py test main` di laptop.
+- Mencoba halaman Experience sebagai pengunjung, pengguna biasa, Editor, dan pemilik (cari, star, ubah lewat modal, tambah, hapus) serta membuka Browsable API `/api/v1/experience/`.
+- Memastikan halaman Projects dari Tutorial 07 tetap berfungsi, lalu mengecek ulang README ini sebelum commit.
+
+**Strategi Prompting:** Saya mengunggah PDF tugas dan menghubungkan folder proyek supaya AI bisa membaca kode yang sebenarnya, bukan contoh di PDF. Saya meminta AI mengikuti PDF, mempertahankan fitur yang sudah ada, dan tidak melakukan commit. Setelah kode selesai, saya meminta AI mengecek hasilnya terhadap checklist dan menjelaskan kodenya per file supaya saya memahami apa yang dikumpulkan.
+
+**Bagian yang dibantu:** `main/serializers.py`, `main/permissions.py`, `main/api_views.py`, `main/api_urls.py`, `main/tests_api.py`, `static/js/pages/experience.js`, modal `components/experience_form_modal.html`, penyesuaian `experience.html`, `i18n.js`, empat test lama di `main/tests.py`, fungsi bersama `clean_photo_urls` di `main/forms.py`, serta draf README ini.
+
+**Keterbatasan AI dan Perbaikan:**
+
+1. **Data Lama Ditolak Validasi URL:** Foto dan logo pada data awal Experience memakai path relatif `/static/img/...`, yang tidak lolos validasi `URLField`. Jika modal edit mengirim ulang semua field, mengubah satu kata pun akan gagal dengan 400. Solusinya, modal edit mengirim **PATCH berisi field yang berubah saja**.
+
+2. **Test Bergantung pada Tanggal:** Salah satu test awal gagal karena `started_at` memakai `auto_now_add` sehingga terisi tanggal hari test dijalankan. Test diperbaiki dengan menetapkan `started_at` di `setUp()`.
+
+3. **Test Lama Ikut Terdampak:** Empat test Tugas 5 memeriksa markup lama. Karena halaman sekarang memakai API baru dan modal juga dipakai Editor, test tersebut diperbarui ke kontrak baru, bukan dihapus.
+
+4. **AI Hanya Menguji Salinan:** AI menjalankan test di salinan proyek, bukan di laptop atau PWS saya. Saat pengecekan, satu test sempat gagal di salinan itu hanya karena file CSS tidak ikut disalin, bukan karena bug. Karena itu saya tetap menjalankan test dan mencoba halaman sendiri.
