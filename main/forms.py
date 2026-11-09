@@ -6,6 +6,33 @@ from django.forms import ModelForm, TextInput, Textarea, URLInput, Select, DateI
 from main.models import ContactMessage, Experience, Project
 
 
+MAX_EXTRA_PHOTOS = 20
+
+
+def clean_photo_urls(text):
+    """Bersihkan daftar foto tambahan Experience (satu URL per baris).
+
+    Tag HTML dan baris kosong dibuang, duplikat dihapus, dan setiap baris harus
+    URL http/https yang valid. Dipakai bersama oleh ExperienceForm (halaman HTML)
+    dan ExperienceSerializer (API), supaya aturan validasinya hanya ditulis sekali.
+    """
+    validate = URLValidator(schemes=["http", "https"])
+    lines = []
+    for raw in strip_tags(text or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        try:
+            validate(line)
+        except ValidationError:
+            raise ValidationError("Each line must be a valid URL (starting with http:// or https://).")
+        if line not in lines:
+            lines.append(line)
+    if len(lines) > MAX_EXTRA_PHOTOS:
+        raise ValidationError("Please add at most 20 extra photos.")
+    return "\n".join(lines)
+
+
 class ExperienceForm(ModelForm):
     started_at = forms.DateField(
         label="Start Date",
@@ -75,22 +102,7 @@ class ExperienceForm(ModelForm):
         return cleaned
 
     def clean_photos(self):
-        """Satu URL per baris; baris kosong dibuang, tag HTML dibuang, tiap baris harus URL yang valid."""
-        validate = URLValidator(schemes=["http", "https"])
-        lines = []
-        for raw in strip_tags(self.cleaned_data.get("photos", "")).splitlines():
-            line = raw.strip()
-            if not line:
-                continue
-            try:
-                validate(line)
-            except ValidationError:
-                raise ValidationError("Each line must be a valid URL (starting with http:// or https://).")
-            if line not in lines:
-                lines.append(line)
-        if len(lines) > 20:
-            raise ValidationError("Please add at most 20 extra photos.")
-        return "\n".join(lines)
+        return clean_photo_urls(self.cleaned_data.get("photos", ""))
 
 class ProjectForm(ModelForm):
     class Meta:
